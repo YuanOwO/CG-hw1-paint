@@ -1,10 +1,9 @@
 #include "shape.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 namespace shape {
-
-#pragma region Line
 
 void Line::draw() const {
     glColor4fv(color);
@@ -29,35 +28,6 @@ void Line::draw() const {
     glVertex2f(end.getX() + nx, end.getY() + ny);
     glEnd();
 }
-
-ShapeEventResult Line::onMouseDown(EventState& eventState) {
-    start = eventState.mousePosition;
-    end = eventState.mousePosition;
-
-    glutPostRedisplay();
-
-    return ShapeEventResult::NONE;
-}
-
-ShapeEventResult Line::onMouseUp(EventState& eventState) {
-    end = eventState.mousePosition;
-
-    glutPostRedisplay();
-
-    return ShapeEventResult::COMMIT;
-}
-
-ShapeEventResult Line::onMouseMove(EventState& eventState) {
-    end = eventState.mousePosition;
-
-    glutPostRedisplay();
-
-    return ShapeEventResult::NONE;
-}
-
-#pragma endregion  // Line
-
-#pragma region Stroke
 
 void Stroke::draw() const {
     if (points.empty()) {
@@ -92,28 +62,6 @@ void Stroke::draw() const {
 
     glEnd();
 }
-
-ShapeEventResult Stroke::onMouseDown(EventState& eventState) {
-    addPoint(eventState.mousePosition);
-    glutPostRedisplay();
-    return ShapeEventResult::NONE;
-}
-
-ShapeEventResult Stroke::onMouseUp(EventState& eventState) {
-    addPoint(eventState.mousePosition);
-    glutPostRedisplay();
-    return ShapeEventResult::COMMIT;
-}
-
-ShapeEventResult Stroke::onMouseMove(EventState& eventState) {
-    addPoint(eventState.mousePosition);
-    glutPostRedisplay();
-    return ShapeEventResult::NONE;
-}
-
-#pragma endregion  // Stroke
-
-#pragma region Rectangle
 
 void Rectangle::draw() const {
     GLfloat leftX = std::min(start.getX(), end.getX());
@@ -161,41 +109,6 @@ void Rectangle::draw() const {
     glEnd();
 }
 
-ShapeEventResult Rectangle::onMouseDown(EventState& eventState) {
-    start = eventState.mousePosition;
-    end = eventState.mousePosition;
-
-    glutPostRedisplay();
-
-    return ShapeEventResult::NONE;
-}
-
-ShapeEventResult Rectangle::onMouseUp(EventState& eventState) {
-    end = eventState.mousePosition;
-
-    glutPostRedisplay();
-
-    return ShapeEventResult::COMMIT;
-}
-
-ShapeEventResult Rectangle::onMouseMove(EventState& eventState) {
-    end = eventState.mousePosition;
-
-    glutPostRedisplay();
-
-    return ShapeEventResult::NONE;
-}
-
-#pragma endregion  // Rectangle
-
-// void Ellipse::update(Point point) {
-//     if (point != end) {
-//         end = point;
-//     }
-// }
-
-#pragma region Polygon
-
 void Polygon::draw() const {
     if (points.size() < 2) return;
 
@@ -222,70 +135,5 @@ void Polygon::draw() const {
 
     glLineWidth(1.0f);  // 恢復，避免影響其他繪圖
 }
-
-ShapeEventResult Polygon::onMouseDown(EventState& eventState) {
-    if (points.empty()) {
-        points.push_back(eventState.mousePosition);
-    } else {
-        points.back() = eventState.mousePosition;
-    }
-
-    glutPostRedisplay();
-
-    return ShapeEventResult::NONE;
-}
-
-ShapeEventResult Polygon::onMouseUp(EventState& eventState) {
-    points.push_back(eventState.mousePosition);
-
-    glutPostRedisplay();
-
-    return ShapeEventResult::NONE;
-}
-
-ShapeEventResult Polygon::onMouseMove(EventState& eventState) {
-    if (points.empty()) return ShapeEventResult::NONE;
-
-    points.back() = eventState.mousePosition;
-
-    glutPostRedisplay();
-
-    return ShapeEventResult::NONE;
-}
-
-ShapeEventResult Polygon::onMousePassiveMove(EventState& eventState) {
-    if (points.empty()) return ShapeEventResult::NONE;
-
-    points.back() = eventState.mousePosition;
-
-    glutPostRedisplay();
-
-    return ShapeEventResult::NONE;
-}
-
-ShapeEventResult Polygon::onKeyDown(EventState& eventState) {
-    if (eventState.keyStates['\r']) {  // Enter
-        if (points.size() >= 3) {
-            return ShapeEventResult::COMMIT;
-        }
-    }
-
-    if (eventState.keyStates[27]) {  // ESC
-        return ShapeEventResult::CANCEL;
-    }
-
-    if (eventState.keyStates['\b']) {  // Backspace
-        if (points.empty()) {
-            return ShapeEventResult::CANCEL;
-        }
-
-        points.pop_back();
-        glutPostRedisplay();
-    }
-
-    return ShapeEventResult::NONE;
-}
-
-#pragma endregion  // Polygon
 
 }  // namespace shape

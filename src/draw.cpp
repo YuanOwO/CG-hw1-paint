@@ -10,6 +10,7 @@
 
 #include "color.hpp"
 #include "confirm.hpp"
+#include "drawing_tool.hpp"
 #include "shape.hpp"
 #include "types.hpp"
 
@@ -27,16 +28,36 @@ int lineWidth = 1;
 color::ColorRGBA currentColor = color::ColorRGBA(color::Color::Black);
 color::ColorRGBA currentFillColor = color::ColorRGBA(color::Color::Transparent);
 
-ShapePtr draft = nullptr;
+// 目前正在使用的繪圖工具，若為 nullptr 則表示沒有正在繪製的草稿。
+std::unique_ptr<drawing::IDrawingTool> activeTool;
+
 std::vector<ShapePtr> history;
 std::vector<ShapePtr> redoStack;
 
+////////////////////////////////////////////////////////////////////////
+
 bool isDrawing() {
-    return draft != nullptr;
+    return activeTool != nullptr;
 }
 
 void clearDraft() {
-    draft.reset();
+    activeTool.reset();
+}
+
+void createDraft() {
+    GLfloat width = static_cast<GLfloat>(lineWidth);
+    GLfloat color[4], fillColor[4];
+
+    for (int i = 0; i < 4; ++i) {
+        color[i] = static_cast<GLfloat>(currentColor[i]);
+        fillColor[i] = static_cast<GLfloat>(currentFillColor[i]);
+    }
+
+    if (isDrawing()) {
+        clearDraft();
+    }
+
+    activeTool = drawing::createDrawingTool(currentTool, width, color, fillColor);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -44,6 +65,7 @@ void clearDraft() {
 void undo() {
     if (isDrawing()) {  // 取消草稿
         clearDraft();
+        glutPostRedisplay();
     }
 
     if (history.empty()) {  // 沒東西可以 undo
@@ -101,54 +123,21 @@ void onAnyKeyDown() {
 
 ////////////////////////////////////////////////////////////////////////
 
-void createDraft() {
-    GLfloat width = static_cast<GLfloat>(lineWidth);
-    GLfloat color[4], fillColor[4];
-
-    for (int i = 0; i < 4; ++i) {
-        color[i] = static_cast<GLfloat>(currentColor[i]);
-        fillColor[i] = static_cast<GLfloat>(currentFillColor[i]);
-    }
-
-    if (isDrawing()) {
-        clearDraft();
-    }
-
-    switch (currentTool) {
-    case Tool::TOOL_PENCIL:
-        draft = std::make_unique<shape::Stroke>(width, color, fillColor);
-        break;
-    case Tool::TOOL_LINE:
-        draft = std::make_unique<shape::Line>(width, color, fillColor);
-        break;
-    case Tool::TOOL_RECTANGLE:
-        draft = std::make_unique<shape::Rectangle>(width, color, fillColor);
-        break;
-    case Tool::TOOL_POLYGON:
-        draft = std::make_unique<shape::Polygon>(width, color, fillColor);
-        break;
-    default:
-        draft = nullptr;
-        break;
-    }
-}
-
-void handleDraftEvent(shape::ShapeEventResult result) {
+void handleDraftEvent(drawing::ToolEventResult result) {
     switch (result) {
-    case shape::ShapeEventResult::COMMIT:
-        history.push_back(std::move(draft));
-        redoStack.clear();  // 清空重做堆疊，因為新的操作會使之前的重做無效
+    case drawing::ToolEventResult::COMMIT:
+        history.push_back(activeTool->takeShape());
+        redoStack.clear();  // 清空 redo 堆疊，因為新的操作會使 redo 無效
+        [[fallthrough]];
+    case drawing::ToolEventResult::CANCEL:  // 注意：這裡故意不加 break，讓 COMMIT 也會清除草稿
         clearDraft();
-        glutPostRedisplay();
-        break;
-    case shape::ShapeEventResult::CANCEL:
-        clearDraft();
-        glutPostRedisplay();
         break;
     default:
         // 不需要提交草稿，繼續繪製
         break;
     }
+
+    glutPostRedisplay();
 }
 
 }  // namespace
@@ -189,7 +178,7 @@ color::ColorRGBA getFillColor() {
 
 ////////////////////////////////////////////////////////////////////////
 
-void clear() {
+void clearCanvas() {
     history.clear();
     redoStack.clear();
     clearDraft();
@@ -204,7 +193,7 @@ void init() {}
 
 void mouse(int button, int state, int x, int y) {
     auto point = Point(x, y);
-    EventState eventState{keyStates, specialKeyStates, point};
+    ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (button == GLUT_LEFT_BUTTON) {
         if (state == GLUT_DOWN) {
@@ -213,11 +202,11 @@ void mouse(int button, int state, int x, int y) {
             }
 
             if (isDrawing()) {
-                handleDraftEvent(draft->onMouseDown(eventState));
+                handleDraftEvent(activeTool->onMouseDown(eventState));
             }
         } else if (state == GLUT_UP) {
             if (isDrawing()) {
-                handleDraftEvent(draft->onMouseUp(eventState));
+                handleDraftEvent(activeTool->onMouseUp(eventState));
             }
         }
     }
@@ -225,29 +214,29 @@ void mouse(int button, int state, int x, int y) {
 
 void motion(int x, int y) {
     auto point = Point(x, y);
-    EventState eventState{keyStates, specialKeyStates, point};
+    ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (isDrawing()) {
-        handleDraftEvent(draft->onMouseMove(eventState));
+        handleDraftEvent(activeTool->onMouseMove(eventState));
     }
 }
 
 void passiveMotion(int x, int y) {
     auto point = Point(x, y);
-    EventState eventState{keyStates, specialKeyStates, point};
+    ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (isDrawing()) {
-        handleDraftEvent(draft->onMousePassiveMove(eventState));
+        handleDraftEvent(activeTool->onMousePassiveMove(eventState));
     }
 }
 
 void keyDown(unsigned char key, int x, int y) {
     keyStates[key] = true;
     auto point = Point(x, y);
-    EventState eventState{keyStates, specialKeyStates, point};
+    ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (isDrawing()) {
-        handleDraftEvent(draft->onKeyDown(eventState));
+        handleDraftEvent(activeTool->onKeyDown(eventState));
     }
 
     onAnyKeyDown();
@@ -256,20 +245,20 @@ void keyDown(unsigned char key, int x, int y) {
 void keyUp(unsigned char key, int x, int y) {
     keyStates[key] = false;
     auto point = Point(x, y);
-    EventState eventState{keyStates, specialKeyStates, point};
+    ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (isDrawing()) {
-        handleDraftEvent(draft->onKeyUp(eventState));
+        handleDraftEvent(activeTool->onKeyUp(eventState));
     }
 }
 
 void specialKeyDown(int key, int x, int y) {
     specialKeyStates[key] = true;
     auto point = Point(x, y);
-    EventState eventState{keyStates, specialKeyStates, point};
+    ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (isDrawing()) {
-        handleDraftEvent(draft->onSpecialKeyDown(eventState));
+        handleDraftEvent(activeTool->onSpecialKeyDown(eventState));
     }
 
     onAnyKeyDown();
@@ -279,10 +268,10 @@ void specialKeyUp(int key, int x, int y) {
     specialKeyStates[key] = false;
     if (confirm::isOpen()) return;
     auto point = Point(x, y);
-    EventState eventState{keyStates, specialKeyStates, point};
+    ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (isDrawing()) {
-        handleDraftEvent(draft->onSpecialKeyUp(eventState));
+        handleDraftEvent(activeTool->onSpecialKeyUp(eventState));
     }
 }
 
@@ -296,8 +285,9 @@ void display() {
         shape->draw();
     }
 
-    if (draft) {
-        draft->draw();
+    // 繪製草稿
+    if (activeTool) {
+        activeTool->preview().draw();
     }
 
     glFlush();

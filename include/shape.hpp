@@ -8,12 +8,6 @@
 
 namespace shape {
 
-enum class ShapeEventResult {
-    NONE,    // 不需要提交草稿
-    COMMIT,  // 提交草稿
-    CANCEL,  // 取消草稿
-};
-
 class Shape {
    public:
     Shape(GLfloat w, const GLfloat* c, const GLfloat* fc)
@@ -21,16 +15,6 @@ class Shape {
 
     virtual ~Shape() = default;
     virtual void draw() const = 0;
-
-    virtual ShapeEventResult onMouseDown(EventState& eventState) { return ShapeEventResult::NONE; }
-    virtual ShapeEventResult onMouseUp(EventState& eventState) { return ShapeEventResult::NONE; }
-    virtual ShapeEventResult onMouseMove(EventState& eventState) { return ShapeEventResult::NONE; }
-    virtual ShapeEventResult onMousePassiveMove(EventState& eventState) { return ShapeEventResult::NONE; }
-
-    virtual ShapeEventResult onKeyDown(EventState& eventState) { return ShapeEventResult::NONE; }
-    virtual ShapeEventResult onKeyUp(EventState& eventState) { return ShapeEventResult::NONE; }
-    virtual ShapeEventResult onSpecialKeyDown(EventState& eventState) { return ShapeEventResult::NONE; }
-    virtual ShapeEventResult onSpecialKeyUp(EventState& eventState) { return ShapeEventResult::NONE; }
 
    protected:
     const GLfloat width;
@@ -44,9 +28,8 @@ class Line : public Shape {
 
     void draw() const override;
 
-    ShapeEventResult onMouseDown(EventState& eventState) override;
-    ShapeEventResult onMouseUp(EventState& eventState) override;
-    ShapeEventResult onMouseMove(EventState& eventState) override;
+    void setStart(const Point& point) { start = point; }
+    void setEnd(const Point& point) { end = point; }
 
    private:
     Point start, end;
@@ -57,10 +40,6 @@ class Stroke : public Shape {
     Stroke(GLfloat w, const GLfloat* c, const GLfloat* fc) : Shape(w, c, fc) {}
 
     void draw() const override;
-
-    ShapeEventResult onMouseDown(EventState& eventState) override;
-    ShapeEventResult onMouseUp(EventState& eventState) override;
-    ShapeEventResult onMouseMove(EventState& eventState) override;
 
     void addPoint(const Point& p) { points.push_back(p); }
 
@@ -74,29 +53,12 @@ class Rectangle : public Shape {
 
     void draw() const override;
 
-    ShapeEventResult onMouseDown(EventState& eventState) override;
-    ShapeEventResult onMouseUp(EventState& eventState) override;
-    ShapeEventResult onMouseMove(EventState& eventState) override;
+    void setStart(const Point& point) { start = point; }
+    void setEnd(const Point& point) { end = point; }
 
    private:
     Point start, end;
-
-    void updateEdges();
 };
-
-// class Ellipse : public Shape {
-//    public:
-//     void draw() const override;
-
-//     void setStart(const Point& s) { start = s; }
-//     Point getStart() const { return start; }
-
-//     void setEnd(const Point& e) { end = e; }
-//     Point getEnd() const { return end; }
-
-//    private:
-//     Point start, end;
-// };
 
 class Polygon : public Shape {
    public:
@@ -104,11 +66,15 @@ class Polygon : public Shape {
 
     void draw() const override;
 
-    ShapeEventResult onMouseDown(EventState& eventState) override;
-    ShapeEventResult onMouseUp(EventState& eventState) override;
-    ShapeEventResult onMouseMove(EventState& eventState) override;
-    ShapeEventResult onMousePassiveMove(EventState& eventState) override;
-    ShapeEventResult onKeyDown(EventState& eventState) override;
+    std::size_t pointCount() const { return points.size(); }
+
+    void addPoint(const Point& point) { points.push_back(point); }
+    void setLastPoint(const Point& point) {
+        if (!points.empty()) points.back() = point;
+    }
+    void removeLastPoint() {
+        if (!points.empty()) points.pop_back();
+    }
 
    private:
     std::vector<Point> points;

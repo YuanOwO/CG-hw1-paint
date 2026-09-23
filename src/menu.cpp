@@ -170,7 +170,7 @@ void requestClear() {
         "OpenGL Painter - Confirm Clear", "Clear canvas and all undo/redo history?\nThis cannot be undone.",
         []() {
             setMenuEnabled(true);
-            draw::clear();
+            draw::clearCanvas();
         },
         []() { setMenuEnabled(true); });
 }

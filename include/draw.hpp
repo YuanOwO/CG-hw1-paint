@@ -24,7 +24,7 @@ color::ColorRGBA getColor();
 void setFillColor(const color::ColorRGBA& color);
 color::ColorRGBA getFillColor();
 
-void clear();
+void clearCanvas();
 
 void init();
 
