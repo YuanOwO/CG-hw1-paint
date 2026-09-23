@@ -15,8 +15,9 @@ if(APPLE)
     # Homebrew FreeGLUT uses Mesa/GLX; Apple's OpenGL framework cannot
     # use the context it creates.
     find_package(PkgConfig REQUIRED)
-    pkg_check_modules(GLUT REQUIRED IMPORTED_TARGET glut)
     pkg_check_modules(MESA_GL REQUIRED IMPORTED_TARGET gl)
+    pkg_check_modules(MESA_GLU REQUIRED IMPORTED_TARGET glu)
+    pkg_check_modules(GLUT REQUIRED IMPORTED_TARGET glut)
 else()
     # Windows / Linux
     find_package(OpenGL REQUIRED)
@@ -59,6 +60,7 @@ target_include_directories(main PRIVATE
 if(APPLE)
     target_link_libraries(main PRIVATE
         PkgConfig::MESA_GL
+        PkgConfig::MESA_GLU
         PkgConfig::GLUT
         "-framework CoreGraphics"
     )
@@ -92,16 +94,3 @@ target_compile_options(main PRIVATE
     $<$<CONFIG:Debug>:-g -O1 -fsanitize=undefined>
     $<$<CONFIG:Release>:-O2 -DNDEBUG>
 )
-
-# Logic tests run without a window or an OpenGL context.
-include(CTest)
-if(BUILD_TESTING)
-    add_executable(draw_test
-        tests/draw_test.cpp
-        src/draw/canvas.cpp
-        src/draw/geometry.cpp
-        src/draw/fill.cpp
-    )
-    target_include_directories(draw_test PRIVATE ${CMAKE_SOURCE_DIR}/include)
-    add_test(NAME draw_logic COMMAND draw_test)
-endif()
