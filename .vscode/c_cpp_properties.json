@@ -1,0 +1,13 @@
+{
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": ["${workspaceFolder}/**", "/opt/homebrew/Cellar/freeglut/3.8.0/include"],
+            "defines": [],
+            "cppStandard": "c++17",
+            "cStandard": "c11",
+            "intelliSenseMode": "macos-clang-arm64"
+        }
+    ],
+    "version": 4
+}
