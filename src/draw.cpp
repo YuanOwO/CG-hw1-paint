@@ -86,7 +86,7 @@ void onAnyKeyDown() {
             undo();
         }
     }
-#else
+#else  // Windows/Linux
     if (ctrl && z) {
         if (shift) {
             redo();
@@ -124,21 +124,31 @@ void createDraft() {
     case Tool::TOOL_RECTANGLE:
         draft = std::make_unique<shape::Rectangle>(width, color, fillColor);
         break;
+    case Tool::TOOL_POLYGON:
+        draft = std::make_unique<shape::Polygon>(width, color, fillColor);
+        break;
     default:
         draft = nullptr;
         break;
     }
 }
 
-void commitDraft() {
-    if (!isDrawing()) {
-        return;
+void handleDraftEvent(shape::ShapeEventResult result) {
+    switch (result) {
+    case shape::ShapeEventResult::COMMIT:
+        history.push_back(std::move(draft));
+        redoStack.clear();  // 清空重做堆疊，因為新的操作會使之前的重做無效
+        clearDraft();
+        glutPostRedisplay();
+        break;
+    case shape::ShapeEventResult::CANCEL:
+        clearDraft();
+        glutPostRedisplay();
+        break;
+    default:
+        // 不需要提交草稿，繼續繪製
+        break;
     }
-
-    history.push_back(std::move(draft));
-    redoStack.clear();  // 清空重做堆疊，因為新的操作會使之前的重做無效
-    clearDraft();
-    glutPostRedisplay();
 }
 
 }  // namespace
@@ -202,12 +212,12 @@ void mouse(int button, int state, int x, int y) {
                 createDraft();
             }
 
-            if (isDrawing() && draft->onMouseDown(eventState)) {
-                commitDraft();
+            if (isDrawing()) {
+                handleDraftEvent(draft->onMouseDown(eventState));
             }
         } else if (state == GLUT_UP) {
-            if (isDrawing() && draft->onMouseUp(eventState)) {
-                commitDraft();
+            if (isDrawing()) {
+                handleDraftEvent(draft->onMouseUp(eventState));
             }
         }
     }
@@ -217,8 +227,17 @@ void motion(int x, int y) {
     auto point = Point(x, y);
     EventState eventState{keyStates, specialKeyStates, point};
 
-    if (isDrawing() && draft->onMouseMove(eventState)) {
-        commitDraft();
+    if (isDrawing()) {
+        handleDraftEvent(draft->onMouseMove(eventState));
+    }
+}
+
+void passiveMotion(int x, int y) {
+    auto point = Point(x, y);
+    EventState eventState{keyStates, specialKeyStates, point};
+
+    if (isDrawing()) {
+        handleDraftEvent(draft->onMousePassiveMove(eventState));
     }
 }
 
@@ -227,8 +246,8 @@ void keyDown(unsigned char key, int x, int y) {
     auto point = Point(x, y);
     EventState eventState{keyStates, specialKeyStates, point};
 
-    if (isDrawing() && draft->onMouseMove(eventState)) {
-        commitDraft();
+    if (isDrawing()) {
+        handleDraftEvent(draft->onKeyDown(eventState));
     }
 
     onAnyKeyDown();
@@ -239,8 +258,8 @@ void keyUp(unsigned char key, int x, int y) {
     auto point = Point(x, y);
     EventState eventState{keyStates, specialKeyStates, point};
 
-    if (isDrawing() && draft->onMouseMove(eventState)) {
-        commitDraft();
+    if (isDrawing()) {
+        handleDraftEvent(draft->onKeyUp(eventState));
     }
 }
 
@@ -249,8 +268,8 @@ void specialKeyDown(int key, int x, int y) {
     auto point = Point(x, y);
     EventState eventState{keyStates, specialKeyStates, point};
 
-    if (isDrawing() && draft->onMouseMove(eventState)) {
-        commitDraft();
+    if (isDrawing()) {
+        handleDraftEvent(draft->onSpecialKeyDown(eventState));
     }
 
     onAnyKeyDown();
@@ -262,8 +281,8 @@ void specialKeyUp(int key, int x, int y) {
     auto point = Point(x, y);
     EventState eventState{keyStates, specialKeyStates, point};
 
-    if (isDrawing() && draft->onMouseMove(eventState)) {
-        commitDraft();
+    if (isDrawing()) {
+        handleDraftEvent(draft->onSpecialKeyUp(eventState));
     }
 }
 

@@ -67,6 +67,7 @@ if(APPLE)
 else()
     target_link_libraries(main PRIVATE
         OpenGL::GL
+        OpenGL::GLU
         GLUT::GLUT
     )
 endif()

@@ -8,6 +8,12 @@
 
 namespace shape {
 
+enum class ShapeEventResult {
+    NONE,    // 不需要提交草稿
+    COMMIT,  // 提交草稿
+    CANCEL,  // 取消草稿
+};
+
 class Shape {
    public:
     Shape(GLfloat w, const GLfloat* c, const GLfloat* fc)
@@ -16,14 +22,15 @@ class Shape {
     virtual ~Shape() = default;
     virtual void draw() const = 0;
 
-    virtual bool onMouseDown(EventState& eventState) { return false; }
-    virtual bool onMouseUp(EventState& eventState) { return false; }
-    virtual bool onMouseMove(EventState& eventState) { return false; }
+    virtual ShapeEventResult onMouseDown(EventState& eventState) { return ShapeEventResult::NONE; }
+    virtual ShapeEventResult onMouseUp(EventState& eventState) { return ShapeEventResult::NONE; }
+    virtual ShapeEventResult onMouseMove(EventState& eventState) { return ShapeEventResult::NONE; }
+    virtual ShapeEventResult onMousePassiveMove(EventState& eventState) { return ShapeEventResult::NONE; }
 
-    virtual bool onKeyDown(EventState& eventState) { return false; }
-    virtual bool onKeyUp(EventState& eventState) { return false; }
-    virtual bool onSpecialKeyDown(EventState& eventState) { return false; }
-    virtual bool onSpecialKeyUp(EventState& eventState) { return false; }
+    virtual ShapeEventResult onKeyDown(EventState& eventState) { return ShapeEventResult::NONE; }
+    virtual ShapeEventResult onKeyUp(EventState& eventState) { return ShapeEventResult::NONE; }
+    virtual ShapeEventResult onSpecialKeyDown(EventState& eventState) { return ShapeEventResult::NONE; }
+    virtual ShapeEventResult onSpecialKeyUp(EventState& eventState) { return ShapeEventResult::NONE; }
 
    protected:
     const GLfloat width;
@@ -37,9 +44,9 @@ class Line : public Shape {
 
     void draw() const override;
 
-    bool onMouseDown(EventState& eventState) override;
-    bool onMouseUp(EventState& eventState) override;
-    bool onMouseMove(EventState& eventState) override;
+    ShapeEventResult onMouseDown(EventState& eventState) override;
+    ShapeEventResult onMouseUp(EventState& eventState) override;
+    ShapeEventResult onMouseMove(EventState& eventState) override;
 
    private:
     Point start, end;
@@ -51,9 +58,9 @@ class Stroke : public Shape {
 
     void draw() const override;
 
-    bool onMouseDown(EventState& eventState) override;
-    bool onMouseUp(EventState& eventState) override;
-    bool onMouseMove(EventState& eventState) override;
+    ShapeEventResult onMouseDown(EventState& eventState) override;
+    ShapeEventResult onMouseUp(EventState& eventState) override;
+    ShapeEventResult onMouseMove(EventState& eventState) override;
 
     void addPoint(const Point& p) { points.push_back(p); }
 
@@ -67,9 +74,9 @@ class Rectangle : public Shape {
 
     void draw() const override;
 
-    bool onMouseDown(EventState& eventState) override;
-    bool onMouseUp(EventState& eventState) override;
-    bool onMouseMove(EventState& eventState) override;
+    ShapeEventResult onMouseDown(EventState& eventState) override;
+    ShapeEventResult onMouseUp(EventState& eventState) override;
+    ShapeEventResult onMouseMove(EventState& eventState) override;
 
    private:
     Point start, end;
@@ -91,14 +98,20 @@ class Rectangle : public Shape {
 //     Point start, end;
 // };
 
-// class Polygon : public Shape {
-//    public:
-//     void draw() const override;
+class Polygon : public Shape {
+   public:
+    Polygon(GLfloat w, const GLfloat* c, const GLfloat* fc) : Shape(w, c, fc) {}
 
-//     void addPoint(const Point& p) { points.push_back(p); }
+    void draw() const override;
 
-//    private:
-//     std::vector<Point> points;
-// };
+    ShapeEventResult onMouseDown(EventState& eventState) override;
+    ShapeEventResult onMouseUp(EventState& eventState) override;
+    ShapeEventResult onMouseMove(EventState& eventState) override;
+    ShapeEventResult onMousePassiveMove(EventState& eventState) override;
+    ShapeEventResult onKeyDown(EventState& eventState) override;
+
+   private:
+    std::vector<Point> points;
+};
 
 }  // namespace shape

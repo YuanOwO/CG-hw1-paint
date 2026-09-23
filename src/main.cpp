@@ -72,6 +72,7 @@ void passiveMotion(int x, int y) {
     if (confirm::isOpen()) return;
 
     // Handle passive mouse motion events if needed
+    draw::passiveMotion(x, y);
 }
 
 void entry(int state) {

@@ -30,6 +30,7 @@ void init();
 
 void mouse(int button, int state, int x, int y);
 void motion(int x, int y);
+void passiveMotion(int x, int y);
 
 void keyDown(unsigned char key, int x, int y);
 void keyUp(unsigned char key, int x, int y);

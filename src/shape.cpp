@@ -30,29 +30,29 @@ void Line::draw() const {
     glEnd();
 }
 
-bool Line::onMouseDown(EventState& eventState) {
+ShapeEventResult Line::onMouseDown(EventState& eventState) {
     start = eventState.mousePosition;
     end = eventState.mousePosition;
 
     glutPostRedisplay();
 
-    return false;  // 不需要提交草稿
+    return ShapeEventResult::NONE;
 }
 
-bool Line::onMouseUp(EventState& eventState) {
+ShapeEventResult Line::onMouseUp(EventState& eventState) {
     end = eventState.mousePosition;
 
     glutPostRedisplay();
 
-    return true;  // 提交草稿
+    return ShapeEventResult::COMMIT;
 }
 
-bool Line::onMouseMove(EventState& eventState) {
+ShapeEventResult Line::onMouseMove(EventState& eventState) {
     end = eventState.mousePosition;
 
     glutPostRedisplay();
 
-    return false;
+    return ShapeEventResult::NONE;
 }
 
 #pragma endregion  // Line
@@ -93,22 +93,22 @@ void Stroke::draw() const {
     glEnd();
 }
 
-bool Stroke::onMouseDown(EventState& eventState) {
+ShapeEventResult Stroke::onMouseDown(EventState& eventState) {
     addPoint(eventState.mousePosition);
     glutPostRedisplay();
-    return false;
+    return ShapeEventResult::NONE;
 }
 
-bool Stroke::onMouseUp(EventState& eventState) {
+ShapeEventResult Stroke::onMouseUp(EventState& eventState) {
     addPoint(eventState.mousePosition);
     glutPostRedisplay();
-    return true;
+    return ShapeEventResult::COMMIT;
 }
 
-bool Stroke::onMouseMove(EventState& eventState) {
+ShapeEventResult Stroke::onMouseMove(EventState& eventState) {
     addPoint(eventState.mousePosition);
     glutPostRedisplay();
-    return false;
+    return ShapeEventResult::NONE;
 }
 
 #pragma endregion  // Stroke
@@ -161,29 +161,29 @@ void Rectangle::draw() const {
     glEnd();
 }
 
-bool Rectangle::onMouseDown(EventState& eventState) {
+ShapeEventResult Rectangle::onMouseDown(EventState& eventState) {
     start = eventState.mousePosition;
     end = eventState.mousePosition;
 
     glutPostRedisplay();
 
-    return false;  // 不需要提交草稿
+    return ShapeEventResult::NONE;
 }
 
-bool Rectangle::onMouseUp(EventState& eventState) {
+ShapeEventResult Rectangle::onMouseUp(EventState& eventState) {
     end = eventState.mousePosition;
 
     glutPostRedisplay();
 
-    return true;  // 提交草稿
+    return ShapeEventResult::COMMIT;
 }
 
-bool Rectangle::onMouseMove(EventState& eventState) {
+ShapeEventResult Rectangle::onMouseMove(EventState& eventState) {
     end = eventState.mousePosition;
 
     glutPostRedisplay();
 
-    return false;
+    return ShapeEventResult::NONE;
 }
 
 #pragma endregion  // Rectangle
@@ -194,8 +194,98 @@ bool Rectangle::onMouseMove(EventState& eventState) {
 //     }
 // }
 
-// void Polygon::update(Point point) {
-//     addPoint(point);
-// }
+#pragma region Polygon
+
+void Polygon::draw() const {
+    if (points.size() < 2) return;
+
+    // 內部填色：透明就跳過
+    if (points.size() >= 3 && fillColor[3] > 0.0f) {
+        glColor4fv(fillColor);
+
+        glBegin(GL_POLYGON);
+        for (const auto& p : points) {
+            glVertex2f(p.getX(), p.getY());
+        }
+        glEnd();
+    }
+
+    // 邊框：最後一個頂點會自動連回第一個
+    glColor4fv(color);
+    glLineWidth(width);
+
+    glBegin(GL_LINE_LOOP);
+    for (const auto& p : points) {
+        glVertex2f(p.getX(), p.getY());
+    }
+    glEnd();
+
+    glLineWidth(1.0f);  // 恢復，避免影響其他繪圖
+}
+
+ShapeEventResult Polygon::onMouseDown(EventState& eventState) {
+    if (points.empty()) {
+        points.push_back(eventState.mousePosition);
+    } else {
+        points.back() = eventState.mousePosition;
+    }
+
+    glutPostRedisplay();
+
+    return ShapeEventResult::NONE;
+}
+
+ShapeEventResult Polygon::onMouseUp(EventState& eventState) {
+    points.push_back(eventState.mousePosition);
+
+    glutPostRedisplay();
+
+    return ShapeEventResult::NONE;
+}
+
+ShapeEventResult Polygon::onMouseMove(EventState& eventState) {
+    if (points.empty()) return ShapeEventResult::NONE;
+
+    points.back() = eventState.mousePosition;
+
+    glutPostRedisplay();
+
+    return ShapeEventResult::NONE;
+}
+
+ShapeEventResult Polygon::onMousePassiveMove(EventState& eventState) {
+    if (points.empty()) return ShapeEventResult::NONE;
+
+    points.back() = eventState.mousePosition;
+
+    glutPostRedisplay();
+
+    return ShapeEventResult::NONE;
+}
+
+ShapeEventResult Polygon::onKeyDown(EventState& eventState) {
+    if (eventState.keyStates['\r']) {  // Enter
+        if (points.size() >= 3) {
+            return ShapeEventResult::COMMIT;
+        }
+    }
+
+    if (eventState.keyStates[27]) {  // ESC
+        return ShapeEventResult::CANCEL;
+    }
+
+    if (eventState.keyStates['\b']) {  // Backspace
+        if (points.empty()) {
+            return ShapeEventResult::CANCEL;
+        }
+
+        points.pop_back();
+        glutPostRedisplay();
+    }
+
+    return ShapeEventResult::NONE;
+}
+
+#pragma endregion  // Polygon
 
 }  // namespace shape
