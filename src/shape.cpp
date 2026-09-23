@@ -4,12 +4,31 @@
 #include <cmath>
 
 namespace shape {
+namespace {
 
-void Line::draw() const {
+void drawDot(const Point& point, GLfloat radius, const GLfloat* color) {
     glColor4fv(color);
 
-    const GLfloat dx = end.getX() - start.getX();
-    const GLfloat dy = end.getY() - start.getY();
+    int numSegments = 32;  // 可以調整以改變圓的平滑度
+    GLfloat ox = point.getX(), oy = point.getY();
+
+    glBegin(GL_TRIANGLE_FAN);
+    glVertex2f(ox, oy);  // 圓心
+
+    for (int i = 0; i <= numSegments; ++i) {
+        GLfloat angle = 2.0f * M_PI * static_cast<GLfloat>(i) / static_cast<GLfloat>(numSegments);
+        GLfloat x = ox + radius * std::cos(angle);
+        GLfloat y = oy + radius * std::sin(angle);
+        glVertex2f(x, y);
+    }
+    glEnd();
+}
+
+void drawLine(const Point& p1, const Point& p2, GLfloat width, const GLfloat* color) {
+    glColor4fv(color);
+
+    const GLfloat dx = p2.getX() - p1.getX();
+    const GLfloat dy = p2.getY() - p1.getY();
     const GLfloat length = std::sqrt(dx * dx + dy * dy);
 
     // 跳過繪製長度為零的線段
@@ -22,11 +41,17 @@ void Line::draw() const {
     const GLfloat ny = -0.5f * width * dx / length;
 
     glBegin(GL_QUADS);
-    glVertex2f(start.getX() + nx, start.getY() + ny);
-    glVertex2f(start.getX() - nx, start.getY() - ny);
-    glVertex2f(end.getX() - nx, end.getY() - ny);
-    glVertex2f(end.getX() + nx, end.getY() + ny);
+    glVertex2f(p1.getX() + nx, p1.getY() + ny);
+    glVertex2f(p1.getX() - nx, p1.getY() - ny);
+    glVertex2f(p2.getX() - nx, p2.getY() - ny);
+    glVertex2f(p2.getX() + nx, p2.getY() + ny);
     glEnd();
+}
+
+}  // namespace
+
+void Line::draw() const {
+    drawLine(start, end, width, color);
 }
 
 void Stroke::draw() const {
@@ -34,83 +59,61 @@ void Stroke::draw() const {
         return;
     }
 
-    glColor4fv(color);
-
+    GLfloat dotRadius = 0.5f * width;
     Point prevPoint = points.front();
-
-    glBegin(GL_QUADS);
+    drawDot(prevPoint, dotRadius, color);
 
     for (const auto& point : points) {
         if (point == prevPoint) {
             continue;  // 跳過與前一個點相同的點，避免繪製長度為零的線段
         }
-
-        const GLfloat dx = point.getX() - prevPoint.getX();
-        const GLfloat dy = point.getY() - prevPoint.getY();
-        const GLfloat length = std::sqrt(dx * dx + dy * dy);
-
-        const GLfloat nx = 0.5f * width * dy / length;
-        const GLfloat ny = -0.5f * width * dx / length;
-
-        glVertex2f(prevPoint.getX() + nx, prevPoint.getY() + ny);
-        glVertex2f(prevPoint.getX() - nx, prevPoint.getY() - ny);
-        glVertex2f(point.getX() - nx, point.getY() - ny);
-        glVertex2f(point.getX() + nx, point.getY() + ny);
-
+        drawLine(prevPoint, point, width, color);
+        drawDot(point, dotRadius, color);
         prevPoint = point;
     }
-
-    glEnd();
 }
 
 void Rectangle::draw() const {
-    GLfloat leftX = std::min(start.getX(), end.getX());
-    GLfloat rightX = std::max(start.getX(), end.getX());
-    GLfloat topY = std::min(start.getY(), end.getY());
-    GLfloat bottomY = std::max(start.getY(), end.getY());
+    const GLfloat left = std::min(start.getX(), end.getX());
+    const GLfloat right = std::max(start.getX(), end.getX());
+    const GLfloat top = std::min(start.getY(), end.getY());
+    const GLfloat bottom = std::max(start.getY(), end.getY());
+
+    if (left == right || top == bottom) return;
 
     glColor4fv(color);
 
-    glBegin(GL_QUADS);
-
-    // top edge
-    glVertex2f(leftX, topY);
-    glVertex2f(rightX, topY);
-    glVertex2f(rightX, topY + width);
-    glVertex2f(leftX, topY + width);
-
-    // bottom edge
-    glVertex2f(leftX, bottomY - width);
-    glVertex2f(rightX, bottomY - width);
-    glVertex2f(rightX, bottomY);
-    glVertex2f(leftX, bottomY);
-
-    // left edge
-    glVertex2f(leftX, topY);
-    glVertex2f(leftX + width, topY);
-    glVertex2f(leftX + width, bottomY);
-    glVertex2f(leftX, bottomY);
-
-    // right edge
-    glVertex2f(rightX - width, topY);
-    glVertex2f(rightX, topY);
-    glVertex2f(rightX, bottomY);
-    glVertex2f(rightX - width, bottomY);
-
-    // fill
-    if (fillColor[3] > 0.0f && (rightX - leftX > 2 * width) && (bottomY - topY > 2 * width)) {
-        glColor4fv(fillColor);
-        glVertex2f(leftX + width, topY + width);
-        glVertex2f(rightX - width, topY + width);
-        glVertex2f(rightX - width, bottomY - width);
-        glVertex2f(leftX + width, bottomY - width);
+    // 邊框已占滿矩形，直接畫整塊。
+    if (right - left <= 2 * width || bottom - top <= 2 * width) {
+        glRectf(left, top, right, bottom);
+        return;
     }
 
-    glEnd();
+    const GLfloat innerLeft = left + width;
+    const GLfloat innerRight = right - width;
+    const GLfloat innerTop = top + width;
+    const GLfloat innerBottom = bottom - width;
+
+    // 四個不重疊的邊框區域。
+    glRectf(left, top, right, innerTop);
+    glRectf(left, innerBottom, right, bottom);
+    glRectf(left, innerTop, innerLeft, innerBottom);
+    glRectf(innerRight, innerTop, right, innerBottom);
+
+    // 內部填色：透明就跳過
+    if (fillColor[3] > 0.0f) {
+        glColor4fv(fillColor);
+        glRectf(innerLeft, innerTop, innerRight, innerBottom);
+    }
 }
 
 void Polygon::draw() const {
-    if (points.size() < 2) return;
+    GLfloat dotRadius = 0.5f * width;
+
+    if (points.size() < 2) {
+        drawDot(points.front(), dotRadius, color);
+        return;
+    }
 
     // 內部填色：透明就跳過
     if (points.size() >= 3 && fillColor[3] > 0.0f) {
@@ -124,16 +127,15 @@ void Polygon::draw() const {
     }
 
     // 邊框：最後一個頂點會自動連回第一個
-    glColor4fv(color);
-    glLineWidth(width);
+    Point prevPoint = points.front();
+    drawLine(prevPoint, points.back(), width, color);
+    drawDot(prevPoint, dotRadius, color);
 
-    glBegin(GL_LINE_LOOP);
-    for (const auto& p : points) {
-        glVertex2f(p.getX(), p.getY());
+    for (const auto& point : points) {
+        drawLine(prevPoint, point, width, color);
+        drawDot(point, dotRadius, color);
+        prevPoint = point;
     }
-    glEnd();
-
-    glLineWidth(1.0f);  // 恢復，避免影響其他繪圖
 }
 
 }  // namespace shape
