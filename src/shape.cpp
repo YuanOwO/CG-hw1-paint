@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+const GLfloat PI = static_cast<GLfloat>(M_PI);
+
 namespace shape {
 namespace {
 
@@ -16,7 +18,7 @@ void drawDot(const Point& point, GLfloat radius, const GLfloat* color) {
     glVertex2f(ox, oy);  // 圓心
 
     for (int i = 0; i <= numSegments; ++i) {
-        GLfloat angle = 2.0f * M_PI * static_cast<GLfloat>(i) / static_cast<GLfloat>(numSegments);
+        GLfloat angle = 2.0f * PI * static_cast<GLfloat>(i) / static_cast<GLfloat>(numSegments);
         GLfloat x = ox + radius * std::cos(angle);
         GLfloat y = oy + radius * std::sin(angle);
         glVertex2f(x, y);
@@ -108,6 +110,7 @@ void Rectangle::draw() const {
 }
 
 void Ellipse::draw() const {
+    // 計算橢圓的中心和半徑
     const GLfloat cx = (start.getX() + end.getX()) / 2.0f;
     const GLfloat cy = (start.getY() + end.getY()) / 2.0f;
     const GLfloat rx = std::abs(end.getX() - start.getX()) / 2.0f;
@@ -115,16 +118,41 @@ void Ellipse::draw() const {
 
     if (rx == 0.0f || ry == 0.0f) return;
 
-    glColor4fv(color);
+    const int segments = 128;
+    const GLfloat pi = static_cast<GLfloat>(M_PI);
 
-    glBegin(GL_LINE_LOOP);
-    for (int i = 0; i < 36; i++) {
-        const GLfloat angle = i * M_PI / 18.0f;
-        const GLfloat x = cx + rx * std::cos(angle);
-        const GLfloat y = cy + ry * std::sin(angle);
-        glVertex2f(x, y);
+    std::vector<Point> points;
+
+    for (int i = 0; i <= segments; i++) {
+        const GLfloat angle = 2.0f * pi * static_cast<GLfloat>(i) / static_cast<GLfloat>(segments);
+        points.emplace_back(cx + rx * std::cos(angle), cy + ry * std::sin(angle));
     }
-    glEnd();
+
+    // 內部填色，透明時跳過。
+    if (fillColor[3] > 0.0f) {
+        glColor4fv(fillColor);
+        glBegin(GL_TRIANGLE_FAN);
+        glVertex2f(cx, cy);
+
+        for (const auto& point : points) {
+            glVertex2f(point.getX(), point.getY());
+        }
+
+        glEnd();
+    }
+
+    // 邊框
+    const GLfloat dotRadius = 0.5f * width;
+    Point previous = points.front();
+
+    drawDot(previous, dotRadius, color);
+    drawLine(previous, points.back(), width, color);
+
+    for (const auto& point : points) {
+        drawLine(previous, point, width, color);
+        drawDot(point, dotRadius, color);
+        previous = point;
+    }
 }
 
 void Polygon::draw() const {
