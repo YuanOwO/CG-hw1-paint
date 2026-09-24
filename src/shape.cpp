@@ -8,22 +8,31 @@ const GLfloat PI = static_cast<GLfloat>(M_PI);
 namespace shape {
 namespace {
 
-void drawDot(const Point& point, GLfloat radius, const GLfloat* color) {
+void drawDot(const Point& point, GLfloat radius, const GLfloat* color, bool rounded) {
     glColor4fv(color);
 
-    int numSegments = 32;  // 可以調整以改變圓的平滑度
-    GLfloat ox = point.getX(), oy = point.getY();
+    if (rounded && radius >= 1.0f) {
+        int numSegments = 32;  // 可以調整以改變圓的平滑度
+        GLfloat ox = point.getX(), oy = point.getY();
 
-    glBegin(GL_TRIANGLE_FAN);
-    glVertex2f(ox, oy);  // 圓心
+        glBegin(GL_TRIANGLE_FAN);
+        glVertex2f(ox, oy);  // 圓心
 
-    for (int i = 0; i <= numSegments; ++i) {
-        GLfloat angle = 2.0f * PI * static_cast<GLfloat>(i) / static_cast<GLfloat>(numSegments);
-        GLfloat x = ox + radius * std::cos(angle);
-        GLfloat y = oy + radius * std::sin(angle);
-        glVertex2f(x, y);
+        for (int i = 0; i <= numSegments; ++i) {
+            GLfloat angle = 2.0f * PI * static_cast<GLfloat>(i) / static_cast<GLfloat>(numSegments);
+            GLfloat x = ox + radius * std::cos(angle);
+            GLfloat y = oy + radius * std::sin(angle);
+            glVertex2f(x, y);
+        }
+        glEnd();
+    } else {
+        glBegin(GL_QUADS);
+        glVertex2f(point.getX() - radius, point.getY() - radius);
+        glVertex2f(point.getX() + radius, point.getY() - radius);
+        glVertex2f(point.getX() + radius, point.getY() + radius);
+        glVertex2f(point.getX() - radius, point.getY() + radius);
+        glEnd();
     }
-    glEnd();
 }
 
 void drawLine(const Point& p1, const Point& p2, GLfloat width, const GLfloat* color) {
@@ -38,7 +47,7 @@ void drawLine(const Point& p1, const Point& p2, GLfloat width, const GLfloat* co
         return;
     }
 
-    // 計算法線向量，並將其縮放到線寬的一半
+    // 計算法向量，並將其縮放到線寬的一半
     const GLfloat nx = 0.5f * width * dy / length;
     const GLfloat ny = -0.5f * width * dx / length;
 
@@ -52,138 +61,105 @@ void drawLine(const Point& p1, const Point& p2, GLfloat width, const GLfloat* co
 
 }  // namespace
 
-void Line::draw() const {
-    drawLine(start, end, width, color);
+////////////////////////////////////////////////////////////////////////
+
+void Shape::fillShape(const std::vector<Point>& vertices) const {
+    if (fillColor[3] <= 0.0f) {
+        return;  // 透明顏色不需要填充
+    }
+
+    if (vertices.size() < 3) {
+        return;  // 至少需要三個頂點才能形成多邊形
+    }
+
+    glColor4fv(fillColor);
+    glBegin(GL_POLYGON);
+    for (const auto& v : vertices) {
+        glVertex2f(v.getX(), v.getY());
+    }
+    glEnd();
 }
 
-void Stroke::draw() const {
-    if (points.empty()) {
-        return;
+void Shape::drawBorder(const std::vector<Point>& vertices) const {
+    if (color[3] <= 0.0f) {
+        return;  // 透明顏色不需要繪製邊框
     }
 
     GLfloat dotRadius = 0.5f * width;
-    Point prevPoint = points.front();
-    drawDot(prevPoint, dotRadius, color);
+    Point prevPoint = vertices.front();
 
-    for (const auto& point : points) {
+    drawDot(prevPoint, dotRadius, color, isRoundedVertices());
+
+    // 如果是封閉形狀，連接最後一個頂點和第一個頂點
+    if (isClosed()) {
+        drawLine(prevPoint, vertices.back(), width, color);
+    }
+
+    for (const auto& point : vertices) {
         if (point == prevPoint) {
             continue;  // 跳過與前一個點相同的點，避免繪製長度為零的線段
         }
+
+        drawDot(point, dotRadius, color, isRoundedVertices());
         drawLine(prevPoint, point, width, color);
-        drawDot(point, dotRadius, color);
         prevPoint = point;
     }
 }
 
-void Rectangle::draw() const {
+////////////////////////////////////////////////////////////////////////
+
+std::vector<Point> Line::getVertices() const {
+    std::vector<Point> vertices = {start, end};
+    return vertices;
+}
+
+std::vector<Point> Rectangle::getVertices() const {
+    std::vector<Point> vertices;
+
     const GLfloat left = std::min(start.getX(), end.getX());
     const GLfloat right = std::max(start.getX(), end.getX());
     const GLfloat top = std::min(start.getY(), end.getY());
     const GLfloat bottom = std::max(start.getY(), end.getY());
 
-    if (left == right || top == bottom) return;
+    vertices.emplace_back(left, top);
+    vertices.emplace_back(left, bottom);
+    vertices.emplace_back(right, bottom);
+    vertices.emplace_back(right, top);
 
-    glColor4fv(color);
-
-    // 邊框已占滿矩形，直接畫整塊。
-    if (right - left <= 2 * width || bottom - top <= 2 * width) {
-        glRectf(left, top, right, bottom);
-        return;
-    }
-
-    const GLfloat innerLeft = left + width;
-    const GLfloat innerRight = right - width;
-    const GLfloat innerTop = top + width;
-    const GLfloat innerBottom = bottom - width;
-
-    // 四個不重疊的邊框區域。
-    glRectf(left, top, right, innerTop);
-    glRectf(left, innerBottom, right, bottom);
-    glRectf(left, innerTop, innerLeft, innerBottom);
-    glRectf(innerRight, innerTop, right, innerBottom);
-
-    // 內部填色：透明就跳過
-    if (fillColor[3] > 0.0f) {
-        glColor4fv(fillColor);
-        glRectf(innerLeft, innerTop, innerRight, innerBottom);
-    }
+    return vertices;
 }
 
-void Ellipse::draw() const {
-    // 計算橢圓的中心和半徑
+std::vector<Point> Ellipse::getVertices() const {
+    std::vector<Point> vertices;
+
     const GLfloat cx = (start.getX() + end.getX()) / 2.0f;
     const GLfloat cy = (start.getY() + end.getY()) / 2.0f;
     const GLfloat rx = std::abs(end.getX() - start.getX()) / 2.0f;
     const GLfloat ry = std::abs(end.getY() - start.getY()) / 2.0f;
 
-    if (rx == 0.0f || ry == 0.0f) return;
+    if (rx == 0.0f || ry == 0.0f) {
+        vertices.emplace_back(cx, cy);  // 如果橢圓的半徑為零，則只繪製中心點
+        return vertices;
+    }
 
-    const int segments = 128;
-    const GLfloat pi = static_cast<GLfloat>(M_PI);
-
-    std::vector<Point> points;
+    const int segments = 64;
 
     for (int i = 0; i <= segments; i++) {
-        const GLfloat angle = 2.0f * pi * static_cast<GLfloat>(i) / static_cast<GLfloat>(segments);
-        points.emplace_back(cx + rx * std::cos(angle), cy + ry * std::sin(angle));
+        const GLfloat angle = 2.0f * PI * static_cast<GLfloat>(i) / static_cast<GLfloat>(segments);
+        vertices.emplace_back(cx + rx * std::cos(angle), cy + ry * std::sin(angle));
     }
 
-    // 內部填色，透明時跳過。
-    if (fillColor[3] > 0.0f) {
-        glColor4fv(fillColor);
-        glBegin(GL_TRIANGLE_FAN);
-        glVertex2f(cx, cy);
-
-        for (const auto& point : points) {
-            glVertex2f(point.getX(), point.getY());
-        }
-
-        glEnd();
-    }
-
-    // 邊框
-    const GLfloat dotRadius = 0.5f * width;
-    Point previous = points.front();
-
-    drawDot(previous, dotRadius, color);
-    drawLine(previous, points.back(), width, color);
-
-    for (const auto& point : points) {
-        drawLine(previous, point, width, color);
-        drawDot(point, dotRadius, color);
-        previous = point;
-    }
+    return vertices;
 }
 
-void Polygon::draw() const {
-    GLfloat dotRadius = 0.5f * width;
+std::vector<Point> Stroke::getVertices() const {
+    std::vector<Point> vertices = points;  // 直接使用點的集合作為頂點
+    return vertices;
+}
 
-    if (points.size() < 2) {
-        drawDot(points.front(), dotRadius, color);
-        return;
-    }
-
-    // 內部填色：透明就跳過
-    if (points.size() >= 3 && fillColor[3] > 0.0f) {
-        glColor4fv(fillColor);
-
-        glBegin(GL_POLYGON);
-        for (const auto& p : points) {
-            glVertex2f(p.getX(), p.getY());
-        }
-        glEnd();
-    }
-
-    // 邊框：最後一個頂點會自動連回第一個
-    Point prevPoint = points.front();
-    drawLine(prevPoint, points.back(), width, color);
-    drawDot(prevPoint, dotRadius, color);
-
-    for (const auto& point : points) {
-        drawLine(prevPoint, point, width, color);
-        drawDot(point, dotRadius, color);
-        prevPoint = point;
-    }
+std::vector<Point> Polygon::getVertices() const {
+    std::vector<Point> vertices = points;  // 直接使用點的集合作為頂點
+    return vertices;
 }
 
 }  // namespace shape
