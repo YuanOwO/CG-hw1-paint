@@ -29,7 +29,9 @@ class Line : public Shape {
     void draw() const override;
 
     void setStart(const Point& point) { start = point; }
+    const Point& getStart() const { return start; }
     void setEnd(const Point& point) { end = point; }
+    const Point& getEnd() const { return end; }
 
    private:
     Point start, end;
@@ -54,7 +56,24 @@ class Rectangle : public Shape {
     void draw() const override;
 
     void setStart(const Point& point) { start = point; }
+    const Point& getStart() const { return start; }
     void setEnd(const Point& point) { end = point; }
+    const Point& getEnd() const { return end; }
+
+   private:
+    Point start, end;
+};
+
+class Ellipse : public Shape {
+   public:
+    Ellipse(GLfloat w, const GLfloat* c, const GLfloat* fc) : Shape(w, c, fc) {}
+
+    void draw() const override;
+
+    void setStart(const Point& point) { start = point; }
+    const Point& getStart() const { return start; }
+    void setEnd(const Point& point) { end = point; }
+    const Point& getEnd() const { return end; }
 
    private:
     Point start, end;

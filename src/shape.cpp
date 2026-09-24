@@ -107,6 +107,26 @@ void Rectangle::draw() const {
     }
 }
 
+void Ellipse::draw() const {
+    const GLfloat cx = (start.getX() + end.getX()) / 2.0f;
+    const GLfloat cy = (start.getY() + end.getY()) / 2.0f;
+    const GLfloat rx = std::abs(end.getX() - start.getX()) / 2.0f;
+    const GLfloat ry = std::abs(end.getY() - start.getY()) / 2.0f;
+
+    if (rx == 0.0f || ry == 0.0f) return;
+
+    glColor4fv(color);
+
+    glBegin(GL_LINE_LOOP);
+    for (int i = 0; i < 36; i++) {
+        const GLfloat angle = i * M_PI / 18.0f;
+        const GLfloat x = cx + rx * std::cos(angle);
+        const GLfloat y = cy + ry * std::sin(angle);
+        glVertex2f(x, y);
+    }
+    glEnd();
+}
+
 void Polygon::draw() const {
     GLfloat dotRadius = 0.5f * width;
 

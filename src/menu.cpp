@@ -48,7 +48,7 @@ int addShapeMenu() {
     glutAddMenuEntry("Pencil", (int)draw::Tool::TOOL_PENCIL);
     glutAddMenuEntry("Line", (int)draw::Tool::TOOL_LINE);
     glutAddMenuEntry("Rectangle", (int)draw::Tool::TOOL_RECTANGLE);
-    glutAddMenuEntry("Circle", (int)draw::Tool::TOOL_CIRCLE);
+    glutAddMenuEntry("Circle/Ellipse", (int)draw::Tool::TOOL_ELLIPSE);
     glutAddMenuEntry("Polygon", (int)draw::Tool::TOOL_POLYGON);
 
     return menu;

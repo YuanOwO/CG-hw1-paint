@@ -8,7 +8,7 @@ enum class Tool {
     TOOL_PENCIL,
     TOOL_LINE,
     TOOL_RECTANGLE,
-    TOOL_CIRCLE,
+    TOOL_ELLIPSE,
     TOOL_POLYGON,
 };
 
