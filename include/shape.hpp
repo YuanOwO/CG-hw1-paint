@@ -74,7 +74,7 @@ class Ellipse : public TwoPointShape {
     std::vector<Point> getVertices() const override;
 };
 
-class Stroke : public Shape {
+class Path : public Shape {
    public:
     using Shape::Shape;
 
@@ -121,7 +121,7 @@ class Polygon : public Shape {
     }
 
    protected:
-    bool isClosed() const override { return true; }
+    bool isClosed() const override { return points.size() >= 3; }
 
     std::vector<Point> getVertices() const override;
 

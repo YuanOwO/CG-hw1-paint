@@ -107,9 +107,9 @@ class EllipseTool : public DragTool<shape::Ellipse> {
     using DragTool<shape::Ellipse>::DragTool;
 };
 
-class PencilTool : public DrawingTool<shape::Stroke> {
+class PencilTool : public DrawingTool<shape::Path> {
    public:
-    using DrawingTool<shape::Stroke>::DrawingTool;
+    using DrawingTool<shape::Path>::DrawingTool;
 
     ToolEventResult onMouseDown(ToolEventState& event) override {
         draft->addPoint(event.mousePosition, true);

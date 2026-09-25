@@ -28,6 +28,9 @@ color::ColorRGBA getFillColor();
 void setLineJoin(shape::LineJoin join);
 shape::LineJoin getLineJoin();
 
+void setLineCap(shape::LineCap cap);
+shape::LineCap getLineCap();
+
 void clearCanvas();
 
 void init();

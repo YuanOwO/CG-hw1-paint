@@ -175,6 +175,14 @@ shape::LineJoin getLineJoin() {
     return currentStyle.stroke.join;
 }
 
+void setLineCap(shape::LineCap cap) {
+    currentStyle.stroke.cap = cap;
+}
+
+shape::LineCap getLineCap() {
+    return currentStyle.stroke.cap;
+}
+
 ////////////////////////////////////////////////////////////////////////
 
 void clearCanvas() {
@@ -187,9 +195,9 @@ void clearCanvas() {
 ////////////////////////////////////////////////////////////////////////
 
 void init() {
-    currentTool = Tool::TOOL_POLYGON;
+    currentTool = Tool::TOOL_PENCIL;
 
-    currentStyle.stroke.width = 20;
+    currentStyle.stroke.width = 1;
     currentStyle.stroke.color = color::ColorRGBA(color::Color::Black);
     currentStyle.fill.color = color::ColorRGBA(color::Color::Transparent);
 }

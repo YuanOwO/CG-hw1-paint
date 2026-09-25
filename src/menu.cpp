@@ -183,6 +183,26 @@ int addLineJoinMenu() {
 
 #pragma endregion  // Join Menu
 
+#pragma region Cap Menu
+
+void lineCapMenu(int option) {
+    auto cap = static_cast<shape::LineCap>(option);
+
+    canvas::setLineCap(cap);
+}
+
+int addLineCapMenu() {
+    auto menu = glutCreateMenu(lineCapMenu);
+
+    glutAddMenuEntry("Butt", (int)shape::LineCap::BUTT);
+    glutAddMenuEntry("Square", (int)shape::LineCap::SQUARE);
+    glutAddMenuEntry("Round", (int)shape::LineCap::ROUND);
+
+    return menu;
+}
+
+#pragma endregion  // Cap Menu
+
 #pragma region Main Menu
 
 void requestClear() {
@@ -217,6 +237,7 @@ int addMainMenu() {
     auto menu_fill_color = addFillColorMenu();
     auto menu_width = addWidthMenu();
     auto menu_join = addLineJoinMenu();
+    auto menu_cap = addLineCapMenu();
 
     auto menu = glutCreateMenu(mainMenu);
     glutAddSubMenu("Shape", menu_shape);
@@ -224,6 +245,7 @@ int addMainMenu() {
     glutAddSubMenu("Fill Color", menu_fill_color);
     glutAddSubMenu("Line Width", menu_width);
     glutAddSubMenu("Line Join Mode", menu_join);
+    glutAddSubMenu("Line Cap Mode", menu_cap);
     glutAddMenuEntry("Clear", (int)Menu_Main::MENU_CLEAR);
     glutAddMenuEntry("Quit", (int)Menu_Main::MENU_QUIT);
 

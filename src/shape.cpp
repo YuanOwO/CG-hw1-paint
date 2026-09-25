@@ -51,7 +51,7 @@ std::vector<Point> Ellipse::getVertices() const {
     return vertices;
 }
 
-std::vector<Point> Stroke::getVertices() const {
+std::vector<Point> Path::getVertices() const {
     std::vector<Point> vertices = points;  // 直接使用點的集合作為頂點
     return vertices;
 }
