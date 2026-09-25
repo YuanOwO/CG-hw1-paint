@@ -293,6 +293,32 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const shape
 
     if (color[3] <= 0.0f || width <= 0.0f || vertices.empty()) return;
 
+    if (vertices.size() == 1) {
+        switch (style.cap) {
+        case shape::LineCap::ROUND: {
+            // 畫圓點， width = 1.0f 時，會退化成單個像素點。
+            if (width > 1.0f) {
+                drawRoundArc(vertices[0], vertices[0] + Point(width * 0.5f, 0.0f),
+                             vertices[0] + Point(-width * 0.5f, 0.0f), width * 0.5f, 1.0f);
+                break;
+            }
+        }
+        case shape::LineCap::SQUARE: {
+            const Point p1 = vertices[0] + Point(width * 0.5f, width * 0.5f);
+            const Point p2 = vertices[0] + Point(-width * 0.5f, width * 0.5f);
+            const Point p3 = vertices[0] + Point(-width * 0.5f, -width * 0.5f);
+            const Point p4 = vertices[0] + Point(width * 0.5f, -width * 0.5f);
+            triangle(p1, p2, p3);
+            triangle(p1, p3, p4);
+            break;
+        }
+        case shape::LineCap::BUTT:
+        default:
+            // BUTT cap 不需要額外繪製
+            break;
+        }
+    }
+
     std::vector<StrokeVertexResult> info(vertices.size());
 
     // 計算每個頂點的 stroke 資訊
@@ -333,7 +359,7 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const shape
             } else if (info0.joinType == shape::LineJoin::ROUND) {
                 triangle(info0.inner, info0.vertex, info0.outer0);
                 triangle(info0.inner, info0.outer1, info0.vertex);
-                drawRoundArc(info0.vertex, info0.outer0, info0.outer1, style.width * 0.5f, info0.turn);
+                drawRoundArc(info0.vertex, info0.outer0, info0.outer1, width * 0.5f, info0.turn);
             }
         }
 
