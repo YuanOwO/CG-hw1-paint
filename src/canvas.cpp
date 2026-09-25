@@ -1,4 +1,4 @@
-#include "draw.hpp"
+#include "canvas.hpp"
 
 #include <GL/freeglut.h>
 
@@ -11,10 +11,11 @@
 #include "color.hpp"
 #include "confirm.hpp"
 #include "drawing_tool.hpp"
+#include "point.hpp"
 #include "shape.hpp"
-#include "types.hpp"
+#include "shapeStyle.hpp"
 
-namespace draw {
+namespace canvas {
 
 namespace {
 
@@ -23,10 +24,8 @@ typedef std::unique_ptr<shape::Shape> ShapePtr;
 // true -> 按下，false -> 釋放
 KeyStateMap keyStates, specialKeyStates;
 
-Tool currentTool = Tool::TOOL_PENCIL;
-int lineWidth = 1;
-color::ColorRGBA currentColor = color::ColorRGBA(color::Color::Black);
-color::ColorRGBA currentFillColor = color::ColorRGBA(color::Color::Transparent);
+Tool currentTool;
+shape::ShapeStyle currentStyle;
 
 // 目前正在使用的繪圖工具，若為 nullptr 則表示沒有正在繪製的草稿。
 std::unique_ptr<drawing::IDrawingTool> activeTool;
@@ -45,19 +44,11 @@ void clearDraft() {
 }
 
 void createDraft() {
-    GLfloat width = static_cast<GLfloat>(lineWidth);
-    GLfloat color[4], fillColor[4];
-
-    for (int i = 0; i < 4; ++i) {
-        color[i] = static_cast<GLfloat>(currentColor[i]);
-        fillColor[i] = static_cast<GLfloat>(currentFillColor[i]);
-    }
-
     if (isDrawing()) {
         clearDraft();
     }
 
-    activeTool = drawing::createDrawingTool(currentTool, width, color, fillColor);
+    activeTool = drawing::createDrawingTool(currentTool, currentStyle);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -152,28 +143,36 @@ Tool getTool() {
     return currentTool;
 }
 
-void setWidth(int width) {
-    lineWidth = width;
+void setLineWidth(int width) {
+    currentStyle.stroke.width = width;
 }
 
-int getWidth() {
-    return lineWidth;
+int getLineWidth() {
+    return currentStyle.stroke.width;
 }
 
 void setColor(const color::ColorRGBA& color) {
-    currentColor = color;
+    currentStyle.stroke.color = color;
 }
 
 color::ColorRGBA getColor() {
-    return currentColor;
+    return currentStyle.stroke.color;
 }
 
 void setFillColor(const color::ColorRGBA& color) {
-    currentFillColor = color;
+    currentStyle.fill.color = color;
 }
 
 color::ColorRGBA getFillColor() {
-    return currentFillColor;
+    return currentStyle.fill.color;
+}
+
+void setLineJoin(shape::LineJoin join) {
+    currentStyle.stroke.join = join;
+}
+
+shape::LineJoin getLineJoin() {
+    return currentStyle.stroke.join;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -187,13 +186,19 @@ void clearCanvas() {
 
 ////////////////////////////////////////////////////////////////////////
 
-void init() {}
+void init() {
+    currentTool = Tool::TOOL_POLYGON;
+
+    currentStyle.stroke.width = 20;
+    currentStyle.stroke.color = color::ColorRGBA(color::Color::Black);
+    currentStyle.fill.color = color::ColorRGBA(color::Color::Transparent);
+}
 
 ////////////////////////////////////////////////////////////////////////
 
 void mouse(int button, int state, int x, int y) {
     auto point = Point(x, y);
-    ToolEventState eventState{keyStates, specialKeyStates, point};
+    drawing::ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (button == GLUT_LEFT_BUTTON) {
         if (state == GLUT_DOWN) {
@@ -214,7 +219,7 @@ void mouse(int button, int state, int x, int y) {
 
 void motion(int x, int y) {
     auto point = Point(x, y);
-    ToolEventState eventState{keyStates, specialKeyStates, point};
+    drawing::ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (isDrawing()) {
         handleDraftEvent(activeTool->onMouseMove(eventState));
@@ -223,7 +228,7 @@ void motion(int x, int y) {
 
 void passiveMotion(int x, int y) {
     auto point = Point(x, y);
-    ToolEventState eventState{keyStates, specialKeyStates, point};
+    drawing::ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (isDrawing()) {
         handleDraftEvent(activeTool->onMousePassiveMove(eventState));
@@ -233,7 +238,7 @@ void passiveMotion(int x, int y) {
 void keyDown(unsigned char key, int x, int y) {
     keyStates[key] = true;
     auto point = Point(x, y);
-    ToolEventState eventState{keyStates, specialKeyStates, point};
+    drawing::ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (isDrawing()) {
         handleDraftEvent(activeTool->onKeyDown(eventState));
@@ -245,7 +250,7 @@ void keyDown(unsigned char key, int x, int y) {
 void keyUp(unsigned char key, int x, int y) {
     keyStates[key] = false;
     auto point = Point(x, y);
-    ToolEventState eventState{keyStates, specialKeyStates, point};
+    drawing::ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (isDrawing()) {
         handleDraftEvent(activeTool->onKeyUp(eventState));
@@ -255,7 +260,7 @@ void keyUp(unsigned char key, int x, int y) {
 void specialKeyDown(int key, int x, int y) {
     specialKeyStates[key] = true;
     auto point = Point(x, y);
-    ToolEventState eventState{keyStates, specialKeyStates, point};
+    drawing::ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (isDrawing()) {
         handleDraftEvent(activeTool->onSpecialKeyDown(eventState));
@@ -266,9 +271,8 @@ void specialKeyDown(int key, int x, int y) {
 
 void specialKeyUp(int key, int x, int y) {
     specialKeyStates[key] = false;
-    if (confirm::isOpen()) return;
     auto point = Point(x, y);
-    ToolEventState eventState{keyStates, specialKeyStates, point};
+    drawing::ToolEventState eventState{keyStates, specialKeyStates, point};
 
     if (isDrawing()) {
         handleDraftEvent(activeTool->onSpecialKeyUp(eventState));
@@ -304,4 +308,4 @@ void reshape(int width, int height) {
     glutPostRedisplay();
 }
 
-}  // namespace draw
+}  // namespace canvas

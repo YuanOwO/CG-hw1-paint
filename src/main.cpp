@@ -3,8 +3,8 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "canvas.hpp"
 #include "confirm.hpp"
-#include "draw.hpp"
 #include "menu.hpp"
 
 namespace {
@@ -30,49 +30,49 @@ void keyboard(unsigned char key, int x, int y) {
     if (confirm::isOpen()) return;
 
     // Handle keyboard events if needed
-    draw::keyDown(key, x, y);
+    canvas::keyDown(key, x, y);
 }
 
 void keyboardUp(unsigned char key, int x, int y) {
     if (confirm::isOpen()) return;
 
     // Handle key release events if needed
-    draw::keyUp(key, x, y);
+    canvas::keyUp(key, x, y);
 }
 
 void special(int key, int x, int y) {
     if (confirm::isOpen()) return;
 
     // Handle special keys if needed
-    draw::specialKeyDown(key, x, y);
+    canvas::specialKeyDown(key, x, y);
 }
 
 void specialUp(int key, int x, int y) {
     if (confirm::isOpen()) return;
 
     // Handle special key release events if needed
-    draw::specialKeyUp(key, x, y);
+    canvas::specialKeyUp(key, x, y);
 }
 
 void mouse(int button, int state, int x, int y) {
     if (confirm::isOpen()) return;
 
     // Handle mouse events if needed
-    draw::mouse(button, state, x, y);
+    canvas::mouse(button, state, x, y);
 }
 
 void motion(int x, int y) {
     if (confirm::isOpen()) return;
 
     // Handle mouse motion events if needed
-    draw::motion(x, y);
+    canvas::motion(x, y);
 }
 
 void passiveMotion(int x, int y) {
     if (confirm::isOpen()) return;
 
     // Handle passive mouse motion events if needed
-    draw::passiveMotion(x, y);
+    canvas::passiveMotion(x, y);
 }
 
 void entry(int state) {
@@ -85,7 +85,7 @@ void reshape(int width, int height) {
     if (confirm::isOpen()) return;
 
     // Handle window resizing if needed
-    draw::reshape(width, height);
+    canvas::reshape(width, height);
 }
 
 void visible(int state) {
@@ -104,7 +104,7 @@ void display() {
     resetIdleCounter();
 
     // Handle rendering here
-    draw::display();
+    canvas::display();
 }
 
 }  // namespace
@@ -114,7 +114,7 @@ int main(int argc, char** argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowSize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT);
-    glutInitWindowPosition(1000, 200);
+    glutInitWindowPosition(500, 200);
     glutCreateWindow("OpenGL Painter");
 
     glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
@@ -137,7 +137,7 @@ int main(int argc, char** argv) {
     glutDisplayFunc(display);
 
     // Other initialization code can go here
-    draw::init();
+    canvas::init();
     menu::init();
 
     // Enter the GLUT main loop to start processing events

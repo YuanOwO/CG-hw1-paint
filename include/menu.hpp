@@ -2,8 +2,6 @@
 
 #include <unordered_map>
 
-#include "color.hpp"
-
 namespace menu {
 
 enum class Menu_Width {

@@ -10,8 +10,7 @@ namespace {
 template <typename TShape>
 class DragTool : public DrawingTool<TShape> {
    public:
-    DragTool(GLfloat width, const GLfloat* color, const GLfloat* fillColor)
-        : DrawingTool<TShape>(width, color, fillColor) {}
+    using DrawingTool<TShape>::DrawingTool;
 
     ToolEventResult onMouseDown(ToolEventState& event) override {
         this->draft->setStart(event.mousePosition);
@@ -64,8 +63,7 @@ class DragTool : public DrawingTool<TShape> {
 
 class LineTool : public DragTool<shape::Line> {
    public:
-    LineTool(GLfloat width, const GLfloat* color, const GLfloat* fillColor)
-        : DragTool<shape::Line>(width, color, fillColor) {}
+    using DragTool<shape::Line>::DragTool;
 
    protected:
     // Shift 鍵被按下時，會畫出水平、垂直或 45° 斜線。
@@ -101,20 +99,17 @@ class LineTool : public DragTool<shape::Line> {
 
 class RectangleTool : public DragTool<shape::Rectangle> {
    public:
-    RectangleTool(GLfloat width, const GLfloat* color, const GLfloat* fillColor)
-        : DragTool<shape::Rectangle>(width, color, fillColor) {}
+    using DragTool<shape::Rectangle>::DragTool;
 };
 
 class EllipseTool : public DragTool<shape::Ellipse> {
    public:
-    EllipseTool(GLfloat width, const GLfloat* color, const GLfloat* fillColor)
-        : DragTool<shape::Ellipse>(width, color, fillColor) {}
+    using DragTool<shape::Ellipse>::DragTool;
 };
 
 class PencilTool : public DrawingTool<shape::Stroke> {
    public:
-    PencilTool(GLfloat width, const GLfloat* color, const GLfloat* fillColor)
-        : DrawingTool<shape::Stroke>(width, color, fillColor) {}
+    using DrawingTool<shape::Stroke>::DrawingTool;
 
     ToolEventResult onMouseDown(ToolEventState& event) override {
         draft->addPoint(event.mousePosition);
@@ -134,8 +129,7 @@ class PencilTool : public DrawingTool<shape::Stroke> {
 
 class PolygonTool : public DrawingTool<shape::Polygon> {
    public:
-    PolygonTool(GLfloat width, const GLfloat* color, const GLfloat* fillColor)
-        : DrawingTool<shape::Polygon>(width, color, fillColor) {}
+    using DrawingTool<shape::Polygon>::DrawingTool;
 
     ToolEventResult onMouseDown(ToolEventState& event) override {
         if (draft->pointCount() == 0) {
@@ -180,19 +174,18 @@ class PolygonTool : public DrawingTool<shape::Polygon> {
 
 }  // namespace
 
-std::unique_ptr<IDrawingTool> createDrawingTool(draw::Tool tool, GLfloat width, const GLfloat* color,
-                                                const GLfloat* fillColor) {
+std::unique_ptr<IDrawingTool> createDrawingTool(canvas::Tool tool, shape::ShapeStyle style) {
     switch (tool) {
-    case draw::Tool::TOOL_PENCIL:
-        return std::make_unique<PencilTool>(width, color, fillColor);
-    case draw::Tool::TOOL_LINE:
-        return std::make_unique<LineTool>(width, color, fillColor);
-    case draw::Tool::TOOL_RECTANGLE:
-        return std::make_unique<RectangleTool>(width, color, fillColor);
-    case draw::Tool::TOOL_ELLIPSE:
-        return std::make_unique<EllipseTool>(width, color, fillColor);
-    case draw::Tool::TOOL_POLYGON:
-        return std::make_unique<PolygonTool>(width, color, fillColor);
+    case canvas::Tool::TOOL_PENCIL:
+        return std::make_unique<PencilTool>(style);
+    case canvas::Tool::TOOL_LINE:
+        return std::make_unique<LineTool>(style);
+    case canvas::Tool::TOOL_RECTANGLE:
+        return std::make_unique<RectangleTool>(style);
+    case canvas::Tool::TOOL_ELLIPSE:
+        return std::make_unique<EllipseTool>(style);
+    case canvas::Tool::TOOL_POLYGON:
+        return std::make_unique<PolygonTool>(style);
     default:
         return nullptr;
     }

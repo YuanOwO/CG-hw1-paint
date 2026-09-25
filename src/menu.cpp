@@ -4,9 +4,10 @@
 
 #include <algorithm>
 
+#include "canvas.hpp"
 #include "color.hpp"
 #include "confirm.hpp"
-#include "draw.hpp"
+#include "shapeStyle.hpp"
 
 namespace menu {
 namespace {
@@ -37,19 +38,19 @@ void setMenuEnabled(bool enabled) {
 #pragma region Shape Menu
 
 void shapeMenu(int option) {
-    auto tool = static_cast<draw::Tool>(option);
+    auto tool = static_cast<canvas::Tool>(option);
 
-    draw::setTool(tool);
+    canvas::setTool(tool);
 }
 
 int addShapeMenu() {
     auto menu = glutCreateMenu(shapeMenu);
 
-    glutAddMenuEntry("Pencil", (int)draw::Tool::TOOL_PENCIL);
-    glutAddMenuEntry("Line", (int)draw::Tool::TOOL_LINE);
-    glutAddMenuEntry("Rectangle", (int)draw::Tool::TOOL_RECTANGLE);
-    glutAddMenuEntry("Circle/Ellipse", (int)draw::Tool::TOOL_ELLIPSE);
-    glutAddMenuEntry("Polygon", (int)draw::Tool::TOOL_POLYGON);
+    glutAddMenuEntry("Pencil", (int)canvas::Tool::TOOL_PENCIL);
+    glutAddMenuEntry("Line", (int)canvas::Tool::TOOL_LINE);
+    glutAddMenuEntry("Rectangle", (int)canvas::Tool::TOOL_RECTANGLE);
+    glutAddMenuEntry("Circle/Ellipse", (int)canvas::Tool::TOOL_ELLIPSE);
+    glutAddMenuEntry("Polygon", (int)canvas::Tool::TOOL_POLYGON);
 
     return menu;
 }
@@ -61,7 +62,7 @@ int addShapeMenu() {
 void colorMenu(int option) {
     auto color = static_cast<color::Color>(option);
 
-    draw::setColor(color::ColorRGBA(color));
+    canvas::setColor(color::ColorRGBA(color));
 }
 
 int addColorMenu() {
@@ -86,7 +87,7 @@ int addColorMenu() {
 void fillColorMenu(int option) {
     auto color = static_cast<color::Color>(option);
 
-    draw::setFillColor(color::ColorRGBA(color));
+    canvas::setFillColor(color::ColorRGBA(color));
 }
 
 int addFillColorMenu() {
@@ -110,7 +111,7 @@ int addFillColorMenu() {
 #pragma region Width Menu
 
 void widthMenu(int option) {
-    int width = draw::getWidth();
+    int width = canvas::getLineWidth();
 
     switch (static_cast<Menu_Width>(option)) {
     case Menu_Width::WIDTH_THICKER:
@@ -138,7 +139,7 @@ void widthMenu(int option) {
 
     width = std::max(1, width);  // Ensure width is at least 1
 
-    draw::setWidth(width);
+    canvas::setLineWidth(width);
 }
 
 int addWidthMenu() {
@@ -162,6 +163,26 @@ int addWidthMenu() {
 
 #pragma endregion  // Width Menu
 
+#pragma region Join Menu
+
+void lineJoinMenu(int option) {
+    auto join = static_cast<shape::LineJoin>(option);
+
+    canvas::setLineJoin(join);
+}
+
+int addLineJoinMenu() {
+    auto menu = glutCreateMenu(lineJoinMenu);
+
+    glutAddMenuEntry("Miter", (int)shape::LineJoin::MITER);
+    glutAddMenuEntry("Bevel", (int)shape::LineJoin::BEVEL);
+    glutAddMenuEntry("Round", (int)shape::LineJoin::ROUND);
+
+    return menu;
+}
+
+#pragma endregion  // Join Menu
+
 #pragma region Main Menu
 
 void requestClear() {
@@ -170,7 +191,7 @@ void requestClear() {
         "OpenGL Painter - Confirm Clear", "Clear canvas and all undo/redo history?\nThis cannot be undone.",
         []() {
             setMenuEnabled(true);
-            draw::clearCanvas();
+            canvas::clearCanvas();
         },
         []() { setMenuEnabled(true); });
 }
@@ -195,12 +216,14 @@ int addMainMenu() {
     auto menu_color = addColorMenu();
     auto menu_fill_color = addFillColorMenu();
     auto menu_width = addWidthMenu();
+    auto menu_join = addLineJoinMenu();
 
     auto menu = glutCreateMenu(mainMenu);
     glutAddSubMenu("Shape", menu_shape);
     glutAddSubMenu("Color", menu_color);
     glutAddSubMenu("Fill Color", menu_fill_color);
-    glutAddSubMenu("Width", menu_width);
+    glutAddSubMenu("Line Width", menu_width);
+    glutAddSubMenu("Line Join Mode", menu_join);
     glutAddMenuEntry("Clear", (int)Menu_Main::MENU_CLEAR);
     glutAddMenuEntry("Quit", (int)Menu_Main::MENU_QUIT);
 

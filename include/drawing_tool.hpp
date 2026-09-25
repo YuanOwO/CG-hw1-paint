@@ -1,12 +1,23 @@
 #pragma once
 
 #include <memory>
+#include <unordered_map>
 #include <utility>
 
-#include "draw.hpp"
+#include "canvas.hpp"
+#include "point.hpp"
 #include "shape.hpp"
 
+// true -> 按下，false -> 釋放
+typedef std::unordered_map<unsigned int, bool> KeyStateMap;  // 用於追蹤按鍵狀態的映射
+
 namespace drawing {
+
+struct ToolEventState {
+    KeyStateMap& keyStates;         // 用於追蹤按鍵狀態的映射
+    KeyStateMap& specialKeyStates;  // 用於追蹤特殊按鍵狀態的映射
+    Point& mousePosition;           // 當前滑鼠位置
+};
 
 enum class ToolEventResult {
     NONE,    // 表示不需要提交草稿，繼續繪製
@@ -38,8 +49,7 @@ class IDrawingTool {
 template <typename TShape>
 class DrawingTool : public IDrawingTool {
    public:
-    DrawingTool(GLfloat width, const GLfloat* color, const GLfloat* fillColor)
-        : draft(std::make_unique<TShape>(width, color, fillColor)) {}
+    DrawingTool(shape::ShapeStyle style) : draft(std::make_unique<TShape>(style)) {}
 
     const shape::Shape& preview() const override { return *draft; }
     std::unique_ptr<shape::Shape> takeShape() override { return std::move(draft); }
@@ -48,7 +58,6 @@ class DrawingTool : public IDrawingTool {
     std::unique_ptr<TShape> draft;
 };
 
-std::unique_ptr<IDrawingTool> createDrawingTool(draw::Tool tool, GLfloat width, const GLfloat* color,
-                                                const GLfloat* fillColor);
+std::unique_ptr<IDrawingTool> createDrawingTool(canvas::Tool tool, shape::ShapeStyle style);
 
 }  // namespace drawing

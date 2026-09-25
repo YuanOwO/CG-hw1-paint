@@ -1,8 +1,9 @@
 #pragma once
 
 #include "color.hpp"
+#include "shapeStyle.hpp"
 
-namespace draw {
+namespace canvas {
 
 enum class Tool {
     TOOL_PENCIL,
@@ -15,14 +16,17 @@ enum class Tool {
 void setTool(Tool tool);
 Tool getTool();
 
-void setWidth(int width);
-int getWidth();
+void setLineWidth(int width);
+int getLineWidth();
 
 void setColor(const color::ColorRGBA& color);
 color::ColorRGBA getColor();
 
 void setFillColor(const color::ColorRGBA& color);
 color::ColorRGBA getFillColor();
+
+void setLineJoin(shape::LineJoin join);
+shape::LineJoin getLineJoin();
 
 void clearCanvas();
 
@@ -40,4 +44,4 @@ void specialKeyUp(int key, int x, int y);
 void display();
 void reshape(int width, int height);
 
-}  // namespace draw
+}  // namespace canvas

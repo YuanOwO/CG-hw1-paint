@@ -4,36 +4,29 @@
 
 #include <vector>
 
-#include "types.hpp"
+#include "point.hpp"
+#include "render.hpp"
+#include "shapeStyle.hpp"
 
 namespace shape {
 
 class Shape {
    public:
-    Shape(GLfloat _width, const GLfloat* _color, const GLfloat* _fillColor)
-        : width(_width),
-          color{_color[0], _color[1], _color[2], _color[3]},
-          fillColor{_fillColor[0], _fillColor[1], _fillColor[2], _fillColor[3]} {}
+    Shape(ShapeStyle _style) : style(_style) {}
 
     virtual ~Shape() = default;
 
     virtual void draw() const {
         auto vertices = getVertices();
-        fillShape(vertices);
-        drawBorder(vertices);
+        render::draw(vertices, isClosed(), style);
     }
 
    protected:
-    const GLfloat width;
-    const GLfloat color[4];
-    const GLfloat fillColor[4];
+    const ShapeStyle style;
 
-    virtual bool isClosed() const = 0;           // 是否封閉形狀（例如多邊形、矩形、圓形等）
-    virtual bool isRoundedVertices() const = 0;  // 是否在頂點處繪製圓點
+    virtual bool isClosed() const = 0;  // 是否為封閉形狀
 
     virtual std::vector<Point> getVertices() const = 0;  // 採樣取得形狀的頂點座標，供繪製邊框使用
-    virtual void fillShape(const std::vector<Point>& vertices) const;
-    virtual void drawBorder(const std::vector<Point>& vertices) const;
 };
 
 // 可以由兩點（起點與終點）定義的形狀，例如直線、矩形、橢圓等。
@@ -55,11 +48,8 @@ class Line : public TwoPointShape {
    public:
     using TwoPointShape::TwoPointShape;
 
-    // void draw() override;
-
    protected:
     bool isClosed() const override { return false; }
-    bool isRoundedVertices() const override { return true; }
 
     std::vector<Point> getVertices() const override;
 };
@@ -68,11 +58,8 @@ class Rectangle : public TwoPointShape {
    public:
     using TwoPointShape::TwoPointShape;
 
-    // void draw() override;
-
    protected:
     bool isClosed() const override { return true; }
-    bool isRoundedVertices() const override { return true; }
 
     std::vector<Point> getVertices() const override;
 };
@@ -81,11 +68,8 @@ class Ellipse : public TwoPointShape {
    public:
     using TwoPointShape::TwoPointShape;
 
-    // void draw() override;
-
    protected:
     bool isClosed() const override { return true; }
-    bool isRoundedVertices() const override { return true; }
 
     std::vector<Point> getVertices() const override;
 };
@@ -94,13 +78,10 @@ class Stroke : public Shape {
    public:
     using Shape::Shape;
 
-    // void draw() override;
-
     void addPoint(const Point& p) { points.push_back(p); }
 
    protected:
     bool isClosed() const override { return false; }
-    bool isRoundedVertices() const override { return true; }
 
     std::vector<Point> getVertices() const override;
 
@@ -111,8 +92,6 @@ class Stroke : public Shape {
 class Polygon : public Shape {
    public:
     using Shape::Shape;
-
-    // void draw() override;
 
     std::size_t pointCount() const { return points.size(); }
 
@@ -126,7 +105,6 @@ class Polygon : public Shape {
 
    protected:
     bool isClosed() const override { return true; }
-    bool isRoundedVertices() const override { return true; }
 
     std::vector<Point> getVertices() const override;
 
