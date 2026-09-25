@@ -78,7 +78,24 @@ class Stroke : public Shape {
    public:
     using Shape::Shape;
 
-    void addPoint(const Point& p) { points.push_back(p); }
+    void addPoint(const Point& p, const bool force = false) {
+        if (points.empty()) {
+            points.push_back(p);
+            return;
+        }
+
+        // 避免筆刷的點太密集，導致繪製出來的線條過於粗糙。
+        const bool isTooClose = abs(points.back() - p) < std::max(style.stroke.width * 0.2f, 1.0f);
+
+        if (force && isTooClose && points.size() >= 2) {
+            // 強制加入點時，若太接近前一個點，則將前一個點移除，避免重疊。
+            points.pop_back();
+        }
+
+        if (force || !isTooClose) {
+            points.push_back(p);
+        }
+    }
 
    protected:
     bool isClosed() const override { return false; }

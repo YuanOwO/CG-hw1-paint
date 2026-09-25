@@ -71,21 +71,22 @@ struct VertexJoinResult {
     Point inner, outer0, outer1;  // bevel 三角形的三個頂點
 };
 
-VertexJoinResult computeVertexJoin(const Point& a, const Point& b, const Point& c, shape::StrokeStyle style) {
-    auto h = style.width * 0.5f;
+VertexJoinResult computeVertexJoin(const Point& a, const Point& b, const Point& c,
+                                   const shape::StrokeStyle& style) {
+    VertexJoinResult result{};
+    result.type = shape::LineJoin::NONE;
+    result.vertex = b;
+
+    const GLfloat h = style.width * 0.5f;
 
     Vector ab = b - a;
     Vector bc = c - b;
 
-    auto lenAB = abs(ab);
-    auto lenBC = abs(bc);
+    const GLfloat lenAB = abs(ab);
+    const GLfloat lenBC = abs(bc);
 
-    bool zeroAB = lenAB <= EPSILON;
-    bool zeroBC = lenBC <= EPSILON;
-
-    VertexJoinResult result;
-    result.type = shape::LineJoin::NONE;
-    result.vertex = b;
+    const bool zeroAB = lenAB <= EPSILON;
+    const bool zeroBC = lenBC <= EPSILON;
 
     // 沒有方向時，截面退化在 B，避免留下原點座標。
     result.inLeft = result.inRight = b;
@@ -110,65 +111,140 @@ VertexJoinResult computeVertexJoin(const Point& a, const Point& b, const Point& 
     // 開放路徑端點：只有一個有效方向，不計算接角。
     if (zeroAB || zeroBC) return result;
 
-    auto turn = cross(u, v);
+    // 一般情況
+    const auto turn = cross(u, v);
+    const auto forward = dot(u, v);
 
-    if (std::abs(turn) < EPSILON) {
-        if (dot(u, v) > 0.0f) {
-            // 同向直行
-            result.inLeft = result.outLeft = b - h * n0;
-            result.inRight = result.outRight = b + h * n0;
+    // 幾乎沒有轉向
+    if (std::abs(turn) <= EPSILON) {
+        if (forward > 0.0f) {
+            // 同方向，不需要 join。
             result.type = shape::LineJoin::NONE;
-            return result;
+
+            // n0、n1 理論上幾乎相同，用平均可以減少一點浮點誤差。
+            result.inLeft = result.outLeft = (result.inLeft + result.outLeft) * 0.5f;
+            result.inRight = result.outRight = (result.inRight + result.outRight) * 0.5f;
         } else {
-            // 反向折返
-            result.type = shape::LineJoin::BEVEL;
-            return result;  // 之後可以另外設計 U-turn
+            // 180° 折返
+            result.type =
+                style.join == shape::LineJoin::ROUND ? shape::LineJoin::ROUND : shape::LineJoin::BEVEL;
+
+            result.inner = b;
+
+            // 此時 outer/inner 的概念其實退化了，
+            // 先留下各線段自己的 offset endpoint。
+            result.outer0 = result.inLeft;
+            result.outer1 = result.inRight;
         }
-    }
-
-    // 一般轉角，計算 miter / bevel / round。
-    Vector bisector = normalize(n0 + n1);
-    auto denom = dot(bisector, n0);
-
-    // 避免除以零或非常小的數值，導致不穩定的結果
-    if (std::abs(denom) < EPSILON) {
-        denom = EPSILON * (denom < 0.0f ? -1.0f : 1.0f);
-    }
-
-    auto len = h / denom;
-
-    bool miterValid = std::abs(len) <= h * style.miterLimit && std::abs(len) <= std::min(lenAB, lenBC) + h;
-
-    // 如果 miter 不符資格就退化使用 bevel
-    if (style.join == shape::LineJoin::MITER && miterValid) {
-        result.type = shape::LineJoin::MITER;
-        result.inLeft = b - len * bisector;
-        result.inRight = b + len * bisector;
-        result.outLeft = b - len * bisector;
-        result.outRight = b + len * bisector;
 
         return result;
     }
 
+    // 左右兩側 offset line 分別求交點
+    Point leftInter, rightInter;
+
+    bool hasLeftInter = lineInter(a - h * n0, b - h * n0, b - h * n1, c - h * n1, leftInter);
+    bool hasRightInter = lineInter(a + h * n0, b + h * n0, b + h * n1, c + h * n1, rightInter);
+
+    // 理論上非平行的兩條 segment，其左右 offset line 都應該可以求交點
+    // 但仍然保留 fallback，避免數值不穩定。
+    if (!hasLeftInter || !hasRightInter) {
+        result.type = style.join == shape::LineJoin::ROUND ? shape::LineJoin::ROUND : shape::LineJoin::BEVEL;
+
+        result.inner = b;
+
+        if (turn > 0.0f) {
+            // screen-space 右轉
+            // 左邊是 outer
+            result.outer0 = result.inLeft;
+            result.outer1 = result.outLeft;
+        } else {
+            // screen-space 左轉
+            // 右邊是 outer
+            result.outer0 = result.inRight;
+            result.outer1 = result.outRight;
+        }
+
+        return result;
+    }
+
+    //
+    // x→、y↓ 時：
+    //
+    // cross > 0 = 畫面上的右轉
+    // cross < 0 = 畫面上的左轉
+    //
+    const bool turnRight = turn > 0.0f;
+
+    Point innerInter;
+    Point outerInter;
+
+    Point outer0;
+    Point outer1;
+
+    if (turnRight) {
+        // 右轉
+        innerInter = rightInter;
+        outerInter = leftInter;
+        outer0 = result.inLeft;
+        outer1 = result.outLeft;
+    } else {
+        // 左轉
+        innerInter = leftInter;
+        outerInter = rightInter;
+        outer0 = result.inRight;
+        outer1 = result.outRight;
+    }
+
+    // Miter
+    const GLfloat outerDistance = abs(outerInter - b);
+
+    const bool validMiter = style.join == shape::LineJoin::MITER && outerDistance <= h * style.miterLimit;
+
+    if (validMiter) {
+        result.type = shape::LineJoin::MITER;
+
+        result.inLeft = result.outLeft = leftInter;
+        result.inRight = result.outRight = rightInter;
+
+        return result;
+    }
+
+    // Bevel / Round
     result.type = style.join == shape::LineJoin::ROUND ? shape::LineJoin::ROUND : shape::LineJoin::BEVEL;
 
-    if (turn > 0) {
-        result.inner = b + len * bisector;
-        result.outer0 = b - h * n0;
-        result.outer1 = b - h * n1;
+    result.outer0 = outer0;
+    result.outer1 = outer1;
 
-        result.inRight = result.outRight = result.inner;
-        result.inLeft = result.outer0;
-        result.outLeft = result.outer1;
+    // inner intersection 也可能因接近 180° 而跑非常遠。
+    // 尤其筆刷的 segment 很短時，不應該直接相信交點。
+    const GLfloat innerDistance = abs(innerInter - b);
 
+    // 一個偏保守的限制：
+    //
+    // 至少允許 2 * halfWidth，
+    // 但也會參考附近 segment 的長度。
+    //
+    const GLfloat maxInnerDistance = std::max(h * 2.0f, std::min(lenAB, lenBC) + h);
+
+    if (innerDistance <= maxInnerDistance) {
+        result.inner = innerInter;
     } else {
-        result.inner = b - len * bisector;
-        result.outer0 = b + h * n0;
-        result.outer1 = b + h * n1;
+        // 接近折返或短 segment：
+        // 不讓 inner 跑到幾十、幾百 px 外。
+        result.inner = b;
+    }
 
+    if (turnRight) {
+        // 右側 inner
+        result.inRight = result.outRight = result.inner;
+        result.inLeft = outer0;
+        result.outLeft = outer1;
+    } else {
+        // 左側 inner
         result.inLeft = result.outLeft = result.inner;
-        result.inRight = result.outer0;
-        result.outRight = result.outer1;
+        result.inRight = outer0;
+        result.outRight = outer1;
     }
 
     return result;

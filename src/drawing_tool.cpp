@@ -112,7 +112,7 @@ class PencilTool : public DrawingTool<shape::Stroke> {
     using DrawingTool<shape::Stroke>::DrawingTool;
 
     ToolEventResult onMouseDown(ToolEventState& event) override {
-        draft->addPoint(event.mousePosition);
+        draft->addPoint(event.mousePosition, true);
         return ToolEventResult::NONE;
     }
 
@@ -122,7 +122,7 @@ class PencilTool : public DrawingTool<shape::Stroke> {
     }
 
     ToolEventResult onMouseUp(ToolEventState& event) override {
-        draft->addPoint(event.mousePosition);
+        draft->addPoint(event.mousePosition, true);
         return ToolEventResult::COMMIT;
     }
 };
