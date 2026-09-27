@@ -2,11 +2,24 @@
     "configurations": [
         {
             "name": "Mac",
-            "includePath": ["${workspaceFolder}/**", "/opt/homebrew/Cellar/freeglut/3.8.0/include"],
+            "includePath": [
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/src",
+                "/opt/homebrew/Cellar/freeglut/3.8.0/include"
+            ],
             "defines": [],
             "cppStandard": "c++17",
             "cStandard": "c11",
             "intelliSenseMode": "macos-clang-arm64"
+        },
+        {
+            "name": "Win32",
+            "includePath": ["${workspaceFolder}/include", "${workspaceFolder}/src", "C:/msys64/mingw64/include/"],
+            "compilerPath": "C:\\msys64\\mingw64\\bin\\g++.exe",
+            "defines": [],
+            "cppStandard": "c++17",
+            "cStandard": "c11",
+            "intelliSenseMode": "windows-gcc-x64"
         }
     ],
     "version": 4
