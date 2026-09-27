@@ -1,10 +1,5 @@
 #pragma once
 
-#include "input/button.hpp"
-#include "input/input_state.hpp"
-
-namespace paint {
-
-class Event {};
-
-}  // namespace paint
+#include "event/base.hpp"
+#include "event/hid_event.hpp"
+#include "event/window_event.hpp"

@@ -3,7 +3,7 @@
 #include <functional>
 #include <memory>
 
-#include "event/hid_event.hpp"
+#include "event/event.hpp"
 
 namespace paint {
 

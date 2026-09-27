@@ -6,8 +6,7 @@
 #include <unordered_map>
 
 #include "element/element.hpp"
-#include "event/hid_event.hpp"
-#include "event/window_event.hpp"
+#include "event/event.hpp"
 #include "input/input_state.hpp"
 
 namespace paint {
