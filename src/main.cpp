@@ -1,17 +1,32 @@
 #include <GL/freeglut.h>
 
-#include <app/application.hpp>
 #include <iostream>
-#include <window/window.hpp>
+
+#include "app/application.hpp"
+#include "menu/menu.hpp"
+#include "window/window.hpp"
 
 class TestWindow : public paint::Window {
    public:
-    using Window::Window;  // 繼承父類的建構函數
+    TestWindow(const std::string& title, int width, int height, bool resizable = true)
+        : paint::Window(title, width, height, resizable) {
+        setupMenu();
+    }
 
    protected:
     void onKeyDown(const paint::KeyboardEvent& event) override {
         auto key = event.key();
         std::cout << "Key pressed: " << static_cast<int>(key) << std::endl;
+    }
+
+    void onClick(const paint::MouseClickEvent& event) override {
+        auto button = event.button();
+        std::cout << "Mouse clicked: " << static_cast<int>(button) << std::endl;
+    }
+
+    void onDoubleClick(const paint::MouseClickEvent& event) override {
+        auto button = event.button();
+        std::cout << "Mouse double clicked: " << static_cast<int>(button) << std::endl;
     }
 
     void onDisplay() override {
@@ -24,6 +39,20 @@ class TestWindow : public paint::Window {
         glColor3f(0.0f, 0.0f, 1.0f);  // Blue
         glVertex2f(600.0f, 100.0f);
         glEnd();
+    }
+
+   private:
+    paint::Menu _menu;
+
+    void setupMenu() {
+        _menu.addMenuEntry("Option 1", []() { std::cout << "Option 1 selected" << std::endl; });
+        _menu.addMenuEntry("Option 2", []() { std::cout << "Option 2 selected" << std::endl; });
+
+        auto& submenu = _menu.addSubMenu("Submenu");
+        submenu.addMenuEntry("Sub-option 1", []() { std::cout << "Sub-option 1 selected" << std::endl; });
+        submenu.addMenuEntry("Sub-option 2", []() { std::cout << "Sub-option 2 selected" << std::endl; });
+
+        _menu.attach(paint::MouseButton::MouseRight);
     }
 };
 

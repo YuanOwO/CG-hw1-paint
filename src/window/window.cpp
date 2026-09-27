@@ -2,7 +2,6 @@
 
 #include <GL/freeglut.h>
 
-#include <iostream>
 #include <unordered_map>
 
 namespace paint {
