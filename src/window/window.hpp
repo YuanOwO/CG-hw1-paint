@@ -34,7 +34,6 @@ class Window {
     virtual void onMouseDown(const MouseEvent& event) {}
     virtual void onMouseUp(const MouseEvent& event) {}
     virtual void onMouseMove(const MouseMoveEvent& event) {}
-    virtual void onMouseScroll(const MouseScrollEvent& event) {}
 
    private:
     int _id = 0;  // GLUT window ID

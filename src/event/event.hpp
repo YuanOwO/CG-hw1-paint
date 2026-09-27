@@ -48,21 +48,6 @@ class MouseMoveEvent : public Event {
     const InputState& _inputState;
 };
 
-class MouseScrollEvent : public Event {
-   public:
-    MouseScrollEvent(int xOffset, int yOffset, const InputState& inputState)
-        : _xOffset(xOffset), _yOffset(yOffset), _inputState(inputState) {}
-
-    int xOffset() const { return _xOffset; }
-    int yOffset() const { return _yOffset; }
-    const InputState& inputState() const { return _inputState; }
-
-   private:
-    int _xOffset;
-    int _yOffset;
-    const InputState& _inputState;
-};
-
 class WindowEvent : public Event {};
 
 class WindowCloseEvent : public WindowEvent {};
