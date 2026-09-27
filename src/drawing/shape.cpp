@@ -1,11 +1,11 @@
-#include "shape.hpp"
+#include "drawing/shape.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-#include "render.hpp"
+#include "drawing/render.hpp"
 
-namespace shape {
+namespace paint::drawing {
 
 std::vector<Point> Line::getVertices() const {
     std::vector<Point> vertices = {start, end};
@@ -61,4 +61,4 @@ std::vector<Point> Polygon::getVertices() const {
     return vertices;
 }
 
-}  // namespace shape
+}  // namespace paint::drawing

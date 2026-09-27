@@ -4,14 +4,14 @@
 #include <unordered_map>
 #include <utility>
 
-#include "canvas.hpp"
-#include "point.hpp"
-#include "shape.hpp"
+#include "common/point.hpp"
+#include "drawing/canvas.hpp"
+#include "drawing/shape.hpp"
 
 // true -> 按下，false -> 釋放
 typedef std::unordered_map<unsigned int, bool> KeyStateMap;  // 用於追蹤按鍵狀態的映射
 
-namespace drawing {
+namespace paint::drawing {
 
 struct ToolEventState {
     KeyStateMap& keyStates;         // 用於追蹤按鍵狀態的映射
@@ -31,10 +31,10 @@ class IDrawingTool {
     virtual ~IDrawingTool() = default;
 
     // 返回草稿的參考，供畫布在 display 時繪製。
-    virtual const shape::Shape& preview() const = 0;
+    virtual const Shape& preview() const = 0;
 
     // 僅在 COMMIT 後呼叫一次；取出後由呼叫端銷毀工具。
-    virtual std::unique_ptr<shape::Shape> takeShape() = 0;
+    virtual std::unique_ptr<Shape> takeShape() = 0;
 
     virtual ToolEventResult onMouseDown(ToolEventState&) { return ToolEventResult::NONE; }
     virtual ToolEventResult onMouseUp(ToolEventState&) { return ToolEventResult::NONE; }
@@ -49,15 +49,15 @@ class IDrawingTool {
 template <typename TShape>
 class DrawingTool : public IDrawingTool {
    public:
-    DrawingTool(shape::ShapeStyle style) : draft(std::make_unique<TShape>(style)) {}
+    DrawingTool(ShapeStyle style) : draft(std::make_unique<TShape>(style)) {}
 
-    const shape::Shape& preview() const override { return *draft; }
-    std::unique_ptr<shape::Shape> takeShape() override { return std::move(draft); }
+    const Shape& preview() const override { return *draft; }
+    std::unique_ptr<Shape> takeShape() override { return std::move(draft); }
 
    protected:
     std::unique_ptr<TShape> draft;
 };
 
-std::unique_ptr<IDrawingTool> createDrawingTool(canvas::Tool tool, shape::ShapeStyle style);
+std::unique_ptr<IDrawingTool> createDrawingTool(Tool tool, ShapeStyle style);
 
-}  // namespace drawing
+}  // namespace paint::drawing

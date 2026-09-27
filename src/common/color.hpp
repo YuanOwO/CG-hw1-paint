@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace color {
+namespace paint {
 
 enum class Color {
     AliceBlue = 0xF0F8FF,
@@ -209,4 +209,4 @@ struct ColorHSV {
 ColorRGBA hsv2rgb(const ColorHSV& hsv);
 ColorHSV rgb2hsv(const ColorRGBA& rgb);
 
-}  // namespace color
+}  // namespace paint

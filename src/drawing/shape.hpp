@@ -4,11 +4,11 @@
 
 #include <vector>
 
-#include "point.hpp"
-#include "render.hpp"
-#include "shapeStyle.hpp"
+#include "common/point.hpp"
+#include "drawing/render.hpp"
+#include "drawing/shapeStyle.hpp"
 
-namespace shape {
+namespace paint::drawing {
 
 class Shape {
    public:
@@ -18,7 +18,7 @@ class Shape {
 
     virtual void draw() const {
         auto vertices = getVertices();
-        render::draw(vertices, isClosed(), style);
+        drawww(vertices, isClosed(), style);
     }
 
    protected:
@@ -129,4 +129,4 @@ class Polygon : public Shape {
     std::vector<Point> points;
 };
 
-}  // namespace shape
+}  // namespace paint::drawing

@@ -1,9 +1,10 @@
-#include "drawing_tool.hpp"
+#include "drawing/tool.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-namespace drawing {
+namespace paint::drawing {
+
 namespace {
 
 // 直線、矩形、圓形等需要拖曳兩個點的工具可以共用這個基底類別。
@@ -61,9 +62,9 @@ class DragTool : public DrawingTool<TShape> {
     }
 };
 
-class LineTool : public DragTool<shape::Line> {
+class LineTool : public DragTool<Line> {
    public:
-    using DragTool<shape::Line>::DragTool;
+    using DragTool<Line>::DragTool;
 
    protected:
     // Shift 鍵被按下時，會畫出水平、垂直或 45° 斜線。
@@ -97,19 +98,19 @@ class LineTool : public DragTool<shape::Line> {
     }
 };
 
-class RectangleTool : public DragTool<shape::Rectangle> {
+class RectangleTool : public DragTool<Rectangle> {
    public:
-    using DragTool<shape::Rectangle>::DragTool;
+    using DragTool<Rectangle>::DragTool;
 };
 
-class EllipseTool : public DragTool<shape::Ellipse> {
+class EllipseTool : public DragTool<Ellipse> {
    public:
-    using DragTool<shape::Ellipse>::DragTool;
+    using DragTool<Ellipse>::DragTool;
 };
 
-class PencilTool : public DrawingTool<shape::Path> {
+class PencilTool : public DrawingTool<Path> {
    public:
-    using DrawingTool<shape::Path>::DrawingTool;
+    using DrawingTool<Path>::DrawingTool;
 
     ToolEventResult onMouseDown(ToolEventState& event) override {
         draft->addPoint(event.mousePosition, true);
@@ -127,9 +128,9 @@ class PencilTool : public DrawingTool<shape::Path> {
     }
 };
 
-class PolygonTool : public DrawingTool<shape::Polygon> {
+class PolygonTool : public DrawingTool<Polygon> {
    public:
-    using DrawingTool<shape::Polygon>::DrawingTool;
+    using DrawingTool<Polygon>::DrawingTool;
 
     ToolEventResult onMouseDown(ToolEventState& event) override {
         if (draft->pointCount() == 0) {
@@ -174,21 +175,21 @@ class PolygonTool : public DrawingTool<shape::Polygon> {
 
 }  // namespace
 
-std::unique_ptr<IDrawingTool> createDrawingTool(canvas::Tool tool, shape::ShapeStyle style) {
+std::unique_ptr<IDrawingTool> createDrawingTool(Tool tool, ShapeStyle style) {
     switch (tool) {
-    case canvas::Tool::TOOL_PENCIL:
+    case Tool::TOOL_PENCIL:
         return std::make_unique<PencilTool>(style);
-    case canvas::Tool::TOOL_LINE:
+    case Tool::TOOL_LINE:
         return std::make_unique<LineTool>(style);
-    case canvas::Tool::TOOL_RECTANGLE:
+    case Tool::TOOL_RECTANGLE:
         return std::make_unique<RectangleTool>(style);
-    case canvas::Tool::TOOL_ELLIPSE:
+    case Tool::TOOL_ELLIPSE:
         return std::make_unique<EllipseTool>(style);
-    case canvas::Tool::TOOL_POLYGON:
+    case Tool::TOOL_POLYGON:
         return std::make_unique<PolygonTool>(style);
     default:
         return nullptr;
     }
 }
 
-}  // namespace drawing
+}  // namespace paint::drawing

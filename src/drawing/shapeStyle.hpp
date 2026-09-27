@@ -4,9 +4,9 @@
 
 #include <vector>
 
-#include "color.hpp"
+#include "common/color.hpp"
 
-namespace shape {
+namespace paint::drawing {
 
 enum class LineJoin { NONE, MITER, BEVEL, ROUND };
 
@@ -15,14 +15,14 @@ enum class LineCap { BUTT, SQUARE, ROUND };
 struct FillStyle {
     bool enabled = true;
 
-    color::ColorRGBA color;
+    ColorRGBA color;
 };
 
 struct StrokeStyle {
     bool enabled = true;
 
     GLfloat width = 1.0f;
-    color::ColorRGBA color;
+    ColorRGBA color;
 
     LineJoin join = LineJoin::MITER;
     LineCap cap = LineCap::ROUND;
@@ -36,4 +36,4 @@ struct ShapeStyle {
     StrokeStyle stroke;
 };
 
-}  // namespace shape
+}  // namespace paint::drawing
