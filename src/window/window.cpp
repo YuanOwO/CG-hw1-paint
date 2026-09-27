@@ -10,272 +10,272 @@ namespace paint {
 namespace {
 std::unordered_map<int, Window*> windows;
 
-Button mapCharacter(int glutKey) {
+Key mapCharacter(int glutKey) {
     switch (glutKey) {
     // Letters
     case 'a':
     case 'A':
-        return Button::A;
+        return Key::A;
     case 'b':
     case 'B':
-        return Button::B;
+        return Key::B;
     case 'c':
     case 'C':
-        return Button::C;
+        return Key::C;
     case 'd':
     case 'D':
-        return Button::D;
+        return Key::D;
     case 'e':
     case 'E':
-        return Button::E;
+        return Key::E;
     case 'f':
     case 'F':
-        return Button::F;
+        return Key::F;
     case 'g':
     case 'G':
-        return Button::G;
+        return Key::G;
     case 'h':
     case 'H':
-        return Button::H;
+        return Key::H;
     case 'i':
     case 'I':
-        return Button::I;
+        return Key::I;
     case 'j':
     case 'J':
-        return Button::J;
+        return Key::J;
     case 'k':
     case 'K':
-        return Button::K;
+        return Key::K;
     case 'l':
     case 'L':
-        return Button::L;
+        return Key::L;
     case 'm':
     case 'M':
-        return Button::M;
+        return Key::M;
     case 'n':
     case 'N':
-        return Button::N;
+        return Key::N;
     case 'o':
     case 'O':
-        return Button::O;
+        return Key::O;
     case 'p':
     case 'P':
-        return Button::P;
+        return Key::P;
     case 'q':
     case 'Q':
-        return Button::Q;
+        return Key::Q;
     case 'r':
     case 'R':
-        return Button::R;
+        return Key::R;
     case 's':
     case 'S':
-        return Button::S;
+        return Key::S;
     case 't':
     case 'T':
-        return Button::T;
+        return Key::T;
     case 'u':
     case 'U':
-        return Button::U;
+        return Key::U;
     case 'v':
     case 'V':
-        return Button::V;
+        return Key::V;
     case 'w':
     case 'W':
-        return Button::W;
+        return Key::W;
     case 'x':
     case 'X':
-        return Button::X;
+        return Key::X;
     case 'y':
     case 'Y':
-        return Button::Y;
+        return Key::Y;
     case 'z':
     case 'Z':
-        return Button::Z;
+        return Key::Z;
 
         // Number row
     case '0':
     case ')':
-        return Button::Digit0;
+        return Key::Digit0;
     case '1':
     case '!':
-        return Button::Digit1;
+        return Key::Digit1;
     case '2':
     case '@':
-        return Button::Digit2;
+        return Key::Digit2;
     case '3':
     case '#':
-        return Button::Digit3;
+        return Key::Digit3;
     case '4':
     case '$':
-        return Button::Digit4;
+        return Key::Digit4;
     case '5':
     case '%':
-        return Button::Digit5;
+        return Key::Digit5;
     case '6':
     case '^':
-        return Button::Digit6;
+        return Key::Digit6;
     case '7':
     case '&':
-        return Button::Digit7;
+        return Key::Digit7;
     case '8':
     case '*':
-        return Button::Digit8;
+        return Key::Digit8;
     case '9':
     case '(':
-        return Button::Digit9;
+        return Key::Digit9;
 
         // Symbols
     case '-':
     case '_':
-        return Button::Minus;
+        return Key::Minus;
     case '=':
     case '+':
-        return Button::Equal;
+        return Key::Equal;
     case '[':
     case '{':
-        return Button::LeftBracket;
+        return Key::LeftBracket;
     case ']':
     case '}':
-        return Button::RightBracket;
+        return Key::RightBracket;
     case '\\':
     case '|':
-        return Button::Backslash;
+        return Key::Backslash;
     case ';':
     case ':':
-        return Button::Semicolon;
+        return Key::Semicolon;
     case '\'':
     case '"':
-        return Button::Apostrophe;
+        return Key::Apostrophe;
     case ',':
     case '<':
-        return Button::Comma;
+        return Key::Comma;
     case '.':
     case '>':
-        return Button::Period;
+        return Key::Period;
     case '/':
     case '?':
-        return Button::Slash;
+        return Key::Slash;
     case '`':
     case '~':
-        return Button::GraveAccent;
+        return Key::GraveAccent;
 
     // Common keys
     case ' ':
-        return Button::Space;
+        return Key::Space;
     case 27:  // ESC
-        return Button::Escape;
+        return Key::Escape;
     case '\r':
     case '\n':
-        return Button::Enter;
+        return Key::Enter;
     case '\b':
-        return Button::Backspace;
+        return Key::Backspace;
     case '\t':
-        return Button::Tab;
+        return Key::Tab;
 
     // Delete
     case 127:
-        return Button::Delete;
+        return Key::Delete;
 
     // Unhandled keys
     default:
-        return Button::Unknown;
+        return Key::Unknown;
     }
 }
 
-Button mapSpecialKey(int glutKey) {
+Key mapSpecialKey(int glutKey) {
     switch (glutKey) {
     // Navigation
     case GLUT_KEY_LEFT:
-        return Button::Left;
+        return Key::Left;
     case GLUT_KEY_RIGHT:
-        return Button::Right;
+        return Key::Right;
     case GLUT_KEY_UP:
-        return Button::Up;
+        return Key::Up;
     case GLUT_KEY_DOWN:
-        return Button::Down;
+        return Key::Down;
 
     case GLUT_KEY_PAGE_UP:
-        return Button::PageUp;
+        return Key::PageUp;
     case GLUT_KEY_PAGE_DOWN:
-        return Button::PageDown;
+        return Key::PageDown;
     case GLUT_KEY_HOME:
-        return Button::Home;
+        return Key::Home;
     case GLUT_KEY_END:
-        return Button::End;
+        return Key::End;
     case GLUT_KEY_INSERT:
-        return Button::Insert;
+        return Key::Insert;
 
     // Function keys
     case GLUT_KEY_F1:
-        return Button::F1;
+        return Key::F1;
     case GLUT_KEY_F2:
-        return Button::F2;
+        return Key::F2;
     case GLUT_KEY_F3:
-        return Button::F3;
+        return Key::F3;
     case GLUT_KEY_F4:
-        return Button::F4;
+        return Key::F4;
     case GLUT_KEY_F5:
-        return Button::F5;
+        return Key::F5;
     case GLUT_KEY_F6:
-        return Button::F6;
+        return Key::F6;
     case GLUT_KEY_F7:
-        return Button::F7;
+        return Key::F7;
     case GLUT_KEY_F8:
-        return Button::F8;
+        return Key::F8;
     case GLUT_KEY_F9:
-        return Button::F9;
+        return Key::F9;
     case GLUT_KEY_F10:
-        return Button::F10;
+        return Key::F10;
     case GLUT_KEY_F11:
-        return Button::F11;
+        return Key::F11;
     case GLUT_KEY_F12:
-        return Button::F12;
+        return Key::F12;
 
     // Modifiers
     case GLUT_KEY_SHIFT_L:
-        return Button::LeftShift;
+        return Key::LeftShift;
     case GLUT_KEY_SHIFT_R:
-        return Button::RightShift;
+        return Key::RightShift;
     case GLUT_KEY_CTRL_L:
-        return Button::LeftCtrl;
+        return Key::LeftCtrl;
     case GLUT_KEY_CTRL_R:
-        return Button::RightCtrl;
+        return Key::RightCtrl;
     case GLUT_KEY_ALT_L:
-        return Button::LeftAlt;
+        return Key::LeftAlt;
     case GLUT_KEY_ALT_R:
-        return Button::RightAlt;
+        return Key::RightAlt;
     case GLUT_KEY_SUPER_L:
-        return Button::LeftSuper;
+        return Key::LeftSuper;
     case GLUT_KEY_SUPER_R:
-        return Button::RightSuper;
+        return Key::RightSuper;
 
     // Unhandled keys
     default:
-        return Button::Unknown;
+        return Key::Unknown;
     }
 }
 
-Button mapMouseButton(int glutButton) {
+MouseButton mapMouseButton(int glutButton) {
     switch (glutButton) {
     case GLUT_LEFT_BUTTON:
-        return Button::MouseLeft;
+        return MouseButton::MouseLeft;
     case GLUT_MIDDLE_BUTTON:
-        return Button::MouseMiddle;
+        return MouseButton::MouseMiddle;
     case GLUT_RIGHT_BUTTON:
-        return Button::MouseRight;
+        return MouseButton::MouseRight;
 
     // Unhandled buttons
     default:
-        return Button::Unknown;
+        return MouseButton::Unknown;
     }
 }
 
 }  // namespace
 
-InputState Window::_inputState{};
+KeyboardState Window::_keyboardState;  // 全局的鍵盤狀態
 
-Window::Window(const std::string& title, int width, int height)
-    : _title(title), _width(width), _height(height) {
+Window::Window(const std::string& title, int width, int height, bool resizable)
+    : _title(title), _width(width), _height(height), _resizable(resizable) {
     // 創建 GLUT 視窗
     glutInitWindowSize(_width, _height);
     _id = glutCreateWindow(_title.c_str());
@@ -319,6 +319,15 @@ Window* Window::getCurrentWindow() {
     return nullptr;
 }
 
+void Window::requestRedisplay() {
+    // 如果視窗已經關閉，直接返回
+    if (_id == 0) {
+        return;
+    }
+
+    glutPostWindowRedisplay(_id);
+}
+
 // --------------------------------------------------
 // GLUT callbacks
 // --------------------------------------------------
@@ -329,7 +338,9 @@ void Window::closeCallback() {
     auto* window = getCurrentWindow();
 
     // 如果找不到當前視窗，直接返回
-    if (!window) return;
+    if (!window) {
+        return;
+    }
 
     // 從管理列表中移除視窗，並將其 ID 設為 0
     windows.erase(window->_id);
@@ -344,108 +355,153 @@ void Window::reshapeCallback(int width, int height) {
     auto* window = getCurrentWindow();
 
     // 如果找不到當前視窗，直接返回
-    if (!window) return;
+    if (!window) {
+        return;
+    }
+
+    if (!window->isResizable() && (width != window->_width || height != window->_height)) {
+        // 如果視窗不可調整大小，則恢復到原始大小
+        glutReshapeWindow(window->_width, window->_height);
+        return;
+    }
 
     window->_width = width;
     window->_height = height;
 
+    // 零尺寸 viewport 合法，表示沒有可繪製的區域。
+    glViewport(0, 0, width, height);
+
+    // glOrtho 的左右、上下界不能相等。
+    if (width > 0 && height > 0) {
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0.0, static_cast<GLdouble>(width), static_cast<GLdouble>(height), 0.0, -1.0, 1.0);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+    }
+
     const WindowResizeEvent event(width, height);
 
     window->onResize(event);
+
+    window->requestRedisplay();
 }
 
 void Window::visibilityCallback(int state) {
     auto* window = getCurrentWindow();
 
     // 如果找不到當前視窗，直接返回
-    if (!window) return;
+    if (!window) {
+        return;
+    }
 
-    // TODO: 可以在這裡處理視窗可見性變化的事件
+    using State = WindowVisibilityEvent::WindowVisibilityState;
+
+    const WindowVisibilityEvent event{state == GLUT_VISIBLE ? State::Visible : State::Hidden};
+
+    window->onVisibilityChange(event);
 }
 
 void Window::displayCallback() {
     auto* window = getCurrentWindow();
 
     // 如果找不到當前視窗，直接返回
-    if (!window) return;
+    if (!window) {
+        return;
+    }
 
-    // TODO: 可以在這裡處理視窗重繪的事件
+    // 清除顯示緩衝區
+    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);  // 設置背景色為白色
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    // 調用使用者自定義的繪製函數
+    window->onDisplay();
+
+    // 提交繪圖命令
+    glFlush();
 }
 
 #pragma endregion  // GLUT Window callbacks
 
 #pragma region GLUT HID callbacks
 
-void Window::keyboardCallback(unsigned char key, int x, int y) {
+void Window::keyDownHandler(Key key, int x, int y) {
     auto* window = getCurrentWindow();
 
-    auto btn = mapCharacter(key);
+    bool firstPress = _keyboardState._press(key);
 
-    _inputState._setMousePosition(x, y);
-    bool firstPress = _inputState._press(btn);
-
-    // 如果找不到當前視窗或未知按鈕，直接返回
-    if (!window || btn == Button::Unknown) {
+    // 找不到當前視窗，直接返回
+    if (!window) {
         return;
     }
 
-    const KeyboardEvent event(btn, ButtonAction::Down, _inputState, !firstPress);
+    window->_mouseState._setMousePosition(x, y);
+
+    const KeyboardEvent event(key, ButtonAction::Down, _keyboardState, window->_mouseState, !firstPress);
 
     window->onKeyDown(event);
+}
+
+void Window::keyUpHandler(Key key, int x, int y) {
+    auto* window = getCurrentWindow();
+
+    _keyboardState._release(key);
+
+    // 找不到當前視窗，直接返回
+    if (!window) {
+        return;
+    }
+
+    window->_mouseState._setMousePosition(x, y);
+
+    const KeyboardEvent event(key, ButtonAction::Up, _keyboardState, window->_mouseState);
+
+    window->onKeyUp(event);
+}
+
+void Window::keyboardCallback(unsigned char key, int x, int y) {
+    auto btn = mapCharacter(key);
+
+    // 未知按鈕，直接返回
+    if (btn == Key::Unknown) {
+        return;
+    }
+
+    keyDownHandler(btn, x, y);
 }
 
 void Window::keyboardUpCallback(unsigned char key, int x, int y) {
-    auto* window = getCurrentWindow();
-
     auto btn = mapCharacter(key);
 
-    _inputState._setMousePosition(x, y);
-    _inputState._release(btn);
-
-    // 如果找不到當前視窗或未知按鈕，直接返回
-    if (!window || btn == Button::Unknown) {
+    // 未知按鈕，直接返回
+    if (btn == Key::Unknown) {
         return;
     }
 
-    const KeyboardEvent event(btn, ButtonAction::Up, _inputState);
-
-    window->onKeyUp(event);
+    keyUpHandler(btn, x, y);
 }
 
 void Window::specialCallback(int key, int x, int y) {
-    auto* window = getCurrentWindow();
-
     auto btn = mapSpecialKey(key);
 
-    _inputState._setMousePosition(x, y);
-    bool firstPress = _inputState._press(btn);
-
-    // 如果找不到當前視窗或未知按鈕，直接返回
-    if (!window || btn == Button::Unknown) {
+    // 未知按鈕，直接返回
+    if (btn == Key::Unknown) {
         return;
     }
 
-    const KeyboardEvent event(btn, ButtonAction::Down, _inputState, !firstPress);
-
-    window->onKeyDown(event);
+    keyDownHandler(btn, x, y);
 }
 
 void Window::specialUpCallback(int key, int x, int y) {
-    auto* window = getCurrentWindow();
-
     auto btn = mapSpecialKey(key);
 
-    _inputState._setMousePosition(x, y);
-    _inputState._release(btn);
-
-    // 如果找不到當前視窗或未知按鈕，直接返回
-    if (!window || btn == Button::Unknown) {
+    // 未知按鈕，直接返回
+    if (btn == Key::Unknown) {
         return;
     }
 
-    const KeyboardEvent event(btn, ButtonAction::Up, _inputState);
-
-    window->onKeyUp(event);
+    keyUpHandler(btn, x, y);
 }
 
 void Window::mouseCallback(int button, int state, int x, int y) {
@@ -453,60 +509,72 @@ void Window::mouseCallback(int button, int state, int x, int y) {
 
     auto btn = mapMouseButton(button);
 
-    _inputState._setMousePosition(x, y);
-    if (state == GLUT_DOWN) {
-        _inputState._press(btn);
-    } else if (state == GLUT_UP) {
-        _inputState._release(btn);
-    }
-
     // 如果找不到當前視窗或未知按鈕，直接返回
-    if (!window || btn == Button::Unknown) {
-        return;  // 未知按鈕，直接返回
+    if (!window || btn == MouseButton::Unknown) {
+        return;
     }
 
-    const MouseEvent event(btn, state == GLUT_DOWN ? ButtonAction::Down : ButtonAction::Up, _inputState);
+    ButtonAction action;
 
     if (state == GLUT_DOWN) {
-        window->onMouseDown(event);
+        window->_mouseState._press(btn);
+        action = ButtonAction::Down;
     } else if (state == GLUT_UP) {
+        window->_mouseState._release(btn);
+        action = ButtonAction::Up;
+    } else {  // 未知狀態，直接返回
+        return;
+    }
+
+    window->_mouseState._setMousePosition(x, y);
+
+    const MouseEvent event(btn, action, _keyboardState, window->_mouseState);
+
+    if (action == ButtonAction::Down) {
+        window->onMouseDown(event);
+    } else {  // action == ButtonAction::Up
         window->onMouseUp(event);
     }
 }
 
-void Window::motionCallback(int x, int y) {
+void Window::mouseMoveHandler(int x, int y) {
     auto* window = getCurrentWindow();
 
-    _inputState._setMousePosition(x, y);
-
     // 如果找不到當前視窗，直接返回
-    if (!window) return;
+    if (!window) {
+        return;
+    }
 
-    const MouseMoveEvent event(x, y, _inputState);
+    window->_mouseState._setMousePosition(x, y);
+
+    const MouseMoveEvent event(_keyboardState, window->_mouseState);
 
     window->onMouseMove(event);
 }
 
+void Window::motionCallback(int x, int y) {
+    mouseMoveHandler(x, y);
+}
+
 void Window::passiveMotionCallback(int x, int y) {
-    auto* window = getCurrentWindow();
-
-    _inputState._setMousePosition(x, y);
-
-    // 如果找不到當前視窗，直接返回
-    if (!window) return;
-
-    const MouseMoveEvent event(x, y, _inputState);
-
-    window->onMouseMove(event);
+    mouseMoveHandler(x, y);
 }
 
 void Window::entryCallback(int state) {
     auto* window = getCurrentWindow();
 
     // 如果找不到當前視窗，直接返回
-    if (!window) return;
+    if (!window) {
+        return;
+    }
 
-    // TODO: 可以在這裡處理滑鼠進入或離開視窗的事件
+    if (state == GLUT_ENTERED) {
+        MouseEnterEvent event(_keyboardState, window->_mouseState);
+        window->onMouseEnter(event);
+    } else if (state == GLUT_LEFT) {
+        MouseLeaveEvent event(_keyboardState, window->_mouseState);
+        window->onMouseLeave(event);
+    }
 }
 
 #pragma endregion  // GLUT HID callbacks

@@ -2,7 +2,7 @@
 
 namespace paint {
 
-enum class Button {
+enum class Key {
     Unknown,
 
     // Letters
@@ -106,6 +106,10 @@ enum class Button {
     NumLock,
     CapsLock,    // unsupported by current GLUT backend
     ScrollLock,  // unsupported by current GLUT backend
+};
+
+enum class MouseButton {
+    Unknown,
 
     // Mouse
     MouseLeft,
@@ -115,6 +119,6 @@ enum class Button {
     MouseButton5,
 };
 
-enum class ButtonAction { Down, Up };
+enum class ButtonAction { Down, Up, Unknown };
 
 }  // namespace paint
