@@ -33,6 +33,19 @@ class KeyboardState : public InputState<Key> {
    public:
     using InputState<Key>::InputState;
 
+    bool isShiftDown() const { return isDown(Key::LeftShift) || isDown(Key::RightShift); }
+    bool isCtrlDown() const { return isDown(Key::LeftCtrl) || isDown(Key::RightCtrl); }
+    bool isAltDown() const { return isDown(Key::LeftAlt) || isDown(Key::RightAlt); }
+    bool isSuperDown() const { return isDown(Key::LeftSuper) || isDown(Key::RightSuper); }
+
+    bool isPrimaryModifierDown() const {
+#ifdef __APPLE__
+        return isSuperDown();  // macOS 上的 Command 鍵是主要的修飾鍵
+#else
+        return isCtrlDown();  // Windows 與 Linux 上的 Ctrl 鍵是主要的修飾鍵
+#endif
+    }
+
    private:
     friend class Window;
 };

@@ -1,7 +1,7 @@
 #include <GL/freeglut.h>
 
 #include "app/application.hpp"
-#include "app/paintWindow.hpp"
+#include "app/paint_window.hpp"
 
 int main(int argc, char** argv) {
     paint::Application app(argc, argv);

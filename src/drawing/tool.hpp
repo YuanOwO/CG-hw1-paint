@@ -1,22 +1,29 @@
 #pragma once
 
 #include <memory>
-#include <unordered_map>
-#include <utility>
 
 #include "common/point.hpp"
-#include "drawing/canvas.hpp"
 #include "drawing/shape.hpp"
-
-// true -> 按下，false -> 釋放
-typedef std::unordered_map<unsigned int, bool> KeyStateMap;  // 用於追蹤按鍵狀態的映射
+#include "input/input_state.hpp"
 
 namespace paint::drawing {
 
 struct ToolEventState {
-    KeyStateMap& keyStates;         // 用於追蹤按鍵狀態的映射
-    KeyStateMap& specialKeyStates;  // 用於追蹤特殊按鍵狀態的映射
-    Point& mousePosition;           // 當前滑鼠位置
+    ToolEventState(const KeyboardState& kbState, const MouseState& msState)
+        : keyboardState(kbState), mouseState(msState) {}
+
+    const KeyboardState& keyboardState;  // 當前鍵盤狀態
+    const MouseState& mouseState;        // 當前滑鼠狀態
+
+    Point position() const { return mouseState.position(); }
+};
+
+enum class Tool {
+    TOOL_PENCIL,
+    TOOL_LINE,
+    TOOL_RECTANGLE,
+    TOOL_ELLIPSE,
+    TOOL_POLYGON,
 };
 
 enum class ToolEventResult {
@@ -36,14 +43,13 @@ class IDrawingTool {
     // 僅在 COMMIT 後呼叫一次；取出後由呼叫端銷毀工具。
     virtual std::unique_ptr<Shape> takeShape() = 0;
 
+    virtual ToolEventResult onClick(ToolEventState&) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onDoubleClick(ToolEventState&) { return ToolEventResult::NONE; }
     virtual ToolEventResult onMouseDown(ToolEventState&) { return ToolEventResult::NONE; }
     virtual ToolEventResult onMouseUp(ToolEventState&) { return ToolEventResult::NONE; }
     virtual ToolEventResult onMouseMove(ToolEventState&) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onMousePassiveMove(ToolEventState&) { return ToolEventResult::NONE; }
     virtual ToolEventResult onKeyDown(ToolEventState&) { return ToolEventResult::NONE; }
     virtual ToolEventResult onKeyUp(ToolEventState&) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onSpecialKeyDown(ToolEventState&) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onSpecialKeyUp(ToolEventState&) { return ToolEventResult::NONE; }
 };
 
 template <typename TShape>

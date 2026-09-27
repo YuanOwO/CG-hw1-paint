@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_map>
 
+#include "element/element.hpp"
 #include "event/hid_event.hpp"
 #include "event/window_event.hpp"
 #include "input/input_state.hpp"
@@ -41,6 +42,15 @@ class Window {
 
     bool isResizable() const { return _resizable; }
 
+    void setRootElement(ElementPtr rootElement) {
+        _rootElement = std::move(rootElement);
+        if (_rootElement) {
+            // 設定根元素的 invalidate callback，當元素需要重新渲染時，呼叫此函式通知父視窗
+            _rootElement->setInvalidateCallback([this]() { this->requestRedisplay(); });
+        }
+        requestRedisplay();
+    }
+
    protected:
     // 回傳目前的輸入狀態。
     const KeyboardState& getKeyboardState() const { return _keyboardState; }
@@ -49,19 +59,65 @@ class Window {
     virtual void onClose(const WindowCloseEvent& event) {}
     virtual void onResize(const WindowResizeEvent& event) {}
     virtual void onVisibilityChange(const WindowVisibilityEvent& event) {}
-    virtual void onDisplay() {}
+    virtual void onDisplay() {
+        if (_rootElement) {
+            _rootElement->render();
+        }
+    }
 
-    virtual void onKeyDown(const KeyboardEvent& event) {}
-    virtual void onKeyUp(const KeyboardEvent& event) {}
+    virtual void onKeyDown(const KeyboardEvent& event) {
+        if (_rootElement) {
+            _rootElement->onKeyDown(event);
+        }
+    }
 
-    virtual void onClick(const MouseClickEvent& event) {}
-    virtual void onDoubleClick(const MouseClickEvent& event) {}
+    virtual void onKeyUp(const KeyboardEvent& event) {
+        if (_rootElement) {
+            _rootElement->onKeyUp(event);
+        }
+    }
 
-    virtual void onMouseDown(const MouseEvent& event) {}
-    virtual void onMouseUp(const MouseEvent& event) {}
-    virtual void onMouseMove(const MouseMoveEvent& event) {}
-    virtual void onMouseEnter(const MouseEnterEvent& event) {}
-    virtual void onMouseLeave(const MouseLeaveEvent& event) {}
+    virtual void onClick(const MouseClickEvent& event) {
+        if (_rootElement) {
+            _rootElement->onClick(event);
+        }
+    }
+
+    virtual void onDoubleClick(const MouseClickEvent& event) {
+        if (_rootElement) {
+            _rootElement->onDoubleClick(event);
+        }
+    }
+
+    virtual void onMouseDown(const MouseEvent& event) {
+        if (_rootElement) {
+            _rootElement->onMouseDown(event);
+        }
+    }
+
+    virtual void onMouseUp(const MouseEvent& event) {
+        if (_rootElement) {
+            _rootElement->onMouseUp(event);
+        }
+    }
+
+    virtual void onMouseMove(const MouseMoveEvent& event) {
+        if (_rootElement) {
+            _rootElement->onMouseMove(event);
+        }
+    }
+
+    virtual void onMouseEnter(const MouseEnterEvent& event) {
+        if (_rootElement) {
+            _rootElement->onMouseEnter(event);
+        }
+    }
+
+    virtual void onMouseLeave(const MouseLeaveEvent& event) {
+        if (_rootElement) {
+            _rootElement->onMouseLeave(event);
+        }
+    }
 
     void requestRedisplay();
 
@@ -69,6 +125,8 @@ class Window {
     int _id = 0;  // GLUT window ID
     int _width, _height;
     std::string _title;
+
+    ElementPtr _rootElement;  // 根元素
 
     bool _resizable;  // 是否允許調整視窗大小
 
