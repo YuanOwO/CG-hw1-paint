@@ -332,7 +332,7 @@ void Window::requestRedisplay() {
 // GLUT callbacks
 // --------------------------------------------------
 
-#pragma region GLUT Window callbacks
+#pragma region GLUT window callbacks
 
 void Window::closeCallback() {
     auto* window = getCurrentWindow();
@@ -422,9 +422,9 @@ void Window::displayCallback() {
     glFlush();
 }
 
-#pragma endregion  // GLUT Window callbacks
+#pragma endregion  // GLUT window callbacks
 
-#pragma region GLUT HID callbacks
+#pragma region GLUT keyboard callbacks
 
 void Window::keyDownHandler(Key key, int x, int y) {
     auto* window = getCurrentWindow();
@@ -504,6 +504,10 @@ void Window::specialUpCallback(int key, int x, int y) {
     keyUpHandler(btn, x, y);
 }
 
+#pragma endregion  // GLUT keyboard callbacks
+
+#pragma region GLUT mouse callbacks
+
 void Window::mouseCallback(int button, int state, int x, int y) {
     auto* window = getCurrentWindow();
 
@@ -514,26 +518,61 @@ void Window::mouseCallback(int button, int state, int x, int y) {
         return;
     }
 
-    ButtonAction action;
+    window->_mouseState._setMousePosition(x, y);
 
     if (state == GLUT_DOWN) {
         window->_mouseState._press(btn);
-        action = ButtonAction::Down;
+
+        // 記錄滑鼠按下的位置，方便後續判斷點擊事件
+        auto& press = window->_clickCandidate[btn];
+        press.active = true;
+        press.position = Point(x, y);
+
+        const MouseEvent event(btn, ButtonAction::Down, _keyboardState, window->_mouseState);
+        window->onMouseDown(event);
     } else if (state == GLUT_UP) {
         window->_mouseState._release(btn);
-        action = ButtonAction::Up;
-    } else {  // 未知狀態，直接返回
-        return;
-    }
 
-    window->_mouseState._setMousePosition(x, y);
-
-    const MouseEvent event(btn, action, _keyboardState, window->_mouseState);
-
-    if (action == ButtonAction::Down) {
-        window->onMouseDown(event);
-    } else {  // action == ButtonAction::Up
+        const MouseEvent event(btn, ButtonAction::Up, _keyboardState, window->_mouseState);
         window->onMouseUp(event);
+
+        // 判斷是否為點擊事件
+        // 如果滑鼠按下和釋放的位置距離小於閾值，則認為是點擊事件
+        auto& press = window->_clickCandidate[btn];
+        if (press.active && abs(window->_mouseState.position() - press.position) <= CLICK_MOVE_THRESHOLD) {
+            // 判斷是否為雙擊事件
+            // 1. 上一次點擊事件有效
+            // 2. 距離現在的時間小於閾值
+            // 3. 上一次點擊事件的位置與現在的位置距離小於閾值
+
+            auto& lastClick = window->_lastClicks[btn];
+            auto now = std::chrono::steady_clock::now();
+            const Point position = window->_mouseState.position();
+
+            const bool isDoubleClick = lastClick.active &&
+                                       now - lastClick.time <= DOUBLE_CLICK_TIME_THRESHOLD &&
+                                       abs(position - lastClick.position) <= CLICK_MOVE_THRESHOLD;
+
+            if (isDoubleClick) {
+                lastClick.active = false;  // 重置上一次點擊事件，避免三擊事件被誤判為雙擊事件
+
+                const MouseClickEvent doubleClickEvent(btn, 2, _keyboardState, window->_mouseState);
+                window->onDoubleClick(doubleClickEvent);
+            } else {
+                lastClick.active = true;
+                lastClick.position = window->_mouseState.position();
+                lastClick.time = now;
+
+                const MouseClickEvent clickEvent(btn, 1, _keyboardState, window->_mouseState);
+                window->onClick(clickEvent);
+            }
+        }
+
+        // 重置滑鼠按下狀態
+        press.active = false;
+    } else {
+        // 未知狀態，直接返回
+        return;
     }
 }
 
@@ -546,6 +585,13 @@ void Window::mouseMoveHandler(int x, int y) {
     }
 
     window->_mouseState._setMousePosition(x, y);
+
+    // 移動距離超過閾值，則取消所有滑鼠按下狀態，避免誤判為點擊事件
+    for (auto& [button, press] : window->_clickCandidate) {
+        if (press.active && abs(window->_mouseState.position() - press.position) > CLICK_MOVE_THRESHOLD) {
+            press.active = false;
+        }
+    }
 
     const MouseMoveEvent event(_keyboardState, window->_mouseState);
 
@@ -568,6 +614,9 @@ void Window::entryCallback(int state) {
         return;
     }
 
+    // 清除滑鼠按鈕狀態，避免在滑鼠進入或離開視窗時，按鈕狀態不一致。
+    window->_mouseState._clear();
+
     if (state == GLUT_ENTERED) {
         MouseEnterEvent event(_keyboardState, window->_mouseState);
         window->onMouseEnter(event);
@@ -577,6 +626,6 @@ void Window::entryCallback(int state) {
     }
 }
 
-#pragma endregion  // GLUT HID callbacks
+#pragma endregion  // GLUT mouse callbacks
 
 }  // namespace paint

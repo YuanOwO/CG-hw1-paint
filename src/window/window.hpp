@@ -1,13 +1,29 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 #include "event/hid_event.hpp"
 #include "event/window_event.hpp"
 #include "input/input_state.hpp"
 
 namespace paint {
+
+const float CLICK_MOVE_THRESHOLD = 4.0f;  // 滑鼠移動距離超過此閾值，則取消點擊事件的判定。
+const std::chrono::milliseconds DOUBLE_CLICK_TIME_THRESHOLD(300);  // 滑鼠雙擊的時間閾值，單位為毫秒。
+
+struct ClickCandidate {
+    bool active = false;
+    Point position;
+};
+
+struct ClickHistory {
+    bool active = false;
+    Point position;
+    std::chrono::steady_clock::time_point time;
+};
 
 class Window {
    public:
@@ -37,6 +53,10 @@ class Window {
 
     virtual void onKeyDown(const KeyboardEvent& event) {}
     virtual void onKeyUp(const KeyboardEvent& event) {}
+
+    virtual void onClick(const MouseClickEvent& event) {}
+    virtual void onDoubleClick(const MouseClickEvent& event) {}
+
     virtual void onMouseDown(const MouseEvent& event) {}
     virtual void onMouseUp(const MouseEvent& event) {}
     virtual void onMouseMove(const MouseMoveEvent& event) {}
@@ -54,6 +74,9 @@ class Window {
 
     static KeyboardState _keyboardState;  // 全局的鍵盤狀態
     MouseState _mouseState;               // 視窗的滑鼠狀態
+
+    std::unordered_map<MouseButton, ClickCandidate> _clickCandidate;  // 記錄滑鼠按下的位置，方便判斷點擊事件
+    std::unordered_map<MouseButton, ClickHistory> _lastClicks;  // 記錄上一次滑鼠點擊事件，方便判斷雙擊事件
 
     static Window* getCurrentWindow();
 
