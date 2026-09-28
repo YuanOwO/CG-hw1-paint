@@ -50,8 +50,8 @@ class CanvasElement : public Element {
 
     bool isDrawing() const { return _activeTool && _activeTool->preview() != nullptr; }
 
-    void clearDraft();
-    void createDraft();
+    void resetTool();
+    void ensureTool();
 
     void handleDraftEvent(drawing::ToolEventResult result);
 };

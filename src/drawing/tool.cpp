@@ -24,6 +24,7 @@ class DragTool : public DrawingTool<TShape> {
 
         if (isShiftKey(event.getKey())) {
             onShift(event);
+            return ToolEventResult::UPDATE;
         }
 
         return ToolEventResult::NONE;
@@ -36,6 +37,7 @@ class DragTool : public DrawingTool<TShape> {
 
         if (isShiftKey(event.getKey())) {
             this->_draft->setEnd(event.getPosition());
+            return ToolEventResult::UPDATE;
         }
 
         return ToolEventResult::NONE;
@@ -46,7 +48,7 @@ class DragTool : public DrawingTool<TShape> {
         this->_draft->setStart(event.getPosition());
         this->_draft->setEnd(event.getPosition());
 
-        return ToolEventResult::NONE;
+        return ToolEventResult::UPDATE;
     }
 
     ToolEventResult onMouseUp(const MouseEvent& event) override {
@@ -76,7 +78,7 @@ class DragTool : public DrawingTool<TShape> {
             onShift(event);
         }
 
-        return ToolEventResult::NONE;
+        return ToolEventResult::UPDATE;
     }
 
    protected:
@@ -161,7 +163,7 @@ class PencilTool : public DrawingTool<Path> {
         this->beginDraft();
         _draft->addPoint(event.getPosition(), true);
 
-        return ToolEventResult::NONE;
+        return ToolEventResult::UPDATE;
     }
 
     ToolEventResult onMouseUp(const MouseEvent& event) override {
@@ -185,7 +187,7 @@ class PencilTool : public DrawingTool<Path> {
 
         _draft->addPoint(event.getPosition());
 
-        return ToolEventResult::NONE;
+        return ToolEventResult::UPDATE;
     }
 };
 
@@ -206,7 +208,7 @@ class PolygonTool : public DrawingTool<Polygon> {
         }
         _draft->addPoint(event.getPosition());
 
-        return ToolEventResult::NONE;
+        return ToolEventResult::UPDATE;
     }
 
     ToolEventResult onDoubleClick(const MouseClickEvent& event) override {
@@ -229,7 +231,7 @@ class PolygonTool : public DrawingTool<Polygon> {
         }
 
         _draft->setLastPoint(event.getPosition());
-        return ToolEventResult::NONE;
+        return ToolEventResult::UPDATE;
     }
 
     ToolEventResult onKeyDown(const KeyboardEvent& event) override {
@@ -250,6 +252,7 @@ class PolygonTool : public DrawingTool<Polygon> {
                 return ToolEventResult::CANCEL;
             }
             _draft->removeLastPoint();
+            return ToolEventResult::UPDATE;
         }
 
         return ToolEventResult::NONE;

@@ -20,7 +20,8 @@ enum class Tool {
 };
 
 enum class ToolEventResult {
-    NONE,    // 表示不需要提交草稿，繼續繪製
+    NONE,    // 表示草稿沒有任何變化，畫布不需要重新繪製草稿
+    UPDATE,  // 表示草稿已更新，畫布需要重新繪製草稿
     COMMIT,  // 表示草稿已完成，提交草稿
     CANCEL,  // 表示草稿已取消，清除草稿但不提交
 };

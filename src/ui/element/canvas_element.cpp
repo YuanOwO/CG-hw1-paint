@@ -17,7 +17,7 @@ CanvasElement::CanvasElement(Document& document)
 
 void CanvasElement::undo() {
     if (isDrawing()) {  // 如果正在繪製草稿，則取消草稿
-        clearDraft();
+        resetTool();
     } else {
         _document.undo();
     }
@@ -36,15 +36,15 @@ void CanvasElement::redo() {
 
 void CanvasElement::clear() {
     _document.clearScene();
-    clearDraft();
+    resetTool();
     invalidate();
 }
 
-void CanvasElement::clearDraft() {
+void CanvasElement::resetTool() {
     _activeTool.reset();
 }
 
-void CanvasElement::createDraft() {
+void CanvasElement::ensureTool() {
     if (isDrawing()) {
         return;  // 已經有草稿了，不需要再創建
     }
@@ -58,15 +58,16 @@ void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
         _document.addShape(_activeTool->takeShape());
         [[fallthrough]];
     case drawing::ToolEventResult::CANCEL:  // 注意：這裡故意不 break，因為 COMMIT 也需要清除草稿
-        clearDraft();
+        resetTool();
+        [[fallthrough]];
+    case drawing::ToolEventResult::UPDATE:  // 注意：這裡故意不 break，因為 COMMIT, CANCEL 也需要重新繪製畫布
+        invalidate();
         break;
     case drawing::ToolEventResult::NONE:
     default:
         // 不需要提交草稿，繼續繪製
         break;
     }
-
-    invalidate();
 }
 
 void CanvasElement::render() {
@@ -98,7 +99,7 @@ void CanvasElement::onKeyDown(const KeyboardEvent& event) {
     }
 
     if (!isDrawing()) {
-        createDraft();
+        ensureTool();
     }
 
     handleDraftEvent(_activeTool->onKeyDown(event));
@@ -111,7 +112,7 @@ void CanvasElement::onKeyUp(const KeyboardEvent& event) {
     }
 
     if (!isDrawing()) {
-        createDraft();
+        ensureTool();
     }
 
     handleDraftEvent(_activeTool->onKeyUp(event));
@@ -123,7 +124,7 @@ void CanvasElement::onClick(const MouseClickEvent& event) {
         return;
     }
     if (!isDrawing()) {
-        createDraft();
+        ensureTool();
     }
 
     handleDraftEvent(_activeTool->onClick(event));
@@ -136,7 +137,7 @@ void CanvasElement::onDoubleClick(const MouseClickEvent& event) {
     }
 
     if (!isDrawing()) {
-        createDraft();
+        ensureTool();
     }
 
     handleDraftEvent(_activeTool->onDoubleClick(event));
@@ -149,7 +150,7 @@ void CanvasElement::onMouseDown(const MouseEvent& event) {
     }
 
     if (!isDrawing()) {
-        createDraft();
+        ensureTool();
     }
 
     handleDraftEvent(_activeTool->onMouseDown(event));
@@ -162,7 +163,7 @@ void CanvasElement::onMouseUp(const MouseEvent& event) {
     }
 
     if (!isDrawing()) {
-        createDraft();
+        ensureTool();
     }
 
     handleDraftEvent(_activeTool->onMouseUp(event));
