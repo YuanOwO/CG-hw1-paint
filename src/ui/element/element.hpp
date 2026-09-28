@@ -45,6 +45,4 @@ class Element {
     void setInvalidateCallback(std::function<void()> callback) { _invalidateCallback = std::move(callback); }
 };
 
-using ElementPtr = std::unique_ptr<Element>;
-
 }  // namespace paint

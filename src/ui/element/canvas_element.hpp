@@ -4,8 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "command/command_history.hpp"
-#include "drawing/scene.hpp"
+#include "document/document.hpp"
 #include "drawing/shape_style.hpp"
 #include "drawing/tool.hpp"
 #include "render/renderer.hpp"
@@ -15,7 +14,7 @@ namespace paint {
 
 class CanvasElement : public Element {
    public:
-    CanvasElement();
+    CanvasElement(Document& document);
 
     void setTool(drawing::Tool tool) { _currentTool = tool; }
     drawing::Tool getTool() const { return _currentTool; }
@@ -54,19 +53,16 @@ class CanvasElement : public Element {
    private:
     drawing::Tool _currentTool;
     drawing::ShapeStyle _currentStyle;
+    Renderer _renderer;  // 用於繪製歷史紀錄與草稿
 
-    Renderer _renderer;  // 用於繪製歷史紀錄與草稿的渲染器
+    Document& _document;  // 參考外部的 Document，CanvasElement 不擁有 Document 的所有權
 
     // 目前正在使用的繪圖工具，若為 nullptr 則表示沒有正在繪製的草稿
     std::unique_ptr<drawing::IDrawingTool> _activeTool;
 
-    drawing::Scene _scene;
-    CommandHistory _history;
-
     bool isDrawing() const { return _activeTool != nullptr; }
 
     void clearDraft();
-
     void createDraft();
 
     void handleDraftEvent(drawing::ToolEventResult result);

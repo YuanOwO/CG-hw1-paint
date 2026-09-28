@@ -54,9 +54,44 @@ std::vector<Point> Path::getVertices() const {
     return vertices;
 }
 
+void Path::addPoint(const Point& p, const bool force) {
+    if (points.empty()) {
+        points.push_back(p);
+        return;
+    }
+
+    // 避免筆刷的點太密集，導致繪製出來的線條過於粗糙。
+    const bool isTooClose = abs(points.back() - p) < std::max(style.stroke.width * 0.2f, 1.0f);
+
+    if (force && isTooClose && points.size() >= 2) {
+        // 強制加入點時，若太接近前一個點，則將前一個點移除，避免重疊。
+        points.pop_back();
+    }
+
+    if (force || !isTooClose) {
+        points.push_back(p);
+    }
+}
+
 std::vector<Point> Polygon::getVertices() const {
     std::vector<Point> vertices = points;  // 直接使用點的集合作為頂點
     return vertices;
+}
+
+void Polygon::addPoint(const Point& point) {
+    points.push_back(point);
+}
+
+void Polygon::setLastPoint(const Point& point) {
+    if (!points.empty()) {
+        points.back() = point;
+    }
+}
+
+void Polygon::removeLastPoint() {
+    if (!points.empty()) {
+        points.pop_back();
+    }
 }
 
 }  // namespace paint::drawing

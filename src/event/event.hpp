@@ -2,6 +2,6 @@
 
 namespace paint {
 
-class Event {};
+class IEvent {};
 
 }  // namespace paint

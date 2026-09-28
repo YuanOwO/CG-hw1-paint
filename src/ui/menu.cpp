@@ -23,7 +23,9 @@ Menu::~Menu() {
 
     menus.erase(_menuId);
 
-    glutDestroyMenu(_menuId);
+    if (glutGet(GLUT_INIT_STATE)) {
+        glutDestroyMenu(_menuId);
+    }
 
     _menuId = 0;
 }

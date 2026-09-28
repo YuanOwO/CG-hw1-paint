@@ -3,6 +3,7 @@
 #include <string>
 
 #include "app/window.hpp"
+#include "document/document.hpp"
 #include "ui/elements.hpp"
 #include "ui/menu.hpp"
 
@@ -15,7 +16,9 @@ class PaintWindow : public Window {
     CanvasElement& getCanvas() { return *_canvas; }
 
    private:
+    Document _document;
     Menu _menu;
+
     CanvasElement* _canvas = nullptr;
 
     void setupMenu();

@@ -10,7 +10,7 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
     setupMenu();
 
     // 設置根元素為 CanvasElement
-    auto canvas = std::make_unique<CanvasElement>();
+    auto canvas = std::make_unique<CanvasElement>(_document);
     _canvas = canvas.get();
     setRootElement(std::move(canvas));
 }

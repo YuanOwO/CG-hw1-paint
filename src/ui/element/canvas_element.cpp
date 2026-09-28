@@ -1,10 +1,13 @@
 #include "ui/element/canvas_element.hpp"
 
+#include <utility>
+
 #include "command/edit_command.hpp"
 
 namespace paint {
 
-CanvasElement::CanvasElement() : _currentTool(drawing::Tool::TOOL_PENCIL) {
+CanvasElement::CanvasElement(Document& document)
+    : _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
     _currentStyle.stroke.width = 1;
     _currentStyle.stroke.color = ColorRGBA(Color::Black);
     _currentStyle.fill.color = ColorRGBA(Color::Transparent);
@@ -15,14 +18,10 @@ CanvasElement::CanvasElement() : _currentTool(drawing::Tool::TOOL_PENCIL) {
 void CanvasElement::undo() {
     if (isDrawing()) {  // 如果正在繪製草稿，則取消草稿
         clearDraft();
-        invalidate();
+    } else {
+        _document.getHistory().undo();
     }
 
-    if (!_history.canUndo()) {  // 沒東西可以 undo
-        return;
-    }
-
-    _history.undo();
     invalidate();
 }
 
@@ -31,16 +30,12 @@ void CanvasElement::redo() {
         return;
     }
 
-    if (!_history.canRedo()) {  // 沒東西可以 redo
-        return;
-    }
-
-    _history.redo();
+    _document.getHistory().redo();
     invalidate();
 }
 
 void CanvasElement::clear() {
-    _history.execute(std::make_unique<ClearSceneCommand>(_scene));
+    _document.clearScene();
     clearDraft();
     invalidate();
 }
@@ -60,7 +55,7 @@ void CanvasElement::createDraft() {
 void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
     switch (result) {
     case drawing::ToolEventResult::COMMIT:
-        _history.execute(std::make_unique<AddShapeCommand>(_scene, _activeTool->takeShape()));
+        _document.addShape(_activeTool->takeShape());
         [[fallthrough]];
     case drawing::ToolEventResult::CANCEL:  // 注意：這裡故意不 break，因為 COMMIT 也需要清除草稿
         clearDraft();
@@ -76,7 +71,7 @@ void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
 
 void CanvasElement::render() {
     // 先繪製歷史紀錄
-    for (const auto& shape : _scene.getShapes()) {
+    for (const auto& shape : _document.getScene().getShapes()) {
         _renderer.draw(*shape);
     }
 
@@ -88,8 +83,8 @@ void CanvasElement::render() {
 
 void CanvasElement::onKeyDown(const KeyboardEvent& event) {
     // 處理 Ctrl+Z / Command+Z 以及 Ctrl+Shift+Z / Command+Shift+Z 的快捷鍵
-    if (event.key() == Key::Z && event.keyboardState().isPrimaryModifierDown()) {
-        if (event.keyboardState().isShiftDown()) {
+    if (event.getKey() == Key::Z && event.getKeyboardState().isPrimaryModifierDown()) {
+        if (event.getKeyboardState().isShiftDown()) {
             redo();
         } else {
             undo();
@@ -120,7 +115,7 @@ void CanvasElement::onKeyUp(const KeyboardEvent& event) {
 
 void CanvasElement::onClick(const MouseClickEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.button() != MouseButton::MouseLeft) {
+    if (event.getButton() != MouseButton::MouseLeft) {
         return;
     }
 
@@ -131,7 +126,7 @@ void CanvasElement::onClick(const MouseClickEvent& event) {
 
 void CanvasElement::onDoubleClick(const MouseClickEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.button() != MouseButton::MouseLeft) {
+    if (event.getButton() != MouseButton::MouseLeft) {
         return;
     }
 
@@ -142,7 +137,7 @@ void CanvasElement::onDoubleClick(const MouseClickEvent& event) {
 
 void CanvasElement::onMouseDown(const MouseEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.button() != MouseButton::MouseLeft) {
+    if (event.getButton() != MouseButton::MouseLeft) {
         return;
     }
 
@@ -155,7 +150,7 @@ void CanvasElement::onMouseDown(const MouseEvent& event) {
 
 void CanvasElement::onMouseUp(const MouseEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.button() != MouseButton::MouseLeft) {
+    if (event.getButton() != MouseButton::MouseLeft) {
         return;
     }
 

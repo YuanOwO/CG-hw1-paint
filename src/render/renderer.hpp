@@ -14,10 +14,6 @@ namespace paint {
 class Renderer {
    public:
     void draw(const drawing::Shape& shape) const;
-
-   private:
-    std::vector<Point> vertices;
-    drawing::ShapeStyle style;
 };
 
 }  // namespace paint

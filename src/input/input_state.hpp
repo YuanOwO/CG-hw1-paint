@@ -55,16 +55,13 @@ class MouseState : public InputState<MouseButton> {
    public:
     using InputState<MouseButton>::InputState;
 
-    int x() const { return _mouseX; }
-    int y() const { return _mouseY; }
-    Point position() const { return Point(_mouseX, _mouseY); }
-    void getPosition(int& x, int& y) const {
-        x = _mouseX;
-        y = _mouseY;
-    }
+    int getX() const { return _mouseX; }
+    int getY() const { return _mouseY; }
+    Point getPosition() const { return Point(_mouseX, _mouseY); }
 
    private:
     friend class Window;
+
     int _mouseX = 0;
     int _mouseY = 0;
 

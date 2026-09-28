@@ -307,15 +307,13 @@ Window::~Window() {
     }
 }
 
-Window* Window::getCurrentWindow() {
-    const int currentWindowId = glutGetWindow();
-
-    auto it = windows.find(currentWindowId);
-    if (it != windows.end()) {
-        return it->second;
+void Window::setRootElement(std::unique_ptr<Element> rootElement) {
+    _rootElement = std::move(rootElement);
+    if (_rootElement) {
+        // 設定根元素的 invalidate callback，當元素需要重新渲染時，呼叫此函式通知父視窗
+        _rootElement->setInvalidateCallback([this]() { this->requestRedisplay(); });
     }
-
-    return nullptr;
+    requestRedisplay();
 }
 
 void Window::requestRedisplay() {
@@ -325,6 +323,17 @@ void Window::requestRedisplay() {
     }
 
     glutPostWindowRedisplay(_id);
+}
+
+Window* Window::getCurrentWindow() {
+    const int currentWindowId = glutGetWindow();
+
+    auto it = windows.find(currentWindowId);
+    if (it != windows.end()) {
+        return it->second;
+    }
+
+    return nullptr;
 }
 
 // --------------------------------------------------
@@ -538,7 +547,7 @@ void Window::mouseCallback(int button, int state, int x, int y) {
         // 判斷是否為點擊事件
         // 如果滑鼠按下和釋放的位置距離小於閾值，則認為是點擊事件
         auto& press = window->_clickCandidate[btn];
-        if (press.active && abs(window->_mouseState.position() - press.position) <= CLICK_MOVE_THRESHOLD) {
+        if (press.active && abs(window->_mouseState.getPosition() - press.position) <= CLICK_MOVE_THRESHOLD) {
             // 判斷是否為雙擊事件
             // 1. 上一次點擊事件有效
             // 2. 距離現在的時間小於閾值
@@ -546,7 +555,7 @@ void Window::mouseCallback(int button, int state, int x, int y) {
 
             auto& lastClick = window->_lastClicks[btn];
             auto now = std::chrono::steady_clock::now();
-            const Point position = window->_mouseState.position();
+            const Point position = window->_mouseState.getPosition();
 
             const bool isDoubleClick = lastClick.active &&
                                        now - lastClick.time <= DOUBLE_CLICK_TIME_THRESHOLD &&
@@ -559,7 +568,7 @@ void Window::mouseCallback(int button, int state, int x, int y) {
                 window->onDoubleClick(doubleClickEvent);
             } else {
                 lastClick.active = true;
-                lastClick.position = window->_mouseState.position();
+                lastClick.position = window->_mouseState.getPosition();
                 lastClick.time = now;
 
                 const MouseClickEvent clickEvent(btn, 1, _keyboardState, window->_mouseState);
@@ -587,7 +596,7 @@ void Window::mouseMoveHandler(int x, int y) {
 
     // 移動距離超過閾值，則取消所有滑鼠按下狀態，避免誤判為點擊事件
     for (auto& [button, press] : window->_clickCandidate) {
-        if (press.active && abs(window->_mouseState.position() - press.position) > CLICK_MOVE_THRESHOLD) {
+        if (press.active && abs(window->_mouseState.getPosition() - press.position) > CLICK_MOVE_THRESHOLD) {
             press.active = false;
         }
     }
