@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 
@@ -16,7 +17,7 @@ class CanvasElement : public Element {
     void setTool(drawing::Tool tool) { currentTool = tool; }
     drawing::Tool getTool() const { return currentTool; }
 
-    void setLineWidth(int width) { currentStyle.stroke.width = width; }
+    void setLineWidth(int width) { currentStyle.stroke.width = std::max(width, 1); }
     int getLineWidth() const { return currentStyle.stroke.width; }
 
     void setColor(const ColorRGBA& color) { currentStyle.stroke.color = color; }
