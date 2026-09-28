@@ -10,10 +10,14 @@ namespace paint {
 
 class Element {
    public:
+    Element(int width, int height) : _width(width), _height(height) {}
     virtual ~Element() = default;
 
    protected:
-    Element() = default;
+    int _width, _height;
+
+    int getWidth() const { return _width; }
+    int getHeight() const { return _height; }
 
     // 當元素需要重新渲染時，呼叫此函式通知父視窗
     void invalidate() {
@@ -23,6 +27,11 @@ class Element {
     }
 
     virtual void render() {}
+
+    virtual void onResize(const WindowResizeEvent& event) {
+        _width = event.getWidth();
+        _height = event.getHeight();
+    }
 
     virtual void onKeyDown(const KeyboardEvent&) {}
     virtual void onKeyUp(const KeyboardEvent&) {}
@@ -44,7 +53,5 @@ class Element {
 
     void setInvalidateCallback(std::function<void()> callback) { _invalidateCallback = std::move(callback); }
 };
-
-using ElementPtr = std::unique_ptr<Element>;
 
 }  // namespace paint

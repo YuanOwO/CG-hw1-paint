@@ -42,14 +42,7 @@ class Window {
 
     bool isResizable() const { return _resizable; }
 
-    void setRootElement(ElementPtr rootElement) {
-        _rootElement = std::move(rootElement);
-        if (_rootElement) {
-            // 設定根元素的 invalidate callback，當元素需要重新渲染時，呼叫此函式通知父視窗
-            _rootElement->setInvalidateCallback([this]() { this->requestRedisplay(); });
-        }
-        requestRedisplay();
-    }
+    void setRootElement(std::unique_ptr<Element> rootElement);
 
    protected:
     // 回傳目前的輸入狀態。
@@ -57,8 +50,13 @@ class Window {
     const MouseState& getMouseState() const { return _mouseState; }
 
     virtual void onClose(const WindowCloseEvent& event) {}
-    virtual void onResize(const WindowResizeEvent& event) {}
+    virtual void onResize(const WindowResizeEvent& event) {
+        if (_rootElement) {
+            _rootElement->onResize(event);
+        }
+    }
     virtual void onVisibilityChange(const WindowVisibilityEvent& event) {}
+
     virtual void onDisplay() {
         if (_rootElement) {
             _rootElement->render();
@@ -126,7 +124,7 @@ class Window {
     int _width, _height;
     std::string _title;
 
-    ElementPtr _rootElement;  // 根元素
+    std::unique_ptr<Element> _rootElement;  // 根元素
 
     bool _resizable;  // 是否允許調整視窗大小
 
@@ -160,7 +158,5 @@ class Window {
     static void keyUpHandler(Key key, int x, int y);
     static void mouseMoveHandler(int x, int y);
 };
-
-using WindowPtr = std::unique_ptr<Window>;
 
 }  // namespace paint

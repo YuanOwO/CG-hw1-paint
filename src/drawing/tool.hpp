@@ -11,6 +11,7 @@
 namespace paint::drawing {
 
 enum class Tool {
+    TOOL_POINT,
     TOOL_PENCIL,
     TOOL_LINE,
     TOOL_RECTANGLE,
@@ -19,7 +20,8 @@ enum class Tool {
 };
 
 enum class ToolEventResult {
-    NONE,    // 表示不需要提交草稿，繼續繪製
+    NONE,    // 表示草稿沒有任何變化，畫布不需要重新繪製草稿
+    UPDATE,  // 表示草稿已更新，畫布需要重新繪製草稿
     COMMIT,  // 表示草稿已完成，提交草稿
     CANCEL,  // 表示草稿已取消，清除草稿但不提交
 };
@@ -35,6 +37,8 @@ class IDrawingTool {
     // 僅在 COMMIT 後呼叫一次；取出後由呼叫端銷毀工具。
     virtual std::unique_ptr<Shape> takeShape() = 0;
 
+    virtual ToolEventResult finish() = 0;
+
     virtual ToolEventResult onKeyDown(const KeyboardEvent& event) { return ToolEventResult::NONE; }
     virtual ToolEventResult onKeyUp(const KeyboardEvent& event) { return ToolEventResult::NONE; }
     virtual ToolEventResult onClick(const MouseClickEvent& event) { return ToolEventResult::NONE; }
@@ -47,13 +51,18 @@ class IDrawingTool {
 template <typename TShape>
 class DrawingTool : public IDrawingTool {
    public:
-    DrawingTool(ShapeStyle style) : draft(std::make_unique<TShape>(style)) {}
+    DrawingTool(ShapeStyle style) : _style(style) {}
 
-    const Shape* preview() const override { return draft.get(); }
-    std::unique_ptr<Shape> takeShape() override { return std::move(draft); }
+    const Shape* preview() const override { return _draft.get(); }
+    std::unique_ptr<Shape> takeShape() override { return std::move(_draft); }
+
+    ToolEventResult finish() override { return _draft ? ToolEventResult::COMMIT : ToolEventResult::NONE; }
 
    protected:
-    std::unique_ptr<TShape> draft;
+    void beginDraft() { _draft = std::make_unique<TShape>(_style); }
+
+    ShapeStyle _style;                         // 繪圖工具的樣式資訊
+    std::unique_ptr<TShape> _draft = nullptr;  // 草稿形狀，供畫布在 display 時繪製
 };
 
 std::unique_ptr<IDrawingTool> createDrawingTool(Tool tool, ShapeStyle style);

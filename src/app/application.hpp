@@ -37,7 +37,7 @@ class Application {
     }
 
    private:
-    std::vector<WindowPtr> _windows;  // 管理所有視窗的智能指針列表
+    std::vector<std::unique_ptr<Window>> _windows;  // 管理所有視窗的智能指針列表
 };
 
 }  // namespace paint

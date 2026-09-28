@@ -1,28 +1,49 @@
 #include "ui/element/canvas_element.hpp"
 
+#include <utility>
+
+#include "command/edit_command.hpp"
+
 namespace paint {
 
-CanvasElement::CanvasElement() : _currentTool(drawing::Tool::TOOL_PENCIL) {
+CanvasElement::CanvasElement(int width, int height, Document& document)
+    : Element(width, height), _showGrid(true), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
     _currentStyle.stroke.width = 1;
     _currentStyle.stroke.color = ColorRGBA(Color::Black);
     _currentStyle.fill.color = ColorRGBA(Color::Transparent);
     _currentStyle.stroke.join = drawing::LineJoin::MITER;
     _currentStyle.stroke.cap = drawing::LineCap::ROUND;
+
+    resetTool();
+}
+
+void CanvasElement::setTool(drawing::Tool tool) {
+    if (_currentTool == tool) {
+        return;  // 工具沒有改變，不需要重置
+    }
+
+    // 如果目前正在繪製草稿，則先提交，再切換工具
+    handleDraftEvent(_activeTool->finish());
+
+    _currentTool = tool;
+    resetTool();
+}
+
+void CanvasElement::setStyle(const drawing::ShapeStyle& style) {
+    _currentStyle = style;
+
+    if (!isDrawing()) {
+        resetTool();
+    }
 }
 
 void CanvasElement::undo() {
     if (isDrawing()) {  // 如果正在繪製草稿，則取消草稿
-        clearDraft();
-        invalidate();
+        resetTool();
+    } else {
+        _document.undo();
     }
 
-    if (_history.empty()) {  // 沒東西可以 undo
-        return;
-    }
-
-    // 將最後一個歷史紀錄移到 redo stack
-    _redoStack.push_back(std::move(_history.back()));
-    _history.pop_back();
     invalidate();
 }
 
@@ -31,56 +52,46 @@ void CanvasElement::redo() {
         return;
     }
 
-    if (_redoStack.empty()) {  // 沒東西可以 redo
-        return;
-    }
-
-    // 將最後一個 redo stack 移回歷史紀錄
-    _history.push_back(std::move(_redoStack.back()));
-    _redoStack.pop_back();
+    _document.redo();
     invalidate();
 }
 
 void CanvasElement::clear() {
-    _history.clear();
-    _redoStack.clear();
-    clearDraft();
+    _document.clearScene();
+    resetTool();
     invalidate();
 }
 
-void CanvasElement::clearDraft() {
-    _activeTool.reset();
-}
-
-void CanvasElement::createDraft() {
-    if (isDrawing()) {
-        clearDraft();
-    }
-
+void CanvasElement::resetTool() {
     _activeTool = drawing::createDrawingTool(_currentTool, _currentStyle);
 }
 
 void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
     switch (result) {
     case drawing::ToolEventResult::COMMIT:
-        _history.push_back(_activeTool->takeShape());
-        _redoStack.clear();  // 清除 redo stack，因為新的操作會使 redo stack 無效
+        _document.addShape(_activeTool->takeShape());
         [[fallthrough]];
     case drawing::ToolEventResult::CANCEL:  // 注意：這裡故意不 break，因為 COMMIT 也需要清除草稿
-        clearDraft();
+        resetTool();
+        [[fallthrough]];
+    case drawing::ToolEventResult::UPDATE:  // 注意：這裡故意不 break，因為 COMMIT, CANCEL 也需要重新繪製畫布
+        invalidate();
         break;
     case drawing::ToolEventResult::NONE:
     default:
         // 不需要提交草稿，繼續繪製
         break;
     }
-
-    invalidate();
 }
 
 void CanvasElement::render() {
+    // 繪製背景網格
+    if (_showGrid) {
+        _renderer.drawGrid(_width, _height);
+    }
+
     // 先繪製歷史紀錄
-    for (const auto& shape : _history) {
+    for (const auto& shape : _document.getScene().getShapes()) {
         _renderer.draw(*shape);
     }
 
@@ -92,8 +103,8 @@ void CanvasElement::render() {
 
 void CanvasElement::onKeyDown(const KeyboardEvent& event) {
     // 處理 Ctrl+Z / Command+Z 以及 Ctrl+Shift+Z / Command+Shift+Z 的快捷鍵
-    if (event.key() == Key::Z && event.keyboardState().isPrimaryModifierDown()) {
-        if (event.keyboardState().isShiftDown()) {
+    if (event.getKey() == Key::Z && event.getKeyboardState().isPrimaryModifierDown()) {
+        if (event.getKeyboardState().isShiftDown()) {
             redo();
         } else {
             undo();
@@ -106,9 +117,7 @@ void CanvasElement::onKeyDown(const KeyboardEvent& event) {
         return;
     }
 
-    if (isDrawing()) {
-        handleDraftEvent(_activeTool->onKeyDown(event));
-    }
+    handleDraftEvent(_activeTool->onKeyDown(event));
 }
 
 void CanvasElement::onKeyUp(const KeyboardEvent& event) {
@@ -117,41 +126,31 @@ void CanvasElement::onKeyUp(const KeyboardEvent& event) {
         return;
     }
 
-    if (isDrawing()) {
-        handleDraftEvent(_activeTool->onKeyUp(event));
-    }
+    handleDraftEvent(_activeTool->onKeyUp(event));
 }
 
 void CanvasElement::onClick(const MouseClickEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.button() != MouseButton::MouseLeft) {
+    if (event.getButton() != MouseButton::MouseLeft) {
         return;
     }
 
-    if (isDrawing()) {
-        handleDraftEvent(_activeTool->onClick(event));
-    }
+    handleDraftEvent(_activeTool->onClick(event));
 }
 
 void CanvasElement::onDoubleClick(const MouseClickEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.button() != MouseButton::MouseLeft) {
+    if (event.getButton() != MouseButton::MouseLeft) {
         return;
     }
 
-    if (isDrawing()) {
-        handleDraftEvent(_activeTool->onDoubleClick(event));
-    }
+    handleDraftEvent(_activeTool->onDoubleClick(event));
 }
 
 void CanvasElement::onMouseDown(const MouseEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.button() != MouseButton::MouseLeft) {
+    if (event.getButton() != MouseButton::MouseLeft) {
         return;
-    }
-
-    if (!isDrawing()) {
-        createDraft();
     }
 
     handleDraftEvent(_activeTool->onMouseDown(event));
@@ -159,19 +158,20 @@ void CanvasElement::onMouseDown(const MouseEvent& event) {
 
 void CanvasElement::onMouseUp(const MouseEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.button() != MouseButton::MouseLeft) {
+    if (event.getButton() != MouseButton::MouseLeft) {
         return;
     }
 
-    if (isDrawing()) {
-        handleDraftEvent(_activeTool->onMouseUp(event));
-    }
+    handleDraftEvent(_activeTool->onMouseUp(event));
 }
 
 void CanvasElement::onMouseMove(const MouseMoveEvent& event) {
-    if (isDrawing()) {
-        handleDraftEvent(_activeTool->onMouseMove(event));
+    // 如果沒有草稿，則不需要處理滑鼠移動事件，避免不必要的計算與渲染。
+    if (!isDrawing()) {
+        return;
     }
+
+    handleDraftEvent(_activeTool->onMouseMove(event));
 }
 
 }  // namespace paint

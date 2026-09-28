@@ -13,11 +13,8 @@ namespace paint {
 
 class Renderer {
    public:
+    void drawGrid(int width, int height, int spacing = 20) const;
     void draw(const drawing::Shape& shape) const;
-
-   private:
-    std::vector<Point> vertices;
-    drawing::ShapeStyle style;
 };
 
 }  // namespace paint
