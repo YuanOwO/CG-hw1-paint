@@ -14,23 +14,23 @@ class CanvasElement : public Element {
    public:
     CanvasElement();
 
-    void setTool(drawing::Tool tool) { currentTool = tool; }
-    drawing::Tool getTool() const { return currentTool; }
+    void setTool(drawing::Tool tool) { _currentTool = tool; }
+    drawing::Tool getTool() const { return _currentTool; }
 
-    void setLineWidth(int width) { currentStyle.stroke.width = std::max(width, 1); }
-    int getLineWidth() const { return currentStyle.stroke.width; }
+    void setLineWidth(int width) { _currentStyle.stroke.width = std::max(width, 1); }
+    int getLineWidth() const { return _currentStyle.stroke.width; }
 
-    void setColor(const ColorRGBA& color) { currentStyle.stroke.color = color; }
-    ColorRGBA getColor() const { return currentStyle.stroke.color; }
+    void setColor(const ColorRGBA& color) { _currentStyle.stroke.color = color; }
+    ColorRGBA getColor() const { return _currentStyle.stroke.color; }
 
-    void setFillColor(const ColorRGBA& color) { currentStyle.fill.color = color; }
-    ColorRGBA getFillColor() const { return currentStyle.fill.color; }
+    void setFillColor(const ColorRGBA& color) { _currentStyle.fill.color = color; }
+    ColorRGBA getFillColor() const { return _currentStyle.fill.color; }
 
-    void setLineJoin(drawing::LineJoin join) { currentStyle.stroke.join = join; }
-    drawing::LineJoin getLineJoin() const { return currentStyle.stroke.join; }
+    void setLineJoin(drawing::LineJoin join) { _currentStyle.stroke.join = join; }
+    drawing::LineJoin getLineJoin() const { return _currentStyle.stroke.join; }
 
-    void setLineCap(drawing::LineCap cap) { currentStyle.stroke.cap = cap; }
-    drawing::LineCap getLineCap() const { return currentStyle.stroke.cap; }
+    void setLineCap(drawing::LineCap cap) { _currentStyle.stroke.cap = cap; }
+    drawing::LineCap getLineCap() const { return _currentStyle.stroke.cap; }
 
     void undo();
     void redo();
@@ -49,16 +49,16 @@ class CanvasElement : public Element {
     void onMouseMove(const MouseMoveEvent& event) override;
 
    private:
-    drawing::Tool currentTool;
-    drawing::ShapeStyle currentStyle;
+    drawing::Tool _currentTool;
+    drawing::ShapeStyle _currentStyle;
 
     // 目前正在使用的繪圖工具，若為 nullptr 則表示沒有正在繪製的草稿
-    std::unique_ptr<drawing::IDrawingTool> activeTool;
+    std::unique_ptr<drawing::IDrawingTool> _activeTool;
 
-    std::vector<std::unique_ptr<drawing::Shape>> history;
-    std::vector<std::unique_ptr<drawing::Shape>> redoStack;
+    std::vector<std::unique_ptr<drawing::Shape>> _history;
+    std::vector<std::unique_ptr<drawing::Shape>> _redoStack;
 
-    bool isDrawing() const { return activeTool != nullptr; }
+    bool isDrawing() const { return _activeTool != nullptr; }
 
     void clearDraft();
 
