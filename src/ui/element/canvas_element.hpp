@@ -4,6 +4,8 @@
 #include <memory>
 #include <vector>
 
+#include "command/command_history.hpp"
+#include "drawing/scene.hpp"
 #include "drawing/shape_style.hpp"
 #include "drawing/tool.hpp"
 #include "render/renderer.hpp"
@@ -58,8 +60,8 @@ class CanvasElement : public Element {
     // 目前正在使用的繪圖工具，若為 nullptr 則表示沒有正在繪製的草稿
     std::unique_ptr<drawing::IDrawingTool> _activeTool;
 
-    std::vector<std::unique_ptr<drawing::Shape>> _history;
-    std::vector<std::unique_ptr<drawing::Shape>> _redoStack;
+    drawing::Scene _scene;
+    CommandHistory _history;
 
     bool isDrawing() const { return _activeTool != nullptr; }
 

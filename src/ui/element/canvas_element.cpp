@@ -1,5 +1,7 @@
 #include "ui/element/canvas_element.hpp"
 
+#include "command/edit_command.hpp"
+
 namespace paint {
 
 CanvasElement::CanvasElement() : _currentTool(drawing::Tool::TOOL_PENCIL) {
@@ -16,13 +18,11 @@ void CanvasElement::undo() {
         invalidate();
     }
 
-    if (_history.empty()) {  // 沒東西可以 undo
+    if (!_history.canUndo()) {  // 沒東西可以 undo
         return;
     }
 
-    // 將最後一個歷史紀錄移到 redo stack
-    _redoStack.push_back(std::move(_history.back()));
-    _history.pop_back();
+    _history.undo();
     invalidate();
 }
 
@@ -31,19 +31,16 @@ void CanvasElement::redo() {
         return;
     }
 
-    if (_redoStack.empty()) {  // 沒東西可以 redo
+    if (!_history.canRedo()) {  // 沒東西可以 redo
         return;
     }
 
-    // 將最後一個 redo stack 移回歷史紀錄
-    _history.push_back(std::move(_redoStack.back()));
-    _redoStack.pop_back();
+    _history.redo();
     invalidate();
 }
 
 void CanvasElement::clear() {
-    _history.clear();
-    _redoStack.clear();
+    _history.execute(std::make_unique<ClearSceneCommand>(_scene));
     clearDraft();
     invalidate();
 }
@@ -63,8 +60,7 @@ void CanvasElement::createDraft() {
 void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
     switch (result) {
     case drawing::ToolEventResult::COMMIT:
-        _history.push_back(_activeTool->takeShape());
-        _redoStack.clear();  // 清除 redo stack，因為新的操作會使 redo stack 無效
+        _history.execute(std::make_unique<AddShapeCommand>(_scene, _activeTool->takeShape()));
         [[fallthrough]];
     case drawing::ToolEventResult::CANCEL:  // 注意：這裡故意不 break，因為 COMMIT 也需要清除草稿
         clearDraft();
@@ -80,7 +76,7 @@ void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
 
 void CanvasElement::render() {
     // 先繪製歷史紀錄
-    for (const auto& shape : _history) {
+    for (const auto& shape : _scene.getShapes()) {
         _renderer.draw(*shape);
     }
 
