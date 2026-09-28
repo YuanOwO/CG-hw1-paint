@@ -1,7 +1,5 @@
 #pragma once
 
-#include <GL/freeglut.h>
-
 #include <vector>
 
 #include "common/color.hpp"
@@ -21,14 +19,14 @@ struct FillStyle {
 struct StrokeStyle {
     bool enabled = true;
 
-    GLfloat width = 1.0f;
+    float width = 1.0f;
     ColorRGBA color;
 
     LineJoin join = LineJoin::MITER;
     LineCap cap = LineCap::ROUND;
 
     // 避免非常尖的角產生超長 miter
-    GLfloat miterLimit = 4.0f;
+    float miterLimit = 4.0f;
 };
 
 struct ShapeStyle {

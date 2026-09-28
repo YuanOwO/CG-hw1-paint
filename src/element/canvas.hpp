@@ -7,6 +7,7 @@
 #include "drawing/shapeStyle.hpp"
 #include "drawing/tool.hpp"
 #include "element/element.hpp"
+#include "render/render.hpp"
 
 namespace paint {
 
@@ -51,6 +52,8 @@ class CanvasElement : public Element {
    private:
     drawing::Tool _currentTool;
     drawing::ShapeStyle _currentStyle;
+
+    Renderer _renderer;  // 用於繪製歷史紀錄與草稿的渲染器
 
     // 目前正在使用的繪圖工具，若為 nullptr 則表示沒有正在繪製的草稿
     std::unique_ptr<drawing::IDrawingTool> _activeTool;

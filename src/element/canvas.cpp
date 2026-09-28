@@ -81,23 +81,19 @@ void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
 void CanvasElement::render() {
     // 先繪製歷史紀錄
     for (const auto& shape : _history) {
-        shape->draw();
+        _renderer.draw(*shape);
     }
 
     // 再繪製草稿
     if (isDrawing()) {
-        _activeTool->preview()->draw();
+        _renderer.draw(*_activeTool->preview());
     }
 }
 
 void CanvasElement::onKeyDown(const KeyboardEvent& event) {
-    bool primary = event.keyboardState().isPrimaryModifierDown();
-    bool shift = event.keyboardState().isShiftDown();
-    bool z = event.keyboardState().isDown(Key::Z);
-
     // 處理 Ctrl+Z / Command+Z 以及 Ctrl+Shift+Z / Command+Shift+Z 的快捷鍵
-    if (primary && z) {
-        if (shift) {
+    if (event.key() == Key::Z && event.keyboardState().isPrimaryModifierDown()) {
+        if (event.keyboardState().isShiftDown()) {
             redo();
         } else {
             undo();

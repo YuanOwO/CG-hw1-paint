@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "common/point.hpp"
-#include "drawing/render.hpp"
 #include "drawing/shapeStyle.hpp"
 
 namespace paint::drawing {
@@ -14,17 +13,14 @@ class Shape {
 
     virtual ~Shape() = default;
 
-    virtual void draw() const {
-        auto vertices = getVertices();
-        drawww(vertices, isClosed(), style);
-    }
+    virtual bool isClosed() const = 0;  // 是否為封閉形狀
+
+    const ShapeStyle& getStyle() const { return style; }
+
+    virtual std::vector<Point> getVertices() const = 0;  // 採樣取得形狀的頂點座標，供繪製邊框使用
 
    protected:
     const ShapeStyle style;
-
-    virtual bool isClosed() const = 0;  // 是否為封閉形狀
-
-    virtual std::vector<Point> getVertices() const = 0;  // 採樣取得形狀的頂點座標，供繪製邊框使用
 };
 
 // 可以由兩點（起點與終點）定義的形狀，例如直線、矩形、橢圓等。

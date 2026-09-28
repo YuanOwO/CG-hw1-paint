@@ -68,8 +68,8 @@ class DragTool : public DrawingTool<TShape> {
         const Point& start = this->draft->getStart();
         const Point& now = event.position();
 
-        GLfloat dx = now.getX() - start.getX();
-        GLfloat dy = now.getY() - start.getY();
+        float dx = now.getX() - start.getX();
+        float dy = now.getY() - start.getY();
 
         const auto size = std::max(std::abs(dx), std::abs(dy));
         Point newEnd;
@@ -89,13 +89,13 @@ class LineTool : public DragTool<Line> {
         const Point& start = this->draft->getStart();
         const Point& now = event.position();
 
-        const GLfloat dx = now.getX() - start.getX();
-        const GLfloat dy = now.getY() - start.getY();
-        const GLfloat ax = std::abs(dx);
-        const GLfloat ay = std::abs(dy);
+        const float dx = now.getX() - start.getX();
+        const float dy = now.getY() - start.getY();
+        const float ax = std::abs(dx);
+        const float ay = std::abs(dy);
 
         // tan(22.5°)：水平、斜線、垂直之間的分界。
-        const GLfloat threshold = static_cast<GLfloat>(std::tan(M_PI / 8.0f));
+        const float threshold = static_cast<float>(std::tan(M_PI / 8.0f));
 
         Point newEnd = start;
         if (ay <= ax * threshold) {

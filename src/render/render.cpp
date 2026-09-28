@@ -1,11 +1,19 @@
-#include "drawing/render.hpp"
+#include "render/render.hpp"
+
+#include <GL/freeglut.h>
 
 #include <cmath>
 #include <utility>
 
 #include "drawing/shape.hpp"
 
-namespace paint::drawing {
+using LineJoin = paint::drawing::LineJoin;
+using LineCap = paint::drawing::LineCap;
+
+using FillStyle = paint::drawing::FillStyle;
+using StrokeStyle = paint::drawing::StrokeStyle;
+
+namespace paint {
 
 namespace {
 
@@ -261,8 +269,6 @@ void drawRoundArc(const Point& center, const Point& start, const Point& end, con
     glEnd();
 }
 
-}  // namespace
-
 ////////////////////////////////////////////////////////////////////////
 
 void fill(const std::vector<Point>& vertices, const FillStyle& style) {
@@ -375,16 +381,21 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const Strok
     }
 }
 
+}  // namespace
+
 ////////////////////////////////////////////////////////////////////////
 
-void drawww(std::vector<Point>& vertices, const bool isClosed, const ShapeStyle& style) {
+void Renderer::draw(const drawing::Shape& shape) const {
+    auto vertices = shape.getVertices();
     uniquefilter(vertices);
 
-    if (isClosed) {  // 封閉形狀才需要填滿
+    const auto& style = shape.getStyle();
+
+    if (shape.isClosed()) {
         fill(vertices, style.fill);
     }
 
-    stroke(vertices, isClosed, style.stroke);
+    stroke(vertices, shape.isClosed(), style.stroke);
 }
 
-}  // namespace paint::drawing
+}  // namespace paint
