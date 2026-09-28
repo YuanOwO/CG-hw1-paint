@@ -46,7 +46,7 @@ void CanvasElement::clearDraft() {
 
 void CanvasElement::createDraft() {
     if (isDrawing()) {
-        clearDraft();
+        return;  // 已經有草稿了，不需要再創建
     }
 
     _activeTool = drawing::createDrawingTool(_currentTool, _currentStyle);
@@ -97,9 +97,11 @@ void CanvasElement::onKeyDown(const KeyboardEvent& event) {
         return;
     }
 
-    if (isDrawing()) {
-        handleDraftEvent(_activeTool->onKeyDown(event));
+    if (!isDrawing()) {
+        createDraft();
     }
+
+    handleDraftEvent(_activeTool->onKeyDown(event));
 }
 
 void CanvasElement::onKeyUp(const KeyboardEvent& event) {
@@ -108,9 +110,11 @@ void CanvasElement::onKeyUp(const KeyboardEvent& event) {
         return;
     }
 
-    if (isDrawing()) {
-        handleDraftEvent(_activeTool->onKeyUp(event));
+    if (!isDrawing()) {
+        createDraft();
     }
+
+    handleDraftEvent(_activeTool->onKeyUp(event));
 }
 
 void CanvasElement::onClick(const MouseClickEvent& event) {
@@ -118,10 +122,11 @@ void CanvasElement::onClick(const MouseClickEvent& event) {
     if (event.getButton() != MouseButton::MouseLeft) {
         return;
     }
-
-    if (isDrawing()) {
-        handleDraftEvent(_activeTool->onClick(event));
+    if (!isDrawing()) {
+        createDraft();
     }
+
+    handleDraftEvent(_activeTool->onClick(event));
 }
 
 void CanvasElement::onDoubleClick(const MouseClickEvent& event) {
@@ -130,9 +135,11 @@ void CanvasElement::onDoubleClick(const MouseClickEvent& event) {
         return;
     }
 
-    if (isDrawing()) {
-        handleDraftEvent(_activeTool->onDoubleClick(event));
+    if (!isDrawing()) {
+        createDraft();
     }
+
+    handleDraftEvent(_activeTool->onDoubleClick(event));
 }
 
 void CanvasElement::onMouseDown(const MouseEvent& event) {
@@ -154,15 +161,20 @@ void CanvasElement::onMouseUp(const MouseEvent& event) {
         return;
     }
 
-    if (isDrawing()) {
-        handleDraftEvent(_activeTool->onMouseUp(event));
+    if (!isDrawing()) {
+        createDraft();
     }
+
+    handleDraftEvent(_activeTool->onMouseUp(event));
 }
 
 void CanvasElement::onMouseMove(const MouseMoveEvent& event) {
-    if (isDrawing()) {
-        handleDraftEvent(_activeTool->onMouseMove(event));
+    // 如果沒有草稿，則不需要處理滑鼠移動事件，避免不必要的計算與渲染。
+    if (!isDrawing()) {
+        return;
     }
+
+    handleDraftEvent(_activeTool->onMouseMove(event));
 }
 
 }  // namespace paint

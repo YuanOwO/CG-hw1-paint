@@ -45,10 +45,10 @@ class CanvasElement : public Element {
 
     Document& _document;  // 參考外部的 Document，CanvasElement 不擁有 Document 的所有權
 
-    // 目前正在使用的繪圖工具，若為 nullptr 則表示沒有正在繪製的草稿
+    // 目前正在使用的繪圖工具，工具存在時仍可能尚未建立草稿
     std::unique_ptr<drawing::IDrawingTool> _activeTool;
 
-    bool isDrawing() const { return _activeTool != nullptr; }
+    bool isDrawing() const { return _activeTool && _activeTool->preview() != nullptr; }
 
     void clearDraft();
     void createDraft();

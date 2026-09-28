@@ -48,13 +48,16 @@ class IDrawingTool {
 template <typename TShape>
 class DrawingTool : public IDrawingTool {
    public:
-    DrawingTool(ShapeStyle style) : draft(std::make_unique<TShape>(style)) {}
+    DrawingTool(ShapeStyle style) : _style(style) {}
 
-    const Shape* preview() const override { return draft.get(); }
-    std::unique_ptr<Shape> takeShape() override { return std::move(draft); }
+    const Shape* preview() const override { return _draft.get(); }
+    std::unique_ptr<Shape> takeShape() override { return std::move(_draft); }
 
    protected:
-    std::unique_ptr<TShape> draft;
+    void beginDraft() { _draft = std::make_unique<TShape>(_style); }
+
+    ShapeStyle _style;                         // 繪圖工具的樣式資訊
+    std::unique_ptr<TShape> _draft = nullptr;  // 草稿形狀，供畫布在 display 時繪製
 };
 
 std::unique_ptr<IDrawingTool> createDrawingTool(Tool tool, ShapeStyle style);
