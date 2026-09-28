@@ -19,6 +19,8 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
     setRootElement(std::move(canvas));
 }
 
+#pragma region Main Menu
+
 void PaintWindow::setupMenu() {
     setupToolMenu();
     setupStrokeMenu();
@@ -35,6 +37,10 @@ void PaintWindow::setupMenu() {
     _menu.attach(MouseButton::MouseRight);
 }
 
+#pragma endregion  // Main Menu
+
+#pragma region Tool Menu
+
 void PaintWindow::setupToolMenu() {
     auto& toolMenu = _menu.addSubMenu("Tools");
 
@@ -47,6 +53,10 @@ void PaintWindow::setupToolMenu() {
     toolMenu.addMenuEntry("Polygon", [this]() { _canvas->setTool(Tool::TOOL_POLYGON); });
 }
 
+#pragma endregion  // Tool Menu
+
+#pragma region Stroke Menu
+
 void PaintWindow::setupStrokeMenu() {
     auto& strokeMenu = _menu.addSubMenu("Stroke");
 
@@ -54,61 +64,157 @@ void PaintWindow::setupStrokeMenu() {
 
     auto& colorMenu = strokeMenu.addSubMenu("Color");
 
-    colorMenu.addMenuEntry("Black", [this]() { _canvas->getStyle().setStrokeColor(Color::Black); });
-    colorMenu.addMenuEntry("White", [this]() { _canvas->getStyle().setStrokeColor(Color::White); });
-    colorMenu.addMenuEntry("Red", [this]() { _canvas->getStyle().setStrokeColor(Color::Red); });
-    colorMenu.addMenuEntry("Orange", [this]() { _canvas->getStyle().setStrokeColor(Color::Orange); });
-    colorMenu.addMenuEntry("Yellow", [this]() { _canvas->getStyle().setStrokeColor(Color::Yellow); });
-    colorMenu.addMenuEntry("Green", [this]() { _canvas->getStyle().setStrokeColor(Color::Green); });
-    colorMenu.addMenuEntry("Blue", [this]() { _canvas->getStyle().setStrokeColor(Color::Blue); });
-    colorMenu.addMenuEntry("Purple", [this]() { _canvas->getStyle().setStrokeColor(Color::Purple); });
+    colorMenu.addMenuEntry("Black", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeColor(Color::Black);
+        _canvas->setStyle(style);
+    });
+    colorMenu.addMenuEntry("White", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeColor(Color::White);
+        _canvas->setStyle(style);
+    });
+    colorMenu.addMenuEntry("Red", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeColor(Color::Red);
+        _canvas->setStyle(style);
+    });
+    colorMenu.addMenuEntry("Orange", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeColor(Color::Orange);
+        _canvas->setStyle(style);
+    });
+    colorMenu.addMenuEntry("Yellow", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeColor(Color::Yellow);
+        _canvas->setStyle(style);
+    });
+    colorMenu.addMenuEntry("Green", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeColor(Color::Green);
+        _canvas->setStyle(style);
+    });
+    colorMenu.addMenuEntry("Blue", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeColor(Color::Blue);
+        _canvas->setStyle(style);
+    });
+    colorMenu.addMenuEntry("Purple", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeColor(Color::Purple);
+        _canvas->setStyle(style);
+    });
     colorMenu.addMenuEntry("Custom...", [this]() {});
 
     // Stroke Width Menu
 
     auto& widthMenu = strokeMenu.addSubMenu("Width");
 
-    widthMenu.addMenuEntry("1 px", [this]() { _canvas->getStyle().setStrokeWidth(1); });
-    widthMenu.addMenuEntry("3 px", [this]() { _canvas->getStyle().setStrokeWidth(3); });
-    widthMenu.addMenuEntry("5 px", [this]() { _canvas->getStyle().setStrokeWidth(5); });
-    widthMenu.addMenuEntry("10 px", [this]() { _canvas->getStyle().setStrokeWidth(10); });
-    widthMenu.addMenuEntry("25 px", [this]() { _canvas->getStyle().setStrokeWidth(25); });
-    widthMenu.addMenuEntry("50 px", [this]() { _canvas->getStyle().setStrokeWidth(50); });
+    widthMenu.addMenuEntry("1 px", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeWidth(1);
+        _canvas->setStyle(style);
+    });
+    widthMenu.addMenuEntry("3 px", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeWidth(3);
+        _canvas->setStyle(style);
+    });
+    widthMenu.addMenuEntry("5 px", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeWidth(5);
+        _canvas->setStyle(style);
+    });
+    widthMenu.addMenuEntry("10 px", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeWidth(10);
+        _canvas->setStyle(style);
+    });
+    widthMenu.addMenuEntry("25 px", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeWidth(25);
+        _canvas->setStyle(style);
+    });
+    widthMenu.addMenuEntry("50 px", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeWidth(50);
+        _canvas->setStyle(style);
+    });
     widthMenu.addMenuEntry("Thicker", [this]() {
-        _canvas->getStyle().setStrokeWidth(_canvas->getStyle().getStrokeWidth() + 1);
+        auto style = _canvas->getStyle();
+        style.setStrokeWidth(_canvas->getStyle().getStrokeWidth() + 1);
+        _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("Thicker++", [this]() {
-        _canvas->getStyle().setStrokeWidth(_canvas->getStyle().getStrokeWidth() + 3);
+        auto style = _canvas->getStyle();
+        style.setStrokeWidth(_canvas->getStyle().getStrokeWidth() + 3);
+        _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("Thicker+++", [this]() {
-        _canvas->getStyle().setStrokeWidth(_canvas->getStyle().getStrokeWidth() + 5);
+        auto style = _canvas->getStyle();
+        style.setStrokeWidth(_canvas->getStyle().getStrokeWidth() + 5);
+        _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("Thinner", [this]() {
-        _canvas->getStyle().setStrokeWidth(_canvas->getStyle().getStrokeWidth() - 1);
+        auto style = _canvas->getStyle();
+        style.setStrokeWidth(_canvas->getStyle().getStrokeWidth() - 1);
+        _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("Thinner++", [this]() {
-        _canvas->getStyle().setStrokeWidth(_canvas->getStyle().getStrokeWidth() - 3);
+        auto style = _canvas->getStyle();
+        style.setStrokeWidth(_canvas->getStyle().getStrokeWidth() - 3);
+        _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("Thinner+++", [this]() {
-        _canvas->getStyle().setStrokeWidth(_canvas->getStyle().getStrokeWidth() - 5);
+        auto style = _canvas->getStyle();
+        style.setStrokeWidth(_canvas->getStyle().getStrokeWidth() - 5);
+        _canvas->setStyle(style);
     });
 
     // Stroke Join Menu
 
     auto& joinMenu = strokeMenu.addSubMenu("Join");
 
-    joinMenu.addMenuEntry("Miter", [this]() { _canvas->getStyle().setStrokeJoin(LineJoin::MITER); });
-    joinMenu.addMenuEntry("Round", [this]() { _canvas->getStyle().setStrokeJoin(LineJoin::ROUND); });
-    joinMenu.addMenuEntry("Bevel", [this]() { _canvas->getStyle().setStrokeJoin(LineJoin::BEVEL); });
+    joinMenu.addMenuEntry("Miter", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeJoin(LineJoin::MITER);
+        _canvas->setStyle(style);
+    });
+    joinMenu.addMenuEntry("Bevel", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeJoin(LineJoin::BEVEL);
+        _canvas->setStyle(style);
+    });
+    joinMenu.addMenuEntry("Round", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeJoin(LineJoin::ROUND);
+        _canvas->setStyle(style);
+    });
 
     // Stroke Cap Menu
 
     auto& capMenu = strokeMenu.addSubMenu("Cap");
 
-    capMenu.addMenuEntry("Butt", [this]() { _canvas->getStyle().setStrokeCap(LineCap::BUTT); });
-    capMenu.addMenuEntry("Round", [this]() { _canvas->getStyle().setStrokeCap(LineCap::ROUND); });
-    capMenu.addMenuEntry("Square", [this]() { _canvas->getStyle().setStrokeCap(LineCap::SQUARE); });
+    capMenu.addMenuEntry("Round", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeCap(LineCap::ROUND);
+        _canvas->setStyle(style);
+    });
+    capMenu.addMenuEntry("Square", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeCap(LineCap::SQUARE);
+        _canvas->setStyle(style);
+    });
+    capMenu.addMenuEntry("Butt", [this]() {
+        auto style = _canvas->getStyle();
+        style.setStrokeCap(LineCap::BUTT);
+        _canvas->setStyle(style);
+    });
 }
+
+#pragma endregion  // Stroke Menu
+
+#pragma region Fill Menu
 
 void PaintWindow::setupFillMenu() {
     auto& fillMenu = _menu.addSubMenu("Fill");
@@ -117,39 +223,113 @@ void PaintWindow::setupFillMenu() {
 
     auto& fillModeMenu = fillMenu.addSubMenu("Mode");
 
-    fillModeMenu.addMenuEntry("Outline",
-                              [this]() { _canvas->getStyle().setFillMode(drawing::FillMode::OUTLINE); });
-    fillModeMenu.addMenuEntry("Filled",
-                              [this]() { _canvas->getStyle().setFillMode(drawing::FillMode::FILLED); });
-    fillModeMenu.addMenuEntry("Advanced",
-                              [this]() { _canvas->getStyle().setFillMode(drawing::FillMode::ADVANCED); });
+    fillModeMenu.addMenuEntry("Outline", [this]() {
+        auto style = _canvas->getStyle();
+        style.setFillMode(drawing::FillMode::OUTLINE);
+        _canvas->setStyle(style);
+    });
+    fillModeMenu.addMenuEntry("Filled", [this]() {
+        auto style = _canvas->getStyle();
+        style.setFillMode(drawing::FillMode::FILLED);
+        _canvas->setStyle(style);
+    });
+    fillModeMenu.addMenuEntry("Advanced", [this]() {
+        auto style = _canvas->getStyle();
+        style.setFillMode(drawing::FillMode::ADVANCED);
+        _canvas->setStyle(style);
+    });
 
     // Fill Color Menu
 
     auto& fillColorMenu = fillMenu.addSubMenu("Color");
 
-    fillColorMenu.addMenuEntry("Transparent",
-                               [this]() { _canvas->getStyle().setFillColor(Color::Transparent); });
-    fillColorMenu.addMenuEntry("Black", [this]() { _canvas->getStyle().setFillColor(Color::Black); });
-    fillColorMenu.addMenuEntry("White", [this]() { _canvas->getStyle().setFillColor(Color::White); });
-    fillColorMenu.addMenuEntry("Red", [this]() { _canvas->getStyle().setFillColor(Color::Red); });
-    fillColorMenu.addMenuEntry("Orange", [this]() { _canvas->getStyle().setFillColor(Color::Orange); });
-    fillColorMenu.addMenuEntry("Yellow", [this]() { _canvas->getStyle().setFillColor(Color::Yellow); });
-    fillColorMenu.addMenuEntry("Green", [this]() { _canvas->getStyle().setFillColor(Color::Green); });
-    fillColorMenu.addMenuEntry("Blue", [this]() { _canvas->getStyle().setFillColor(Color::Blue); });
-    fillColorMenu.addMenuEntry("Purple", [this]() { _canvas->getStyle().setFillColor(Color::Purple); });
+    fillColorMenu.addMenuEntry("Transparent", [this]() {
+        auto style = _canvas->getStyle();
+        style.setFillColor(Color::Transparent);
+        _canvas->setStyle(style);
+    });
+    fillColorMenu.addMenuEntry("Black", [this]() {
+        auto style = _canvas->getStyle();
+        style.setFillColor(Color::Black);
+        _canvas->setStyle(style);
+    });
+    fillColorMenu.addMenuEntry("White", [this]() {
+        auto style = _canvas->getStyle();
+        style.setFillColor(Color::White);
+        _canvas->setStyle(style);
+    });
+    fillColorMenu.addMenuEntry("Red", [this]() {
+        auto style = _canvas->getStyle();
+        style.setFillColor(Color::Red);
+        _canvas->setStyle(style);
+    });
+    fillColorMenu.addMenuEntry("Orange", [this]() {
+        auto style = _canvas->getStyle();
+        style.setFillColor(Color::Orange);
+        _canvas->setStyle(style);
+    });
+    fillColorMenu.addMenuEntry("Yellow", [this]() {
+        auto style = _canvas->getStyle();
+        style.setFillColor(Color::Yellow);
+        _canvas->setStyle(style);
+    });
+    fillColorMenu.addMenuEntry("Green", [this]() {
+        auto style = _canvas->getStyle();
+        style.setFillColor(Color::Green);
+        _canvas->setStyle(style);
+    });
+    fillColorMenu.addMenuEntry("Blue", [this]() {
+        auto style = _canvas->getStyle();
+        style.setFillColor(Color::Blue);
+        _canvas->setStyle(style);
+    });
+    fillColorMenu.addMenuEntry("Purple", [this]() {
+        auto style = _canvas->getStyle();
+        style.setFillColor(Color::Purple);
+        _canvas->setStyle(style);
+    });
     fillColorMenu.addMenuEntry("Custom...", [this]() {});
 }
+
+#pragma endregion  // Fill Menu
+
+#pragma region Point Menu
 
 void PaintWindow::setupPointMenu() {
     auto& pointMenu = _menu.addSubMenu("Point");
 
-    pointMenu.addMenuEntry("1 px", [this]() { _canvas->getStyle().setPointSize(1); });
-    pointMenu.addMenuEntry("3 px", [this]() { _canvas->getStyle().setPointSize(3); });
-    pointMenu.addMenuEntry("5 px", [this]() { _canvas->getStyle().setPointSize(5); });
-    pointMenu.addMenuEntry("10 px", [this]() { _canvas->getStyle().setPointSize(10); });
-    pointMenu.addMenuEntry("25 px", [this]() { _canvas->getStyle().setPointSize(25); });
-    pointMenu.addMenuEntry("50 px", [this]() { _canvas->getStyle().setPointSize(50); });
+    pointMenu.addMenuEntry("1 px", [this]() {
+        auto style = _canvas->getStyle();
+        style.setPointSize(1);
+        _canvas->setStyle(style);
+    });
+    pointMenu.addMenuEntry("3 px", [this]() {
+        auto style = _canvas->getStyle();
+        style.setPointSize(3);
+        _canvas->setStyle(style);
+    });
+    pointMenu.addMenuEntry("5 px", [this]() {
+        auto style = _canvas->getStyle();
+        style.setPointSize(5);
+        _canvas->setStyle(style);
+    });
+    pointMenu.addMenuEntry("10 px", [this]() {
+        auto style = _canvas->getStyle();
+        style.setPointSize(10);
+        _canvas->setStyle(style);
+    });
+    pointMenu.addMenuEntry("25 px", [this]() {
+        auto style = _canvas->getStyle();
+        style.setPointSize(25);
+        _canvas->setStyle(style);
+    });
+    pointMenu.addMenuEntry("50 px", [this]() {
+        auto style = _canvas->getStyle();
+        style.setPointSize(50);
+        _canvas->setStyle(style);
+    });
 }
+
+#pragma endregion  // Point Menu
 
 }  // namespace paint

@@ -13,6 +13,28 @@ CanvasElement::CanvasElement(Document& document)
     _currentStyle.fill.color = ColorRGBA(Color::Transparent);
     _currentStyle.stroke.join = drawing::LineJoin::MITER;
     _currentStyle.stroke.cap = drawing::LineCap::ROUND;
+
+    resetTool();
+}
+
+void CanvasElement::setTool(drawing::Tool tool) {
+    if (_currentTool == tool) {
+        return;  // 工具沒有改變，不需要重置
+    }
+
+    // 如果目前正在繪製草稿，則先提交，再切換工具
+    handleDraftEvent(_activeTool->finish());
+
+    _currentTool = tool;
+    resetTool();
+}
+
+void CanvasElement::setStyle(const drawing::ShapeStyle& style) {
+    _currentStyle = style;
+
+    if (!isDrawing()) {
+        resetTool();
+    }
 }
 
 void CanvasElement::undo() {
@@ -41,14 +63,6 @@ void CanvasElement::clear() {
 }
 
 void CanvasElement::resetTool() {
-    _activeTool.reset();
-}
-
-void CanvasElement::ensureTool() {
-    if (isDrawing()) {
-        return;  // 已經有草稿了，不需要再創建
-    }
-
     _activeTool = drawing::createDrawingTool(_currentTool, _currentStyle);
 }
 
@@ -98,10 +112,6 @@ void CanvasElement::onKeyDown(const KeyboardEvent& event) {
         return;
     }
 
-    if (!isDrawing()) {
-        ensureTool();
-    }
-
     handleDraftEvent(_activeTool->onKeyDown(event));
 }
 
@@ -111,10 +121,6 @@ void CanvasElement::onKeyUp(const KeyboardEvent& event) {
         return;
     }
 
-    if (!isDrawing()) {
-        ensureTool();
-    }
-
     handleDraftEvent(_activeTool->onKeyUp(event));
 }
 
@@ -122,9 +128,6 @@ void CanvasElement::onClick(const MouseClickEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
     if (event.getButton() != MouseButton::MouseLeft) {
         return;
-    }
-    if (!isDrawing()) {
-        ensureTool();
     }
 
     handleDraftEvent(_activeTool->onClick(event));
@@ -136,10 +139,6 @@ void CanvasElement::onDoubleClick(const MouseClickEvent& event) {
         return;
     }
 
-    if (!isDrawing()) {
-        ensureTool();
-    }
-
     handleDraftEvent(_activeTool->onDoubleClick(event));
 }
 
@@ -149,10 +148,6 @@ void CanvasElement::onMouseDown(const MouseEvent& event) {
         return;
     }
 
-    if (!isDrawing()) {
-        ensureTool();
-    }
-
     handleDraftEvent(_activeTool->onMouseDown(event));
 }
 
@@ -160,10 +155,6 @@ void CanvasElement::onMouseUp(const MouseEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
     if (event.getButton() != MouseButton::MouseLeft) {
         return;
-    }
-
-    if (!isDrawing()) {
-        ensureTool();
     }
 
     handleDraftEvent(_activeTool->onMouseUp(event));

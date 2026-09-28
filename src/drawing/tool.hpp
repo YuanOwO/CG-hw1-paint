@@ -37,6 +37,8 @@ class IDrawingTool {
     // 僅在 COMMIT 後呼叫一次；取出後由呼叫端銷毀工具。
     virtual std::unique_ptr<Shape> takeShape() = 0;
 
+    virtual ToolEventResult finish() = 0;
+
     virtual ToolEventResult onKeyDown(const KeyboardEvent& event) { return ToolEventResult::NONE; }
     virtual ToolEventResult onKeyUp(const KeyboardEvent& event) { return ToolEventResult::NONE; }
     virtual ToolEventResult onClick(const MouseClickEvent& event) { return ToolEventResult::NONE; }
@@ -53,6 +55,8 @@ class DrawingTool : public IDrawingTool {
 
     const Shape* preview() const override { return _draft.get(); }
     std::unique_ptr<Shape> takeShape() override { return std::move(_draft); }
+
+    ToolEventResult finish() override { return _draft ? ToolEventResult::COMMIT : ToolEventResult::NONE; }
 
    protected:
     void beginDraft() { _draft = std::make_unique<TShape>(_style); }

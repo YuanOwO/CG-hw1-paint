@@ -16,11 +16,11 @@ class CanvasElement : public Element {
    public:
     CanvasElement(Document& document);
 
-    void setTool(drawing::Tool tool) { _currentTool = tool; }
-    drawing::Tool getTool() const { return _currentTool; }
+    void setTool(drawing::Tool tool);
+    const drawing::Tool getTool() const { return _currentTool; }
 
-    void setStyle(const drawing::ShapeStyle& style) { _currentStyle = style; }
-    drawing::ShapeStyle& getStyle() { return _currentStyle; }
+    void setStyle(const drawing::ShapeStyle& style);
+    const drawing::ShapeStyle& getStyle() const { return _currentStyle; }
 
     void undo();
     void redo();
@@ -48,10 +48,9 @@ class CanvasElement : public Element {
     // 目前正在使用的繪圖工具，工具存在時仍可能尚未建立草稿
     std::unique_ptr<drawing::IDrawingTool> _activeTool;
 
-    bool isDrawing() const { return _activeTool && _activeTool->preview() != nullptr; }
+    bool isDrawing() const { return _activeTool->preview() != nullptr; }
 
     void resetTool();
-    void ensureTool();
 
     void handleDraftEvent(drawing::ToolEventResult result);
 };
