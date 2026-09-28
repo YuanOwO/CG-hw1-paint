@@ -478,7 +478,7 @@ void Window::displayCallback() {
     // 或者 ColorBuffer 的大小與視窗不匹配，則重新渲染視窗內容
     if (window->_contentDirty || window->_needsCapture ||
         !window->_colorBuffer.matchesSize(window->_width, window->_height)) {
-        window->onDisplay();
+        window->renderContent();
 
         window->_contentDirty = false;
         window->_needsCapture = true;

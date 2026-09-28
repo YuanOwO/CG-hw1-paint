@@ -84,7 +84,7 @@ void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
     }
 }
 
-void CanvasElement::render() {
+void CanvasElement::renderContent() {
     // 繪製背景網格
     if (_showGrid) {
         _renderer.drawGrid(_width, _height);

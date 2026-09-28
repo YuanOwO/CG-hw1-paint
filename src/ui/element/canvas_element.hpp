@@ -33,7 +33,7 @@ class CanvasElement : public Element {
     void clear();
 
    protected:
-    void render() override;
+    void renderContent() override;
 
     void onKeyDown(const KeyboardEvent& event) override;
     void onKeyUp(const KeyboardEvent& event) override;

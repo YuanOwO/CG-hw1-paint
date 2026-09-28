@@ -26,7 +26,7 @@ class Element {
         }
     }
 
-    virtual void render() {}
+    virtual void renderContent() {}
 
     virtual void onResize(const WindowResizeEvent& event) {
         _width = event.getWidth();

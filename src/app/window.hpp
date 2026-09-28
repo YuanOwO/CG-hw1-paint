@@ -62,9 +62,10 @@ class Window {
 
     virtual void onVisibilityChange(const WindowVisibilityEvent& event) {}
 
-    virtual void onDisplay() {
+    // 當視窗需要重新渲染內容時，呼叫此函式。子類別可以覆寫此函式來實現自定義的渲染邏輯。
+    virtual void renderContent() {
         if (_rootElement) {
-            _rootElement->render();
+            _rootElement->renderContent();
         }
     }
 
