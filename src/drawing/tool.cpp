@@ -27,7 +27,7 @@ class DragTool : public DrawingTool<TShape> {
 
     ToolEventResult onKeyUp(const KeyboardEvent& event) override {
         if (isShiftKey(event.key())) {
-            onShift(event);
+            this->draft->setEnd(event.position());
         }
 
         return ToolEventResult::NONE;
