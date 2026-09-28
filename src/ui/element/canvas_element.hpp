@@ -4,10 +4,10 @@
 #include <memory>
 #include <vector>
 
-#include "drawing/shapeStyle.hpp"
+#include "drawing/shape_style.hpp"
 #include "drawing/tool.hpp"
-#include "element/element.hpp"
-#include "render/render.hpp"
+#include "render/renderer.hpp"
+#include "ui/element/element.hpp"
 
 namespace paint {
 

@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "input/button.hpp"
+#include "input/input_types.hpp"
 
 namespace paint {
 

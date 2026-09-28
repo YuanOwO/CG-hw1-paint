@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "window/window.hpp"
+#include "app/window.hpp"
 
 namespace paint {
 

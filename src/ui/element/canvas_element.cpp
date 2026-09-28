@@ -1,4 +1,4 @@
-#include "element/canvas.hpp"
+#include "ui/element/canvas_element.hpp"
 
 namespace paint {
 

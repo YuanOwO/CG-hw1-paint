@@ -1,10 +1,11 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 
 #include "common/point.hpp"
 #include "drawing/shape.hpp"
-#include "event/event.hpp"
+#include "event/events.hpp"
 #include "input/input_state.hpp"
 
 namespace paint::drawing {

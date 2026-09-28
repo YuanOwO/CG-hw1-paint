@@ -1,12 +1,14 @@
 #pragma once
 
 #include "event/event.hpp"
+#include "input/input_state.hpp"
+#include "input/input_types.hpp"
 
 namespace paint {
 
-class HIDEvent : public Event {
+class InputEvent : public Event {
    public:
-    HIDEvent(const KeyboardState& keyboardState, const MouseState& mouseState)
+    InputEvent(const KeyboardState& keyboardState, const MouseState& mouseState)
         : _keyboardState(keyboardState), _mouseState(mouseState) {}
 
     const KeyboardState& keyboardState() const { return _keyboardState; }
@@ -20,11 +22,11 @@ class HIDEvent : public Event {
     const MouseState _mouseState;
 };
 
-class KeyboardEvent : public HIDEvent {
+class KeyboardEvent : public InputEvent {
    public:
     KeyboardEvent(Key key, ButtonAction action, const KeyboardState& inputState, const MouseState& mouseState,
                   bool isRepeat = false)
-        : HIDEvent(inputState, mouseState), _key(key), _action(action), _isRepeat(isRepeat) {}
+        : InputEvent(inputState, mouseState), _key(key), _action(action), _isRepeat(isRepeat) {}
 
     Key key() const { return _key; }
     ButtonAction action() const { return _action; }
@@ -36,11 +38,11 @@ class KeyboardEvent : public HIDEvent {
     bool _isRepeat;
 };
 
-class MouseEvent : public HIDEvent {
+class MouseEvent : public InputEvent {
    public:
     MouseEvent(MouseButton button, ButtonAction action, const KeyboardState& keyboardState,
                const MouseState& mouseState)
-        : HIDEvent(keyboardState, mouseState), _button(button), _action(action) {}
+        : InputEvent(keyboardState, mouseState), _button(button), _action(action) {}
 
     MouseButton button() const { return _button; }
     ButtonAction action() const { return _action; }
@@ -50,11 +52,11 @@ class MouseEvent : public HIDEvent {
     ButtonAction _action;
 };
 
-class MouseClickEvent : public HIDEvent {
+class MouseClickEvent : public InputEvent {
    public:
     MouseClickEvent(MouseButton button, int clickCount, const KeyboardState& keyboardState,
                     const MouseState& mouseState)
-        : HIDEvent(keyboardState, mouseState), _button(button), _clickCount(clickCount) {}
+        : InputEvent(keyboardState, mouseState), _button(button), _clickCount(clickCount) {}
 
     MouseButton button() const { return _button; }
     int clickCount() const { return _clickCount; }
@@ -64,22 +66,22 @@ class MouseClickEvent : public HIDEvent {
     int _clickCount = 0;
 };
 
-class MouseMoveEvent : public HIDEvent {
+class MouseMoveEvent : public InputEvent {
    public:
-    using HIDEvent::HIDEvent;
+    using InputEvent::InputEvent;
 
     int x() const { return mouseState().x(); }
     int y() const { return mouseState().y(); }
 };
 
-class MouseEnterEvent : public HIDEvent {
+class MouseEnterEvent : public InputEvent {
    public:
-    using HIDEvent::HIDEvent;
+    using InputEvent::InputEvent;
 };
 
-class MouseLeaveEvent : public HIDEvent {
+class MouseLeaveEvent : public InputEvent {
    public:
-    using HIDEvent::HIDEvent;
+    using InputEvent::InputEvent;
 };
 
 }  // namespace paint

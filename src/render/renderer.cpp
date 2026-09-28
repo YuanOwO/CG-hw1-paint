@@ -1,4 +1,4 @@
-#include "render/render.hpp"
+#include "render/renderer.hpp"
 
 #include <GL/freeglut.h>
 
@@ -7,11 +7,10 @@
 
 #include "drawing/shape.hpp"
 
-using LineJoin = paint::drawing::LineJoin;
-using LineCap = paint::drawing::LineCap;
-
-using FillStyle = paint::drawing::FillStyle;
-using StrokeStyle = paint::drawing::StrokeStyle;
+using paint::drawing::FillStyle;
+using paint::drawing::LineCap;
+using paint::drawing::LineJoin;
+using paint::drawing::StrokeStyle;
 
 namespace paint {
 

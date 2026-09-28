@@ -1,4 +1,4 @@
-#include "window/window.hpp"
+#include "app/window.hpp"
 
 #include <GL/freeglut.h>
 

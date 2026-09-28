@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <stdexcept>
 
 namespace paint {
@@ -184,7 +185,7 @@ struct ColorRGBA {
         }
     }
 
-    float& operator[](size_t index) {
+    float& operator[](std::size_t index) {
         switch (index) {
         case 0:
             return r;

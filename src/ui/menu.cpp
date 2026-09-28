@@ -1,4 +1,4 @@
-#include "menu/menu.hpp"
+#include "ui/menu.hpp"
 
 #include <GL/freeglut.h>
 

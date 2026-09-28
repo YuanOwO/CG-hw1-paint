@@ -3,7 +3,7 @@
 #include <vector>
 
 #include "common/point.hpp"
-#include "drawing/shapeStyle.hpp"
+#include "drawing/shape_style.hpp"
 
 namespace paint::drawing {
 class Shape;

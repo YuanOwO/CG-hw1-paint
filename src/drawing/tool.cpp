@@ -64,7 +64,7 @@ class DragTool : public DrawingTool<TShape> {
 
    protected:
     // Shift 鍵被按下時，會畫出正方形、正圓或 45° 斜線。這個函式可以被子類別覆寫以實現不同的行為。
-    virtual void onShift(const HIDEvent& event) {
+    virtual void onShift(const InputEvent& event) {
         const Point& start = this->draft->getStart();
         const Point& now = event.position();
 
@@ -85,7 +85,7 @@ class LineTool : public DragTool<Line> {
 
    protected:
     // Shift 鍵被按下時，會畫出水平、垂直或 45° 斜線。
-    void onShift(const HIDEvent& event) override {
+    void onShift(const InputEvent& event) override {
         const Point& start = this->draft->getStart();
         const Point& now = event.position();
 

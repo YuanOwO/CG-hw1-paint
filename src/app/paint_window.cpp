@@ -1,5 +1,9 @@
 #include "app/paint_window.hpp"
 
+#include <cstdlib>
+#include <memory>
+#include <utility>
+
 namespace paint {
 
 PaintWindow::PaintWindow(const std::string& title, int width, int height) : Window(title, width, height) {
@@ -20,7 +24,7 @@ void PaintWindow::setupMenu() {
     setupCapMenu();
 
     _menu.addMenuEntry("Clear", [this]() { _canvas->clear(); });
-    _menu.addMenuEntry("Exit", []() { exit(0); });
+    _menu.addMenuEntry("Exit", []() { std::exit(0); });
 
     _menu.attach(MouseButton::MouseRight);
 }

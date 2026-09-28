@@ -1,8 +1,10 @@
 #pragma once
 
-#include "element/canvas.hpp"
-#include "menu/menu.hpp"
-#include "window/window.hpp"
+#include <string>
+
+#include "app/window.hpp"
+#include "ui/elements.hpp"
+#include "ui/menu.hpp"
 
 namespace paint {
 

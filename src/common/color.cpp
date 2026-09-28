@@ -1,4 +1,4 @@
-#include "color.hpp"
+#include "common/color.hpp"
 
 #include <algorithm>
 
