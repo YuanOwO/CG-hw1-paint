@@ -292,6 +292,8 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const Strok
 
     if (color[3] <= 0.0f || width <= 0.0f || vertices.empty()) return;
 
+    glColor4fv(color);
+
     if (vertices.size() == 1) {
         switch (style.cap) {
         case LineCap::ROUND: {
@@ -299,6 +301,8 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const Strok
             if (width > 1.0f) {
                 drawRoundArc(vertices[0], vertices[0] + Point(width * 0.5f, 0.0f),
                              vertices[0] + Point(-width * 0.5f, 0.0f), width * 0.5f, 1.0f);
+                drawRoundArc(vertices[0], vertices[0] + Point(width * 0.5f, 0.0f),
+                             vertices[0] + Point(-width * 0.5f, 0.0f), width * 0.5f, -1.0f);
                 break;
             }
         }
@@ -316,6 +320,7 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const Strok
             // BUTT cap 不需要額外繪製
             break;
         }
+        return;
     }
 
     std::vector<StrokeVertexResult> info(vertices.size());
@@ -337,8 +342,6 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const Strok
 
         info[i] = computeStrokeVertex(prev, curr, next, style);
     }
-
-    glColor4fv(color);
 
     // 繪製每個頂點與邊的 stroke
     for (int i = 0; i < info.size(); i++) {
