@@ -1,12 +1,22 @@
-#include "render.hpp"
+#include "render/render.hpp"
+
+#include <GL/freeglut.h>
 
 #include <cmath>
-#include <iostream>
 #include <utility>
 
-#include "shape.hpp"
+#include "drawing/shape.hpp"
+
+using LineJoin = paint::drawing::LineJoin;
+using LineCap = paint::drawing::LineCap;
+
+using FillStyle = paint::drawing::FillStyle;
+using StrokeStyle = paint::drawing::StrokeStyle;
+
+namespace paint {
 
 namespace {
+
 void uniquefilter(std::vector<Point>& vertices) {
     if (vertices.size() < 2) return;
 
@@ -21,10 +31,6 @@ void uniquefilter(std::vector<Point>& vertices) {
 
     vertices = std::move(filtered);
 }
-}  // namespace
-
-namespace render {
-namespace {
 
 void triangle(const Point& a, const Point& b, const Point& c) {
     glBegin(GL_TRIANGLES);
@@ -37,8 +43,8 @@ void triangle(const Point& a, const Point& b, const Point& c) {
 struct StrokeVertexResult {
     bool hasIn, hasOut;
 
-    shape::LineJoin joinType = shape::LineJoin::NONE;  // 使用的連接類型（MITER、BEVEL、ROUND）
-    shape::LineCap capType = shape::LineCap::BUTT;     // 使用的端點類型（BUTT、SQUARE、ROUND）
+    LineJoin joinType = LineJoin::NONE;  // 使用的連接類型（MITER、BEVEL、ROUND）
+    LineCap capType = LineCap::BUTT;     // 使用的端點類型（BUTT、SQUARE、ROUND）
 
     Point vertex;  // 連接點的座標（B 點）
 
@@ -50,11 +56,11 @@ struct StrokeVertexResult {
 };
 
 StrokeVertexResult computeStrokeVertex(const Point& prev, const Point& curr, const Point& next,
-                                       const shape::StrokeStyle& style) {
+                                       const StrokeStyle& style) {
     StrokeVertexResult result{};
     result.hasIn = prev != curr;
     result.hasOut = curr != next;
-    result.joinType = shape::LineJoin::NONE;
+    result.joinType = LineJoin::NONE;
     result.capType = style.cap;
     result.vertex = curr;
 
@@ -89,12 +95,12 @@ StrokeVertexResult computeStrokeVertex(const Point& prev, const Point& curr, con
     // 開放路徑端點：只有一個有效方向，不計算接角。
     if (!result.hasIn || !result.hasOut) {
         // SQUARE 端點需要額外延伸截面。
-        if (!result.hasIn && result.capType == shape::LineCap::SQUARE) {
+        if (!result.hasIn && result.capType == LineCap::SQUARE) {
             result.outLeft = result.outLeft - h * v;
             result.outRight = result.outRight - h * v;
         }
 
-        if (!result.hasOut && result.capType == shape::LineCap::SQUARE) {
+        if (!result.hasOut && result.capType == LineCap::SQUARE) {
             result.inLeft = result.inLeft + h * u;
             result.inRight = result.inRight + h * u;
         }
@@ -112,15 +118,14 @@ StrokeVertexResult computeStrokeVertex(const Point& prev, const Point& curr, con
     if (std::abs(turn) <= EPSILON) {
         if (forward > 0.0f) {
             // 同方向，不需要 join。
-            result.joinType = shape::LineJoin::NONE;
+            result.joinType = LineJoin::NONE;
 
             // n0、n1 理論上幾乎相同，用平均可以減少一點浮點誤差。
             result.inLeft = result.outLeft = (result.inLeft + result.outLeft) * 0.5f;
             result.inRight = result.outRight = (result.inRight + result.outRight) * 0.5f;
         } else {
             // 180° 折返
-            result.joinType =
-                style.join == shape::LineJoin::ROUND ? shape::LineJoin::ROUND : shape::LineJoin::BEVEL;
+            result.joinType = style.join == LineJoin::ROUND ? LineJoin::ROUND : LineJoin::BEVEL;
 
             result.inner = curr;
 
@@ -142,8 +147,7 @@ StrokeVertexResult computeStrokeVertex(const Point& prev, const Point& curr, con
     // 理論上非平行的兩條 segment，其左右 offset line 都應該可以求交點
     // 但仍然保留 fallback，避免數值不穩定。
     if (!hasLeftInter || !hasRightInter) {
-        result.joinType =
-            style.join == shape::LineJoin::ROUND ? shape::LineJoin::ROUND : shape::LineJoin::BEVEL;
+        result.joinType = style.join == LineJoin::ROUND ? LineJoin::ROUND : LineJoin::BEVEL;
 
         result.inner = curr;
 
@@ -181,10 +185,11 @@ StrokeVertexResult computeStrokeVertex(const Point& prev, const Point& curr, con
     // Miter
     const GLfloat outerDistance = abs(outerInter - curr);
 
-    const bool validMiter = style.join == shape::LineJoin::MITER && outerDistance <= h * style.miterLimit;
+    // 檢查是否符合 Miter 連接的條件
+    const bool validMiter = style.join == LineJoin::MITER && outerDistance <= h * style.miterLimit;
 
     if (validMiter) {
-        result.joinType = shape::LineJoin::MITER;
+        result.joinType = LineJoin::MITER;
 
         result.inLeft = result.outLeft = leftInter;
         result.inRight = result.outRight = rightInter;
@@ -193,7 +198,7 @@ StrokeVertexResult computeStrokeVertex(const Point& prev, const Point& curr, con
     }
 
     // Bevel / Round
-    result.joinType = style.join == shape::LineJoin::ROUND ? shape::LineJoin::ROUND : shape::LineJoin::BEVEL;
+    result.joinType = style.join == LineJoin::ROUND ? LineJoin::ROUND : LineJoin::BEVEL;
 
     result.outer0 = outer0;
     result.outer1 = outer1;
@@ -264,11 +269,9 @@ void drawRoundArc(const Point& center, const Point& start, const Point& end, con
     glEnd();
 }
 
-}  // namespace
-
 ////////////////////////////////////////////////////////////////////////
 
-void fill(const std::vector<Point>& vertices, const shape::FillStyle& style) {
+void fill(const std::vector<Point>& vertices, const FillStyle& style) {
     if (!style.enabled) return;
 
     const GLfloat fillColor[] = {style.color.r, style.color.g, style.color.b, style.color.a};
@@ -285,7 +288,7 @@ void fill(const std::vector<Point>& vertices, const shape::FillStyle& style) {
     glEnd();
 }
 
-void stroke(const std::vector<Point>& vertices, const bool isClosed, const shape::StrokeStyle& style) {
+void stroke(const std::vector<Point>& vertices, const bool isClosed, const StrokeStyle& style) {
     if (!style.enabled) return;
 
     const GLfloat width = style.width;
@@ -295,7 +298,7 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const shape
 
     if (vertices.size() == 1) {
         switch (style.cap) {
-        case shape::LineCap::ROUND: {
+        case LineCap::ROUND: {
             // 畫圓點， width = 1.0f 時，會退化成單個像素點。
             if (width > 1.0f) {
                 drawRoundArc(vertices[0], vertices[0] + Point(width * 0.5f, 0.0f),
@@ -303,7 +306,7 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const shape
                 break;
             }
         }
-        case shape::LineCap::SQUARE: {
+        case LineCap::SQUARE: {
             const Point p1 = vertices[0] + Point(width * 0.5f, width * 0.5f);
             const Point p2 = vertices[0] + Point(-width * 0.5f, width * 0.5f);
             const Point p3 = vertices[0] + Point(-width * 0.5f, -width * 0.5f);
@@ -312,7 +315,7 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const shape
             triangle(p1, p3, p4);
             break;
         }
-        case shape::LineCap::BUTT:
+        case LineCap::BUTT:
         default:
             // BUTT cap 不需要額外繪製
             break;
@@ -354,9 +357,9 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const shape
 
         // 繪製 join 接角
         if (info0.hasIn && info0.hasOut) {
-            if (info0.joinType == shape::LineJoin::BEVEL) {
+            if (info0.joinType == LineJoin::BEVEL) {
                 triangle(info0.outer0, info0.outer1, info0.inner);
-            } else if (info0.joinType == shape::LineJoin::ROUND) {
+            } else if (info0.joinType == LineJoin::ROUND) {
                 triangle(info0.inner, info0.vertex, info0.outer0);
                 triangle(info0.inner, info0.outer1, info0.vertex);
                 drawRoundArc(info0.vertex, info0.outer0, info0.outer1, width * 0.5f, info0.turn);
@@ -365,7 +368,7 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const shape
 
         // 3. 畫 cap 額外需要的 geometry
         if (info0.hasIn != info0.hasOut) {
-            if (info0.capType == shape::LineCap::ROUND) {
+            if (info0.capType == LineCap::ROUND) {
                 if (info0.hasOut) {
                     // 起點：沿負角度方向，畫在線身後方。
                     drawRoundArc(info0.vertex, info0.outLeft, info0.outRight, width * 0.5f, -1.0f);
@@ -378,16 +381,21 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const shape
     }
 }
 
+}  // namespace
+
 ////////////////////////////////////////////////////////////////////////
 
-void draw(std::vector<Point>& vertices, const bool isClosed, const shape::ShapeStyle& style) {
+void Renderer::draw(const drawing::Shape& shape) const {
+    auto vertices = shape.getVertices();
     uniquefilter(vertices);
 
-    if (isClosed) {  // 封閉形狀才需要填滿
+    const auto& style = shape.getStyle();
+
+    if (shape.isClosed()) {
         fill(vertices, style.fill);
     }
 
-    stroke(vertices, isClosed, style.stroke);
+    stroke(vertices, shape.isClosed(), style.stroke);
 }
 
-}  // namespace render
+}  // namespace paint

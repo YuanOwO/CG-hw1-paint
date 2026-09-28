@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace color {
+namespace paint {
 
 ColorRGBA hsv2rgb(const ColorHSV& hsv) {
     float h = hsv.h, s = hsv.s, v = hsv.v;
@@ -88,4 +88,4 @@ ColorHSV rgb2hsv(const ColorRGBA& rgb) {
     return ColorHSV(h, s, v);
 }
 
-}  // namespace color
+}  // namespace paint

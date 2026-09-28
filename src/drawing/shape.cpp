@@ -1,11 +1,9 @@
-#include "shape.hpp"
+#include "drawing/shape.hpp"
 
 #include <algorithm>
 #include <cmath>
 
-#include "render.hpp"
-
-namespace shape {
+namespace paint::drawing {
 
 std::vector<Point> Line::getVertices() const {
     std::vector<Point> vertices = {start, end};
@@ -15,10 +13,10 @@ std::vector<Point> Line::getVertices() const {
 std::vector<Point> Rectangle::getVertices() const {
     std::vector<Point> vertices;
 
-    const GLfloat left = std::min(start.getX(), end.getX());
-    const GLfloat right = std::max(start.getX(), end.getX());
-    const GLfloat top = std::min(start.getY(), end.getY());
-    const GLfloat bottom = std::max(start.getY(), end.getY());
+    const float left = std::min(start.getX(), end.getX());
+    const float right = std::max(start.getX(), end.getX());
+    const float top = std::min(start.getY(), end.getY());
+    const float bottom = std::max(start.getY(), end.getY());
 
     vertices.emplace_back(left, top);
     vertices.emplace_back(left, bottom);
@@ -31,10 +29,10 @@ std::vector<Point> Rectangle::getVertices() const {
 std::vector<Point> Ellipse::getVertices() const {
     std::vector<Point> vertices;
 
-    const GLfloat cx = (start.getX() + end.getX()) / 2.0f;
-    const GLfloat cy = (start.getY() + end.getY()) / 2.0f;
-    const GLfloat rx = std::abs(end.getX() - start.getX()) / 2.0f;
-    const GLfloat ry = std::abs(end.getY() - start.getY()) / 2.0f;
+    const float cx = (start.getX() + end.getX()) / 2.0f;
+    const float cy = (start.getY() + end.getY()) / 2.0f;
+    const float rx = std::abs(end.getX() - start.getX()) / 2.0f;
+    const float ry = std::abs(end.getY() - start.getY()) / 2.0f;
 
     if (rx == 0.0f || ry == 0.0f) {
         vertices.emplace_back(cx, cy);  // 如果橢圓的半徑為零，則只繪製中心點
@@ -44,7 +42,7 @@ std::vector<Point> Ellipse::getVertices() const {
     const int segments = 64;
 
     for (int i = 0; i < segments; i++) {
-        const GLfloat angle = 2.0f * PI * static_cast<GLfloat>(i) / static_cast<GLfloat>(segments);
+        const float angle = 2.0f * PI * static_cast<float>(i) / static_cast<float>(segments);
         vertices.emplace_back(cx + rx * std::cos(angle), cy + ry * std::sin(angle));
     }
 
@@ -61,4 +59,4 @@ std::vector<Point> Polygon::getVertices() const {
     return vertices;
 }
 
-}  // namespace shape
+}  // namespace paint::drawing
