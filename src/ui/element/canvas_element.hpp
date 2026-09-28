@@ -14,7 +14,13 @@ namespace paint {
 
 class CanvasElement : public Element {
    public:
-    CanvasElement(Document& document);
+    CanvasElement(int width, int height, Document& document);
+
+    void setShowGrid(bool show) {
+        _showGrid = show;
+        invalidate();
+    }
+    bool isShowGrid() const { return _showGrid; }
 
     void setTool(drawing::Tool tool);
     const drawing::Tool getTool() const { return _currentTool; }
@@ -39,6 +45,8 @@ class CanvasElement : public Element {
     void onMouseMove(const MouseMoveEvent& event) override;
 
    private:
+    bool _showGrid;
+
     drawing::Tool _currentTool;
     drawing::ShapeStyle _currentStyle;
     Renderer _renderer;  // 用於繪製歷史紀錄與草稿

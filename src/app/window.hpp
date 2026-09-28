@@ -50,8 +50,13 @@ class Window {
     const MouseState& getMouseState() const { return _mouseState; }
 
     virtual void onClose(const WindowCloseEvent& event) {}
-    virtual void onResize(const WindowResizeEvent& event) {}
+    virtual void onResize(const WindowResizeEvent& event) {
+        if (_rootElement) {
+            _rootElement->onResize(event);
+        }
+    }
     virtual void onVisibilityChange(const WindowVisibilityEvent& event) {}
+
     virtual void onDisplay() {
         if (_rootElement) {
             _rootElement->render();

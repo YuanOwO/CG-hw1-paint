@@ -434,6 +434,30 @@ void basicDraw(const std::vector<Point>& vertices, const bool isClosed, const Sh
 
 ////////////////////////////////////////////////////////////////////////
 
+// renderer.cpp
+void Renderer::drawGrid(int width, int height, int spacing) const {
+    if (width <= 0 || height <= 0 || spacing <= 0) {
+        return;
+    }
+
+    glColor4f(0.9f, 0.9f, 0.9f, 1.0f);  // 淺灰色
+    glLineWidth(1.0f);
+
+    glBegin(GL_LINES);
+
+    for (int x = spacing; x < width; x += spacing) {
+        glVertex2f(static_cast<float>(x), 0.0f);
+        glVertex2f(static_cast<float>(x), static_cast<float>(height));
+    }
+
+    for (int y = spacing; y < height; y += spacing) {
+        glVertex2f(0.0f, static_cast<float>(y));
+        glVertex2f(static_cast<float>(width), static_cast<float>(y));
+    }
+
+    glEnd();
+}
+
 void Renderer::draw(const drawing::Shape& shape) const {
     auto vertices = shape.getVertices();
     uniquefilter(vertices);

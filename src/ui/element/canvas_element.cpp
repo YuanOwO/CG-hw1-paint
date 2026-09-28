@@ -6,8 +6,8 @@
 
 namespace paint {
 
-CanvasElement::CanvasElement(Document& document)
-    : _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
+CanvasElement::CanvasElement(int width, int height, Document& document)
+    : Element(width, height), _showGrid(true), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
     _currentStyle.stroke.width = 1;
     _currentStyle.stroke.color = ColorRGBA(Color::Black);
     _currentStyle.fill.color = ColorRGBA(Color::Transparent);
@@ -85,6 +85,11 @@ void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
 }
 
 void CanvasElement::render() {
+    // 繪製背景網格
+    if (_showGrid) {
+        _renderer.drawGrid(_width, _height);
+    }
+
     // 先繪製歷史紀錄
     for (const auto& shape : _document.getScene().getShapes()) {
         _renderer.draw(*shape);

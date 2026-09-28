@@ -14,7 +14,7 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
     setupMenu();
 
     // 設置根元素為 CanvasElement
-    auto canvas = std::make_unique<CanvasElement>(_document);
+    auto canvas = std::make_unique<CanvasElement>(getWidth(), getHeight(), _document);
     _canvas = canvas.get();
     setRootElement(std::move(canvas));
 }
@@ -26,6 +26,8 @@ void PaintWindow::setupMenu() {
     setupStrokeMenu();
     setupFillMenu();
     setupPointMenu();
+
+    _menu.addMenuEntry("Grid", [this]() { _canvas->setShowGrid(!_canvas->isShowGrid()); });
 
     auto& editMenu = _menu.addSubMenu("Edit");
     editMenu.addMenuEntry("Undo", [this]() { _canvas->undo(); });
