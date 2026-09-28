@@ -280,6 +280,7 @@ Window::Window(const std::string& title, int width, int height, bool resizable)
     _id = glutCreateWindow(_title.c_str());
 
     // 註冊 GLUT 回調函數
+
     glutCloseFunc(Window::closeCallback);
 
     glutReshapeFunc(Window::reshapeCallback);
@@ -298,6 +299,9 @@ Window::Window(const std::string& title, int width, int height, bool resizable)
 
     // 將視窗加入管理列表
     windows[_id] = this;
+
+    // 啟動定時器，確保持續更新視窗內容
+    glutTimerFunc(CAPTURE_INTERVAL_MS, Window::timerCallback, _id);  // 16ms 對應約 60 FPS
 }
 
 Window::~Window() {
@@ -311,7 +315,12 @@ void Window::setRootElement(std::unique_ptr<Element> rootElement) {
     _rootElement = std::move(rootElement);
     if (_rootElement) {
         // 設定根元素的 invalidate callback，當元素需要重新渲染時，呼叫此函式通知父視窗
-        _rootElement->setInvalidateCallback([this]() { this->requestRedisplay(); });
+        _rootElement->setInvalidateCallback([this]() {
+            // 標記視窗內容為 dirty，並請求重新渲染
+            _contentDirty = true;
+            _needsCapture = false;
+            this->requestRedisplay();
+        });
     }
     requestRedisplay();
 }
@@ -339,6 +348,37 @@ Window* Window::getCurrentWindow() {
 // --------------------------------------------------
 // GLUT callbacks
 // --------------------------------------------------
+
+#pragma region GLUT timer callback
+
+void Window::timerCallback(int windowId) {
+    auto it = windows.find(windowId);
+    if (it == windows.end()) {
+        return;  // 目標視窗已關閉，不再續約
+    }
+
+    auto* window = it->second;
+
+    // 如果視窗需要捕捉內容到 ColorBuffer，且內容沒有被標記為 dirty，則進行捕捉
+    if (window->_needsCapture && !window->_contentDirty) {
+        const int previousWindow = glutGetWindow();
+
+        // Timer 不會幫你選視窗，讀取 framebuffer 前要自行切換。
+        glutSetWindow(windowId);
+
+        window->_colorBuffer.capture(window->_width, window->_height);
+        window->_needsCapture = false;
+
+        if (previousWindow != 0) {
+            glutSetWindow(previousWindow);
+        }
+    }
+
+    // 重新啟動 timer，確保持續更新
+    glutTimerFunc(CAPTURE_INTERVAL_MS, Window::timerCallback, windowId);
+}
+
+#pragma endregion  // GLUT timer callback
 
 #pragma region GLUT window callbacks
 
@@ -376,6 +416,10 @@ void Window::reshapeCallback(int width, int height) {
     window->_width = width;
     window->_height = height;
 
+    window->_colorBuffer.resize(width, height);  // 調整 ColorBuffer 的大小
+    window->_contentDirty = true;
+    window->_needsCapture = false;
+
     // 零尺寸 viewport 合法，表示沒有可繪製的區域。
     glViewport(0, 0, width, height);
 
@@ -406,7 +450,14 @@ void Window::visibilityCallback(int state) {
 
     using State = WindowVisibilityEvent::WindowVisibilityState;
 
-    const WindowVisibilityEvent event{state == GLUT_VISIBLE ? State::Visible : State::Hidden};
+    const WindowVisibilityEvent event(state == GLUT_VISIBLE ? State::Visible : State::Hidden);
+
+    if (state == GLUT_VISIBLE) {
+        window->requestRedisplay();
+    } else {
+        window->_contentDirty = true;
+        window->_needsCapture = false;
+    }
 
     window->onVisibilityChange(event);
 }
@@ -423,8 +474,18 @@ void Window::displayCallback() {
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);  // 設置背景色為白色
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // 調用使用者自定義的繪製函數
-    window->onDisplay();
+    // 如果視窗內容被標記為 dirty，或者需要捕捉內容到 ColorBuffer，
+    // 或者 ColorBuffer 的大小與視窗不匹配，則重新渲染視窗內容
+    if (window->_contentDirty || window->_needsCapture ||
+        !window->_colorBuffer.matchesSize(window->_width, window->_height)) {
+        window->onDisplay();
+
+        window->_contentDirty = false;
+        window->_needsCapture = true;
+    } else {
+        // 直接從 ColorBuffer 恢復視窗內容，避免不必要的重繪
+        window->_colorBuffer.restore();
+    }
 
     // 提交繪圖命令
     glFlush();

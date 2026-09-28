@@ -8,26 +8,29 @@
 
 #include "event/events.hpp"
 #include "input/input_state.hpp"
+#include "render/color_buffer.hpp"
 #include "ui/element/element.hpp"
 
 namespace paint {
 
-const float CLICK_MOVE_THRESHOLD = 4.0f;  // 滑鼠移動距離超過此閾值，則取消點擊事件的判定。
+const int CAPTURE_RATE = 60;                          // 每秒幀數
+const int CAPTURE_INTERVAL_MS = 1000 / CAPTURE_RATE;  // 每幀的時間間隔，單位為毫秒
+const float CLICK_MOVE_THRESHOLD = 4.0f;              // 滑鼠移動距離超過此閾值，則取消點擊事件的判定。
 const std::chrono::milliseconds DOUBLE_CLICK_TIME_THRESHOLD(300);  // 滑鼠雙擊的時間閾值，單位為毫秒。
-
-struct ClickCandidate {
-    bool active = false;
-    Point position;
-};
-
-struct ClickHistory {
-    bool active = false;
-    Point position;
-    std::chrono::steady_clock::time_point time;
-};
 
 class Window {
    public:
+    struct ClickCandidate {
+        bool active = false;
+        Point position;
+    };
+
+    struct ClickHistory {
+        bool active = false;
+        Point position;
+        std::chrono::steady_clock::time_point time;
+    };
+
     Window(const std::string& title, int width, int height, bool resizable = true);
     virtual ~Window();
 
@@ -50,11 +53,13 @@ class Window {
     const MouseState& getMouseState() const { return _mouseState; }
 
     virtual void onClose(const WindowCloseEvent& event) {}
+
     virtual void onResize(const WindowResizeEvent& event) {
         if (_rootElement) {
             _rootElement->onResize(event);
         }
     }
+
     virtual void onVisibilityChange(const WindowVisibilityEvent& event) {}
 
     virtual void onDisplay() {
@@ -121,8 +126,13 @@ class Window {
 
    private:
     int _id = 0;  // GLUT window ID
-    int _width, _height;
+    int _width;
+    int _height;
     std::string _title;
+
+    bool _contentDirty = true;   // 是否需要重新渲染視窗內容
+    bool _needsCapture = false;  // 是否需要捕捉視窗內容到 ColorBuffer
+    ColorBuffer _colorBuffer;
 
     std::unique_ptr<Element> _rootElement;  // 根元素
 
@@ -137,6 +147,8 @@ class Window {
     static Window* getCurrentWindow();
 
     // GLUT callbacks
+    static void timerCallback(int windowId);
+
     static void closeCallback();
 
     static void reshapeCallback(int width, int height);
