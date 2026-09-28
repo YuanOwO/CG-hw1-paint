@@ -18,7 +18,7 @@ void Scene::insert(std::size_t index, std::shared_ptr<Shape> shape) {
     _shapes.insert(_shapes.begin() + static_cast<std::ptrdiff_t>(index), std::move(shape));
 }
 
-void Scene::remove(std::shared_ptr<Shape>& shape) {
+void Scene::remove(const std::shared_ptr<Shape>& shape) {
     auto it = std::find(_shapes.begin(), _shapes.end(), shape);
 
     if (it == _shapes.end()) {
@@ -32,14 +32,14 @@ void Scene::clear() {
     _shapes.clear();
 }
 
-std::size_t Scene::indexOf(std::shared_ptr<Shape>& shape) const {
+std::size_t Scene::indexOf(const std::shared_ptr<Shape>& shape) const {
     auto it = std::find(_shapes.begin(), _shapes.end(), shape);
 
     if (it != _shapes.end()) {
         return std::distance(_shapes.begin(), it);
     }
 
-    throw std::runtime_error("Shape not found in Scene::indexOf");
+    throw std::out_of_range("Shape not found in Scene::indexOf");
 }
 
 void Scene::setShapes(const std::vector<std::shared_ptr<Shape>>& shapes) {

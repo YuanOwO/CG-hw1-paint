@@ -48,23 +48,23 @@ class RemoveShapeCommand : public EditCommand {
     RemoveShapeCommand(Scene& scene, std::shared_ptr<Shape> shape)
         : EditCommand(scene), _shape(std::move(shape)) {}
 
-    void execute() override { _scene.remove(_shape); }
+    void execute() override {
+        _index = _scene.indexOf(_shape);
+        _scene.remove(_shape);
+    }
 
-    // FIXME: 如果是 remove 中間的 shape，或是 remove 後再 insert，undo 會失敗，因為 shape 的位置資訊會遺失
-    void undo() override { _scene.add(_shape); }
+    void undo() override { _scene.insert(_index, _shape); }
 
    private:
+    std::size_t _index = 0;
     std::shared_ptr<Shape> _shape;
 };
 
 class ClearSceneCommand : public EditCommand {
    public:
-    ClearSceneCommand(Scene& scene) : EditCommand(scene) {}
+    ClearSceneCommand(Scene& scene) : EditCommand(scene), _backupShapes(scene.getShapes()) {}
 
-    void execute() override {
-        _backupShapes = _scene.getShapes();
-        _scene.clear();
-    }
+    void execute() override { _scene.clear(); }
 
     void undo() override { _scene.setShapes(_backupShapes); }
 

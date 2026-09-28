@@ -19,7 +19,7 @@ void CanvasElement::undo() {
     if (isDrawing()) {  // 如果正在繪製草稿，則取消草稿
         clearDraft();
     } else {
-        _document.getHistory().undo();
+        _document.undo();
     }
 
     invalidate();
@@ -30,7 +30,7 @@ void CanvasElement::redo() {
         return;
     }
 
-    _document.getHistory().redo();
+    _document.redo();
     invalidate();
 }
 

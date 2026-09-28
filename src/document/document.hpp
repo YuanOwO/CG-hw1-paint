@@ -18,8 +18,11 @@ class Document {
     Document() = default;
     Document(const std::string& filename) : _filename(filename) {}
 
-    CommandHistory& getHistory() { return _history; }
-    Scene& getScene() { return _scene; }
+    // 禁止拷貝和賦值
+    Document(const Document& other) = delete;
+    Document& operator=(const Document& other) = delete;
+
+    const Scene& getScene() { return _scene; }
 
     std::string getFilename() const { return _filename; }
     void setFilename(const std::string& filename) { _filename = filename; }
@@ -31,6 +34,9 @@ class Document {
 
     void undo();
     void redo();
+
+    bool canUndo() const { return _history.canUndo(); }
+    bool canRedo() const { return _history.canRedo(); }
 
     // void saveToFile();
 
