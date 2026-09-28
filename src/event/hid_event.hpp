@@ -12,6 +12,9 @@ class HIDEvent : public Event {
     const KeyboardState& keyboardState() const { return _keyboardState; }
     const MouseState& mouseState() const { return _mouseState; }
 
+    // 返回滑鼠目前的位置，方便繪圖工具使用。
+    Point position() const { return mouseState().position(); }
+
    private:
     const KeyboardState _keyboardState;
     const MouseState _mouseState;
@@ -67,11 +70,6 @@ class MouseMoveEvent : public HIDEvent {
 
     int x() const { return mouseState().x(); }
     int y() const { return mouseState().y(); }
-    Point position() const { return mouseState().position(); }
-
-   private:
-    int _x;
-    int _y;
 };
 
 class MouseEnterEvent : public HIDEvent {

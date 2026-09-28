@@ -72,7 +72,7 @@ enum class Key {
     RightCtrl,
     LeftAlt,
     RightAlt,
-    LeftSuper,
+    LeftSuper,  // Windows 上的 Windows 鍵、macOS 上的 Command 鍵
     RightSuper,
 
     // Function keys
@@ -120,5 +120,12 @@ enum class MouseButton {
 };
 
 enum class ButtonAction { Down, Up, Unknown };
+
+bool isShiftKey(Key key);
+bool isCtrlKey(Key key);
+bool isAltKey(Key key);
+bool isSuperKey(Key key);
+bool isModifierKey(Key key);
+bool isPrimaryModifierKey(Key key);
 
 }  // namespace paint

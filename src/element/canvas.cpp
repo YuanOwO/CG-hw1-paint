@@ -86,65 +86,81 @@ void CanvasElement::render() {
 
     // 再繪製草稿
     if (isDrawing()) {
-        activeTool->preview().draw();
+        activeTool->preview()->draw();
     }
 }
 
 void CanvasElement::onKeyDown(const KeyboardEvent& event) {
-    drawing::ToolEventState state(event.keyboardState(), event.mouseState());
+    // 忽略重複按鍵事件
+    if (event.isRepeat()) {
+        return;
+    }
 
     if (isDrawing()) {
-        handleDraftEvent(activeTool->onKeyDown(state));
+        handleDraftEvent(activeTool->onKeyDown(event));
     }
 }
 
 void CanvasElement::onKeyUp(const KeyboardEvent& event) {
-    drawing::ToolEventState state(event.keyboardState(), event.mouseState());
+    // 忽略重複按鍵事件
+    if (event.isRepeat()) {
+        return;
+    }
 
     if (isDrawing()) {
-        handleDraftEvent(activeTool->onKeyUp(state));
+        handleDraftEvent(activeTool->onKeyUp(event));
     }
 }
 
 void CanvasElement::onClick(const MouseClickEvent& event) {
-    drawing::ToolEventState state(event.keyboardState(), event.mouseState());
+    // 只處理左鍵點擊事件，其他按鍵忽略
+    if (event.button() != MouseButton::MouseLeft) {
+        return;
+    }
 
     if (isDrawing()) {
-        handleDraftEvent(activeTool->onClick(state));
+        handleDraftEvent(activeTool->onClick(event));
     }
 }
 
 void CanvasElement::onDoubleClick(const MouseClickEvent& event) {
-    drawing::ToolEventState state(event.keyboardState(), event.mouseState());
+    // 只處理左鍵點擊事件，其他按鍵忽略
+    if (event.button() != MouseButton::MouseLeft) {
+        return;
+    }
 
     if (isDrawing()) {
-        handleDraftEvent(activeTool->onDoubleClick(state));
+        handleDraftEvent(activeTool->onDoubleClick(event));
     }
 }
 
 void CanvasElement::onMouseDown(const MouseEvent& event) {
-    drawing::ToolEventState state(event.keyboardState(), event.mouseState());
+    // 只處理左鍵點擊事件，其他按鍵忽略
+    if (event.button() != MouseButton::MouseLeft) {
+        return;
+    }
 
     if (!isDrawing()) {
         createDraft();
     }
 
-    handleDraftEvent(activeTool->onMouseDown(state));
+    handleDraftEvent(activeTool->onMouseDown(event));
 }
 
 void CanvasElement::onMouseUp(const MouseEvent& event) {
-    drawing::ToolEventState state(event.keyboardState(), event.mouseState());
+    // 只處理左鍵點擊事件，其他按鍵忽略
+    if (event.button() != MouseButton::MouseLeft) {
+        return;
+    }
 
     if (isDrawing()) {
-        handleDraftEvent(activeTool->onMouseUp(state));
+        handleDraftEvent(activeTool->onMouseUp(event));
     }
 }
 
 void CanvasElement::onMouseMove(const MouseMoveEvent& event) {
-    drawing::ToolEventState state(event.keyboardState(), event.mouseState());
-
     if (isDrawing()) {
-        handleDraftEvent(activeTool->onMouseMove(state));
+        handleDraftEvent(activeTool->onMouseMove(event));
     }
 }
 

@@ -4,19 +4,10 @@
 
 #include "common/point.hpp"
 #include "drawing/shape.hpp"
+#include "event/event.hpp"
 #include "input/input_state.hpp"
 
 namespace paint::drawing {
-
-struct ToolEventState {
-    ToolEventState(const KeyboardState& kbState, const MouseState& msState)
-        : keyboardState(kbState), mouseState(msState) {}
-
-    const KeyboardState& keyboardState;  // 當前鍵盤狀態
-    const MouseState& mouseState;        // 當前滑鼠狀態
-
-    Point position() const { return mouseState.position(); }
-};
 
 enum class Tool {
     TOOL_PENCIL,
@@ -38,18 +29,18 @@ class IDrawingTool {
     virtual ~IDrawingTool() = default;
 
     // 返回草稿的參考，供畫布在 display 時繪製。
-    virtual const Shape& preview() const = 0;
+    virtual const Shape* preview() const = 0;
 
     // 僅在 COMMIT 後呼叫一次；取出後由呼叫端銷毀工具。
     virtual std::unique_ptr<Shape> takeShape() = 0;
 
-    virtual ToolEventResult onClick(ToolEventState&) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onDoubleClick(ToolEventState&) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onMouseDown(ToolEventState&) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onMouseUp(ToolEventState&) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onMouseMove(ToolEventState&) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onKeyDown(ToolEventState&) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onKeyUp(ToolEventState&) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onKeyDown(const KeyboardEvent& event) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onKeyUp(const KeyboardEvent& event) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onClick(const MouseClickEvent& event) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onDoubleClick(const MouseClickEvent& event) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onMouseDown(const MouseEvent& event) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onMouseUp(const MouseEvent& event) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onMouseMove(const MouseMoveEvent& event) { return ToolEventResult::NONE; }
 };
 
 template <typename TShape>
@@ -57,7 +48,7 @@ class DrawingTool : public IDrawingTool {
    public:
     DrawingTool(ShapeStyle style) : draft(std::make_unique<TShape>(style)) {}
 
-    const Shape& preview() const override { return *draft; }
+    const Shape* preview() const override { return draft.get(); }
     std::unique_ptr<Shape> takeShape() override { return std::move(draft); }
 
    protected:

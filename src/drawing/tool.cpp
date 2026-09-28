@@ -13,57 +13,49 @@ class DragTool : public DrawingTool<TShape> {
    public:
     using DrawingTool<TShape>::DrawingTool;
 
-    ToolEventResult onMouseDown(ToolEventState& event) override {
-        if (!event.mouseState.isDown(MouseButton::MouseLeft)) {
-            return ToolEventResult::NONE;
+    ToolEventResult onKeyDown(const KeyboardEvent& event) override {
+        if (event.key() == Key::Escape) {  // ESC
+            return ToolEventResult::CANCEL;
         }
 
+        if (isShiftKey(event.key())) {
+            onShift(event);
+        }
+
+        return ToolEventResult::NONE;
+    }
+
+    ToolEventResult onKeyUp(const KeyboardEvent& event) override {
+        if (isShiftKey(event.key())) {
+            onShift(event);
+        }
+
+        return ToolEventResult::NONE;
+    }
+
+    ToolEventResult onMouseDown(const MouseEvent& event) override {
         this->draft->setStart(event.position());
         this->draft->setEnd(event.position());
 
         return ToolEventResult::NONE;
     }
 
-    ToolEventResult onMouseMove(ToolEventState& event) override {
-        if (!event.mouseState.isDown(MouseButton::MouseLeft)) {
-            return ToolEventResult::NONE;
-        }
-
+    ToolEventResult onMouseUp(const MouseEvent& event) override {
         this->draft->setEnd(event.position());
-        if (event.keyboardState.isShiftDown()) {
-            onShift(event);
-        }
-
-        return ToolEventResult::NONE;
-    }
-
-    ToolEventResult onMouseUp(ToolEventState& event) override {
-        if (!event.mouseState.isUp(MouseButton::MouseLeft)) {
-            return ToolEventResult::NONE;
-        }
-
-        this->draft->setEnd(event.position());
-        if (event.keyboardState.isShiftDown()) {
+        if (event.keyboardState().isShiftDown()) {
             onShift(event);
         }
 
         return ToolEventResult::COMMIT;
     }
 
-    ToolEventResult onKeyDown(ToolEventState& event) override {
-        if (event.keyboardState.isDown(Key::Escape)) {  // ESC
-            return ToolEventResult::CANCEL;
+    ToolEventResult onMouseMove(const MouseMoveEvent& event) override {
+        if (!event.mouseState().isDown(MouseButton::MouseLeft)) {
+            return ToolEventResult::NONE;
         }
 
-        if (event.keyboardState.isShiftDown()) {
-            onShift(event);
-        }
-
-        return ToolEventResult::NONE;
-    }
-
-    ToolEventResult onKeyUp(ToolEventState& event) override {
-        if (event.keyboardState.isShiftDown()) {
+        this->draft->setEnd(event.position());
+        if (event.keyboardState().isShiftDown()) {
             onShift(event);
         }
 
@@ -72,7 +64,7 @@ class DragTool : public DrawingTool<TShape> {
 
    protected:
     // Shift 鍵被按下時，會畫出正方形、正圓或 45° 斜線。這個函式可以被子類別覆寫以實現不同的行為。
-    virtual void onShift(ToolEventState& event) {
+    virtual void onShift(const HIDEvent& event) {
         const Point& start = this->draft->getStart();
         const Point& now = event.position();
 
@@ -93,7 +85,7 @@ class LineTool : public DragTool<Line> {
 
    protected:
     // Shift 鍵被按下時，會畫出水平、垂直或 45° 斜線。
-    void onShift(ToolEventState& event) override {
+    void onShift(const HIDEvent& event) override {
         const Point& start = this->draft->getStart();
         const Point& now = event.position();
 
@@ -137,34 +129,26 @@ class PencilTool : public DrawingTool<Path> {
    public:
     using DrawingTool<Path>::DrawingTool;
 
-    ToolEventResult onMouseDown(ToolEventState& event) override {
-        if (!event.mouseState.isDown(MouseButton::MouseLeft)) {
-            return ToolEventResult::NONE;
-        }
-
+    ToolEventResult onMouseDown(const MouseEvent& event) override {
         draft->addPoint(event.position(), true);
 
         return ToolEventResult::NONE;
     }
 
-    ToolEventResult onMouseMove(ToolEventState& event) override {
-        if (!event.mouseState.isDown(MouseButton::MouseLeft)) {
+    ToolEventResult onMouseUp(const MouseEvent& event) override {
+        draft->addPoint(event.position(), true);
+
+        return ToolEventResult::COMMIT;
+    }
+
+    ToolEventResult onMouseMove(const MouseMoveEvent& event) override {
+        if (!event.mouseState().isDown(MouseButton::MouseLeft)) {
             return ToolEventResult::NONE;
         }
 
         draft->addPoint(event.position());
 
         return ToolEventResult::NONE;
-    }
-
-    ToolEventResult onMouseUp(ToolEventState& event) override {
-        if (!event.mouseState.isUp(MouseButton::MouseLeft)) {
-            return ToolEventResult::NONE;
-        }
-
-        draft->addPoint(event.position(), true);
-
-        return ToolEventResult::COMMIT;
     }
 };
 
@@ -172,53 +156,43 @@ class PolygonTool : public DrawingTool<Polygon> {
    public:
     using DrawingTool<Polygon>::DrawingTool;
 
-    ToolEventResult onClick(ToolEventState& event) override {
-        if (!event.mouseState.isDown(MouseButton::MouseLeft)) {
-            return ToolEventResult::NONE;
-        }
-
+    ToolEventResult onClick(const MouseClickEvent& event) override {
+        // 第一次點擊時，加入第一個點；之後的點擊，更新最後一個點並加入新點。
         if (draft->pointCount() == 0) {
             draft->addPoint(event.position());
         } else {
             draft->setLastPoint(event.position());
         }
+        draft->addPoint(event.position());
 
         return ToolEventResult::NONE;
     }
 
-    ToolEventResult onDoubleClick(ToolEventState& event) override {
-        if (!event.mouseState.isDown(MouseButton::MouseLeft)) {
-            return ToolEventResult::NONE;
-        }
-
+    ToolEventResult onDoubleClick(const MouseClickEvent& event) override {
         draft->setLastPoint(event.position());
         return ToolEventResult::COMMIT;
     }
 
-    ToolEventResult onMouseUp(ToolEventState& event) override {
-        if (!event.mouseState.isUp(MouseButton::MouseLeft)) {
-            return ToolEventResult::NONE;
+    ToolEventResult onMouseMove(const MouseMoveEvent& event) override {
+        if (event.mouseState().isUp(MouseButton::MouseLeft) && draft->pointCount() == 0) {
+            // 尚未加入任何點，無法預覽。
+            return ToolEventResult::CANCEL;
         }
 
-        draft->addPoint(event.position());
-        return ToolEventResult::NONE;
-    }
-
-    ToolEventResult onMouseMove(ToolEventState& event) override {
         draft->setLastPoint(event.position());
         return ToolEventResult::NONE;
     }
 
-    ToolEventResult onKeyDown(ToolEventState& event) override {
-        if (event.keyboardState.isDown(Key::Enter) && draft->pointCount() >= 3) {
+    ToolEventResult onKeyDown(const KeyboardEvent& event) override {
+        if (event.key() == Key::Enter) {
             return ToolEventResult::COMMIT;
         }
 
-        if (event.keyboardState.isDown(Key::Escape)) {  // ESC
+        if (event.key() == Key::Escape) {
             return ToolEventResult::CANCEL;
         }
 
-        if (event.keyboardState.isDown(Key::Backspace)) {  // Backspace
+        if (event.key() == Key::Backspace) {
             if (draft->pointCount() == 0) {
                 return ToolEventResult::CANCEL;
             }

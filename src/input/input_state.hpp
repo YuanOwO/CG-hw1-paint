@@ -37,6 +37,7 @@ class KeyboardState : public InputState<Key> {
     bool isCtrlDown() const { return isDown(Key::LeftCtrl) || isDown(Key::RightCtrl); }
     bool isAltDown() const { return isDown(Key::LeftAlt) || isDown(Key::RightAlt); }
     bool isSuperDown() const { return isDown(Key::LeftSuper) || isDown(Key::RightSuper); }
+    bool isModifierDown() const { return isShiftDown() || isCtrlDown() || isAltDown() || isSuperDown(); }
 
     bool isPrimaryModifierDown() const {
 #ifdef __APPLE__
