@@ -19,20 +19,8 @@ class CanvasElement : public Element {
     void setTool(drawing::Tool tool) { _currentTool = tool; }
     drawing::Tool getTool() const { return _currentTool; }
 
-    void setLineWidth(int width) { _currentStyle.stroke.width = std::max(width, 1); }
-    int getLineWidth() const { return _currentStyle.stroke.width; }
-
-    void setColor(const ColorRGBA& color) { _currentStyle.stroke.color = color; }
-    ColorRGBA getColor() const { return _currentStyle.stroke.color; }
-
-    void setFillColor(const ColorRGBA& color) { _currentStyle.fill.color = color; }
-    ColorRGBA getFillColor() const { return _currentStyle.fill.color; }
-
-    void setLineJoin(drawing::LineJoin join) { _currentStyle.stroke.join = join; }
-    drawing::LineJoin getLineJoin() const { return _currentStyle.stroke.join; }
-
-    void setLineCap(drawing::LineCap cap) { _currentStyle.stroke.cap = cap; }
-    drawing::LineCap getLineCap() const { return _currentStyle.stroke.cap; }
+    void setStyle(const drawing::ShapeStyle& style) { _currentStyle = style; }
+    drawing::ShapeStyle& getStyle() { return _currentStyle; }
 
     void undo();
     void redo();

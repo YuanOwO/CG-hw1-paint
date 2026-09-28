@@ -21,6 +21,21 @@ class Shape {
     const ShapeStyle style;
 };
 
+class PointShape : public Shape {
+   public:
+    PointShape(const ShapeStyle& style) : Shape(style) {}
+
+    bool isClosed() const override { return false; }
+
+    std::vector<Point> getVertices() const override;
+
+    void setPosition(const Point& p) { position = p; }
+    const Point& getPosition() const { return position; }
+
+   private:
+    Point position;
+};
+
 // 可以由兩點（起點與終點）定義的形狀，例如直線、矩形、橢圓等。
 class TwoPointShape : public Shape {
    public:

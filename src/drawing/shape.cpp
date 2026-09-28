@@ -5,6 +5,11 @@
 
 namespace paint::drawing {
 
+std::vector<Point> PointShape::getVertices() const {
+    std::vector<Point> vertices = {position};
+    return vertices;
+}
+
 std::vector<Point> Line::getVertices() const {
     std::vector<Point> vertices = {start, end};
     return vertices;

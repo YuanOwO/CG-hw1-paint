@@ -11,6 +11,7 @@
 namespace paint::drawing {
 
 enum class Tool {
+    TOOL_POINT,
     TOOL_PENCIL,
     TOOL_LINE,
     TOOL_RECTANGLE,

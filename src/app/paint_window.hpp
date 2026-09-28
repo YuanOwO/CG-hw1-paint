@@ -22,12 +22,11 @@ class PaintWindow : public Window {
     CanvasElement* _canvas = nullptr;
 
     void setupMenu();
-    void setupShapeMenu();
-    void setupColorMenu();
-    void setupFillColorMenu();
-    void setupWidthMenu();
-    void setupJoinMenu();
-    void setupCapMenu();
+
+    void setupToolMenu();
+    void setupStrokeMenu();
+    void setupFillMenu();
+    void setupPointMenu();
 };
 
 }  // namespace paint

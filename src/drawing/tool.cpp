@@ -125,6 +125,16 @@ class EllipseTool : public DragTool<Ellipse> {
     using DragTool<Ellipse>::DragTool;
 };
 
+class PointTool : public DrawingTool<PointShape> {
+   public:
+    using DrawingTool<PointShape>::DrawingTool;
+
+    ToolEventResult onClick(const MouseClickEvent& event) override {
+        draft->setPosition(event.getPosition());
+        return ToolEventResult::COMMIT;
+    }
+};
+
 class PencilTool : public DrawingTool<Path> {
    public:
     using DrawingTool<Path>::DrawingTool;
@@ -207,6 +217,8 @@ class PolygonTool : public DrawingTool<Polygon> {
 
 std::unique_ptr<IDrawingTool> createDrawingTool(Tool tool, ShapeStyle style) {
     switch (tool) {
+    case Tool::TOOL_POINT:
+        return std::make_unique<PointTool>(style);
     case Tool::TOOL_PENCIL:
         return std::make_unique<PencilTool>(style);
     case Tool::TOOL_LINE:

@@ -10,6 +10,7 @@
 using paint::drawing::FillStyle;
 using paint::drawing::LineCap;
 using paint::drawing::LineJoin;
+using paint::drawing::ShapeStyle;
 using paint::drawing::StrokeStyle;
 
 namespace paint {
@@ -271,8 +272,6 @@ void drawRoundArc(const Point& center, const Point& start, const Point& end, con
 ////////////////////////////////////////////////////////////////////////
 
 void fill(const std::vector<Point>& vertices, const FillStyle& style) {
-    if (!style.enabled) return;
-
     const GLfloat fillColor[] = {style.color.r, style.color.g, style.color.b, style.color.a};
 
     if (fillColor[3] <= 0.0f || vertices.size() < 3) {
@@ -288,8 +287,6 @@ void fill(const std::vector<Point>& vertices, const FillStyle& style) {
 }
 
 void stroke(const std::vector<Point>& vertices, const bool isClosed, const StrokeStyle& style) {
-    if (!style.enabled) return;
-
     const GLfloat width = style.width;
     const GLfloat color[] = {style.color.r, style.color.g, style.color.b, style.color.a};
 
@@ -380,6 +377,56 @@ void stroke(const std::vector<Point>& vertices, const bool isClosed, const Strok
     }
 }
 
+////////////////////////////////////////////////////////////////////////
+
+void basicPoint(const Point& position, const ShapeStyle& style) {
+    glPointSize(style.pointSize);
+    const GLfloat color[] = {style.stroke.color.r, style.stroke.color.g, style.stroke.color.b,
+                             style.stroke.color.a};
+    glColor4fv(color);
+    glBegin(GL_POINTS);
+    glVertex2f(position.getX(), position.getY());
+    glEnd();
+}
+
+void basicDraw(const std::vector<Point>& vertices, const bool isClosed, const ShapeStyle& style) {
+    const GLfloat width = style.stroke.width;
+    const GLfloat color[] = {style.stroke.color.r, style.stroke.color.g, style.stroke.color.b,
+                             style.stroke.color.a};
+
+    if (color[3] <= 0.0f || width <= 0.0f || vertices.empty()) return;
+
+    glColor4fv(color);
+    glPointSize(width);
+    glLineWidth(width);
+
+    if (style.fillMode == drawing::FillMode::FILLED) {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    } else {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
+
+    int drawMode;
+
+    if (vertices.size() == 1) {
+        drawMode = GL_POINTS;
+    } else if (vertices.size() == 2) {
+        drawMode = GL_LINES;
+    } else if (isClosed) {
+        drawMode = GL_POLYGON;
+    } else {
+        drawMode = GL_LINE_STRIP;
+    }
+
+    glBegin(drawMode);
+
+    for (const auto& v : vertices) {
+        glVertex2f(v.getX(), v.getY());
+    }
+
+    glEnd();
+}
+
 }  // namespace
 
 ////////////////////////////////////////////////////////////////////////
@@ -390,11 +437,25 @@ void Renderer::draw(const drawing::Shape& shape) const {
 
     const auto& style = shape.getStyle();
 
-    if (shape.isClosed()) {
-        fill(vertices, style.fill);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  // 先設定為填充模式
+
+    // 如果是 PointShape，直接使用 basicPoint 繪製
+    if (auto point = dynamic_cast<const drawing::PointShape*>(&shape)) {
+        basicPoint(point->getPosition(), style);
+        return;
     }
 
-    stroke(vertices, shape.isClosed(), style.stroke);
+    // 根據 FillMode 決定使用哪種繪製方式
+    if (style.fillMode != drawing::FillMode::ADVANCED) {
+        // OUTLINE / FILLED 模式，直接使用基本繪製
+        basicDraw(vertices, shape.isClosed(), style);
+    } else {
+        // ADVANCED 模式，使用自訂的填充與描邊方式
+        if (shape.isClosed()) {
+            fill(vertices, style.fill);
+        }
+        stroke(vertices, shape.isClosed(), style.stroke);
+    }
 }
 
 }  // namespace paint
