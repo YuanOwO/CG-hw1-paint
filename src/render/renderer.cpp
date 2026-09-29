@@ -34,9 +34,9 @@ void uniquefilter(std::vector<Point>& vertices) {
 
 void triangle(const Point& a, const Point& b, const Point& c) {
     glBegin(GL_TRIANGLES);
-    glVertex2f(a.getX(), a.getY());
-    glVertex2f(b.getX(), b.getY());
-    glVertex2f(c.getX(), c.getY());
+    glVertex2f(a.x(), a.y());
+    glVertex2f(b.x(), b.y());
+    glVertex2f(c.x(), c.y());
     glEnd();
 }
 
@@ -237,8 +237,8 @@ StrokeVertexResult computeStrokeVertex(const Point& prev, const Point& curr, con
 
 void drawRoundArc(const Point& center, const Point& start, const Point& end, const GLfloat radius,
                   const GLfloat turn) {
-    const GLfloat angleStart = std::atan2(start.getY() - center.getY(), start.getX() - center.getX());
-    const GLfloat angleEnd = std::atan2(end.getY() - center.getY(), end.getX() - center.getX());
+    const GLfloat angleStart = std::atan2(start.y() - center.y(), start.x() - center.x());
+    const GLfloat angleEnd = std::atan2(end.y() - center.y(), end.x() - center.x());
 
     GLfloat angleDiff = angleEnd - angleStart;
 
@@ -258,12 +258,12 @@ void drawRoundArc(const Point& center, const Point& start, const Point& end, con
     const int segments = std::max(4, static_cast<int>(std::ceil(std::abs(angleDiff) / (PI / 16.0f))));
 
     glBegin(GL_TRIANGLE_FAN);
-    glVertex2f(center.getX(), center.getY());
+    glVertex2f(center.x(), center.y());
     for (int i = 0; i <= segments; ++i) {
         const GLfloat angle =
             angleStart + angleDiff * static_cast<GLfloat>(i) / static_cast<GLfloat>(segments);
-        const GLfloat x = center.getX() + radius * std::cos(angle);
-        const GLfloat y = center.getY() + radius * std::sin(angle);
+        const GLfloat x = center.x() + radius * std::cos(angle);
+        const GLfloat y = center.y() + radius * std::sin(angle);
         glVertex2f(x, y);
     }
     glEnd();
@@ -281,7 +281,7 @@ void fill(const std::vector<Point>& vertices, const FillStyle& style) {
     glColor4fv(fillColor);
     glBegin(GL_POLYGON);
     for (const auto& v : vertices) {
-        glVertex2f(v.getX(), v.getY());
+        glVertex2f(v.x(), v.y());
     }
     glEnd();
 }
@@ -388,7 +388,7 @@ void basicPoint(const Point& position, const ShapeStyle& style) {
                              style.stroke.color.a};
     glColor4fv(color);
     glBegin(GL_POINTS);
-    glVertex2f(position.getX(), position.getY());
+    glVertex2f(position.x(), position.y());
     glEnd();
 }
 
@@ -424,7 +424,7 @@ void basicDraw(const std::vector<Point>& vertices, const bool isClosed, const Sh
     glBegin(drawMode);
 
     for (const auto& v : vertices) {
-        glVertex2f(v.getX(), v.getY());
+        glVertex2f(v.x(), v.y());
     }
 
     glEnd();
@@ -462,7 +462,7 @@ void Renderer::draw(const drawing::Shape& shape) const {
     auto vertices = shape.getVertices();
     uniquefilter(vertices);
 
-    const auto& style = shape.getStyle();
+    const auto& style = shape.style();
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  // 先設定為填充模式
 

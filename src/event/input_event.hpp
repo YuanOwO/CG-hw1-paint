@@ -11,11 +11,11 @@ class InputEvent : public Event {
     InputEvent(const KeyboardState& keyboardState, const MouseState& mouseState)
         : _keyboardState(keyboardState), _mouseState(mouseState) {}
 
-    const KeyboardState& getKeyboardState() const { return _keyboardState; }
-    const MouseState& getMouseState() const { return _mouseState; }
+    const KeyboardState& keyboardState() const { return _keyboardState; }
+    const MouseState& mouseState() const { return _mouseState; }
 
     // 返回滑鼠目前的位置，方便繪圖工具使用。
-    Point getPosition() const { return getMouseState().getPosition(); }
+    Point position() const { return mouseState().position(); }
 
    private:
     const KeyboardState _keyboardState;
@@ -28,8 +28,9 @@ class KeyboardEvent : public InputEvent {
                   bool isRepeat = false)
         : InputEvent(inputState, mouseState), _key(key), _action(action), _isRepeat(isRepeat) {}
 
-    Key getKey() const { return _key; }
-    ButtonAction getAction() const { return _action; }
+    Key key() const { return _key; }
+    ButtonAction action() const { return _action; }
+
     bool isRepeat() const { return _isRepeat; }
 
    private:
@@ -44,8 +45,8 @@ class MouseEvent : public InputEvent {
                const MouseState& mouseState)
         : InputEvent(keyboardState, mouseState), _button(button), _action(action) {}
 
-    MouseButton getButton() const { return _button; }
-    ButtonAction getAction() const { return _action; }
+    MouseButton button() const { return _button; }
+    ButtonAction action() const { return _action; }
 
    private:
     MouseButton _button;
@@ -58,7 +59,8 @@ class MouseClickEvent : public InputEvent {
                     const MouseState& mouseState)
         : InputEvent(keyboardState, mouseState), _button(button), _clickCount(clickCount) {}
 
-    MouseButton getButton() const { return _button; }
+    MouseButton button() const { return _button; }
+
     int clickCount() const { return _clickCount; }
 
    private:

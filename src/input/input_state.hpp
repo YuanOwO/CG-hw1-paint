@@ -55,9 +55,9 @@ class MouseState : public InputState<MouseButton> {
    public:
     using InputState<MouseButton>::InputState;
 
-    int getX() const { return _mouseX; }
-    int getY() const { return _mouseY; }
-    Point getPosition() const { return Point(_mouseX, _mouseY); }
+    int x() const { return _mouseX; }
+    int y() const { return _mouseY; }
+    Point position() const { return Point(_mouseX, _mouseY); }
 
    private:
     friend class Window;
@@ -65,7 +65,7 @@ class MouseState : public InputState<MouseButton> {
     int _mouseX = 0;
     int _mouseY = 0;
 
-    void _setMousePosition(int x, int y);
+    void _setPosition(int x, int y);
 };
 
 }  // namespace paint

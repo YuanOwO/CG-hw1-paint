@@ -10,27 +10,27 @@ const float EPSILON = 1e-6f;  // 用於浮點數比較的容差值
 // 點座標，必要時也可以用於表示向量（例如兩點之間的向量）。
 class Point {
    public:
-    Point() : x(0.0f), y(0.0f) {}
-    Point(float xCoord, float yCoord) : x(xCoord), y(yCoord) {}
+    Point() : _x(0.0f), _y(0.0f) {}
+    Point(float x, float y) : _x(x), _y(y) {}
 
-    void setX(float xCoord) { x = xCoord; }
-    float getX() const { return x; }
+    float x() const { return _x; }
+    void setX(float x) { _x = x; }
 
-    void setY(float yCoord) { y = yCoord; }
-    float getY() const { return y; }
+    float y() const { return _y; }
+    void setY(float y) { _y = y; }
 
     bool operator==(const Point& other) const {
-        return std::abs(x - other.x) < EPSILON && std::abs(y - other.y) < EPSILON;
+        return std::abs(_x - other._x) < EPSILON && std::abs(_y - other._y) < EPSILON;
     }
     bool operator!=(const Point& other) const { return !(*this == other); }
 
-    Point operator+(const Point& other) const { return Point(x + other.x, y + other.y); }
-    Point operator-(const Point& other) const { return Point(x - other.x, y - other.y); }
-    Point operator*(float scalar) const { return Point(x * scalar, y * scalar); }
-    Point operator/(float scalar) const { return Point(x / scalar, y / scalar); }
+    Point operator+(const Point& other) const { return Point(_x + other._x, _y + other._y); }
+    Point operator-(const Point& other) const { return Point(_x - other._x, _y - other._y); }
+    Point operator*(float scalar) const { return Point(_x * scalar, _y * scalar); }
+    Point operator/(float scalar) const { return Point(_x / scalar, _y / scalar); }
 
    protected:
-    float x, y;
+    float _x, _y;
 };
 
 inline Point operator*(float scalar, const Point& vec) {

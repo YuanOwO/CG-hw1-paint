@@ -62,7 +62,7 @@ class RemoveShapeCommand : public EditCommand {
 
 class ClearSceneCommand : public EditCommand {
    public:
-    ClearSceneCommand(Scene& scene) : EditCommand(scene), _backupShapes(scene.getShapes()) {}
+    ClearSceneCommand(Scene& scene) : EditCommand(scene), _backupShapes(scene.shapes()) {}
 
     void execute() override { _scene.clear(); }
 

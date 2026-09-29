@@ -14,7 +14,7 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
     setupMenu();
 
     // 設置根元素為 CanvasElement
-    auto canvas = std::make_unique<CanvasElement>(getWidth(), getHeight(), _document);
+    auto canvas = std::make_unique<CanvasElement>(width, height, _document);
     _canvas = canvas.get();
     setRootElement(std::move(canvas));
 }
@@ -74,42 +74,42 @@ void PaintWindow::setupStrokeMenu() {
     auto& colorMenu = strokeMenu.addSubMenu("Color");
 
     colorMenu.addMenuEntry("Black", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeColor(Color::Black);
         _canvas->setStyle(style);
     });
     colorMenu.addMenuEntry("White", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeColor(Color::White);
         _canvas->setStyle(style);
     });
     colorMenu.addMenuEntry("Red", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeColor(Color::Red);
         _canvas->setStyle(style);
     });
     colorMenu.addMenuEntry("Orange", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeColor(Color::Orange);
         _canvas->setStyle(style);
     });
     colorMenu.addMenuEntry("Yellow", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeColor(Color::Yellow);
         _canvas->setStyle(style);
     });
     colorMenu.addMenuEntry("Green", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeColor(Color::Green);
         _canvas->setStyle(style);
     });
     colorMenu.addMenuEntry("Blue", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeColor(Color::Blue);
         _canvas->setStyle(style);
     });
     colorMenu.addMenuEntry("Purple", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeColor(Color::Purple);
         _canvas->setStyle(style);
     });
@@ -120,63 +120,63 @@ void PaintWindow::setupStrokeMenu() {
     auto& widthMenu = strokeMenu.addSubMenu("Width");
 
     widthMenu.addMenuEntry("1 px", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeWidth(1);
         _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("3 px", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeWidth(3);
         _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("5 px", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeWidth(5);
         _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("10 px", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeWidth(10);
         _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("25 px", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeWidth(25);
         _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("50 px", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeWidth(50);
         _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("Thicker", [this]() {
-        auto style = _canvas->getStyle();
-        style.setStrokeWidth(_canvas->getStyle().getStrokeWidth() + 1);
+        auto style = _canvas->style();
+        style.setStrokeWidth(_canvas->style().strokeWidth() + 1);
         _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("Thicker++", [this]() {
-        auto style = _canvas->getStyle();
-        style.setStrokeWidth(_canvas->getStyle().getStrokeWidth() + 3);
+        auto style = _canvas->style();
+        style.setStrokeWidth(_canvas->style().strokeWidth() + 3);
         _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("Thicker+++", [this]() {
-        auto style = _canvas->getStyle();
-        style.setStrokeWidth(_canvas->getStyle().getStrokeWidth() + 5);
+        auto style = _canvas->style();
+        style.setStrokeWidth(_canvas->style().strokeWidth() + 5);
         _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("Thinner", [this]() {
-        auto style = _canvas->getStyle();
-        style.setStrokeWidth(_canvas->getStyle().getStrokeWidth() - 1);
+        auto style = _canvas->style();
+        style.setStrokeWidth(_canvas->style().strokeWidth() - 1);
         _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("Thinner++", [this]() {
-        auto style = _canvas->getStyle();
-        style.setStrokeWidth(_canvas->getStyle().getStrokeWidth() - 3);
+        auto style = _canvas->style();
+        style.setStrokeWidth(_canvas->style().strokeWidth() - 3);
         _canvas->setStyle(style);
     });
     widthMenu.addMenuEntry("Thinner+++", [this]() {
-        auto style = _canvas->getStyle();
-        style.setStrokeWidth(_canvas->getStyle().getStrokeWidth() - 5);
+        auto style = _canvas->style();
+        style.setStrokeWidth(_canvas->style().strokeWidth() - 5);
         _canvas->setStyle(style);
     });
 
@@ -185,17 +185,17 @@ void PaintWindow::setupStrokeMenu() {
     auto& joinMenu = strokeMenu.addSubMenu("Join");
 
     joinMenu.addMenuEntry("Miter", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeJoin(LineJoin::MITER);
         _canvas->setStyle(style);
     });
     joinMenu.addMenuEntry("Bevel", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeJoin(LineJoin::BEVEL);
         _canvas->setStyle(style);
     });
     joinMenu.addMenuEntry("Round", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeJoin(LineJoin::ROUND);
         _canvas->setStyle(style);
     });
@@ -205,17 +205,17 @@ void PaintWindow::setupStrokeMenu() {
     auto& capMenu = strokeMenu.addSubMenu("Cap");
 
     capMenu.addMenuEntry("Round", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeCap(LineCap::ROUND);
         _canvas->setStyle(style);
     });
     capMenu.addMenuEntry("Square", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeCap(LineCap::SQUARE);
         _canvas->setStyle(style);
     });
     capMenu.addMenuEntry("Butt", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setStrokeCap(LineCap::BUTT);
         _canvas->setStyle(style);
     });
@@ -233,17 +233,17 @@ void PaintWindow::setupFillMenu() {
     auto& fillModeMenu = fillMenu.addSubMenu("Mode");
 
     fillModeMenu.addMenuEntry("Outline", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setFillMode(drawing::FillMode::OUTLINE);
         _canvas->setStyle(style);
     });
     fillModeMenu.addMenuEntry("Filled", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setFillMode(drawing::FillMode::FILLED);
         _canvas->setStyle(style);
     });
     fillModeMenu.addMenuEntry("Advanced", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setFillMode(drawing::FillMode::ADVANCED);
         _canvas->setStyle(style);
     });
@@ -253,47 +253,47 @@ void PaintWindow::setupFillMenu() {
     auto& fillColorMenu = fillMenu.addSubMenu("Color");
 
     fillColorMenu.addMenuEntry("Transparent", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setFillColor(Color::Transparent);
         _canvas->setStyle(style);
     });
     fillColorMenu.addMenuEntry("Black", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setFillColor(Color::Black);
         _canvas->setStyle(style);
     });
     fillColorMenu.addMenuEntry("White", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setFillColor(Color::White);
         _canvas->setStyle(style);
     });
     fillColorMenu.addMenuEntry("Red", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setFillColor(Color::Red);
         _canvas->setStyle(style);
     });
     fillColorMenu.addMenuEntry("Orange", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setFillColor(Color::Orange);
         _canvas->setStyle(style);
     });
     fillColorMenu.addMenuEntry("Yellow", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setFillColor(Color::Yellow);
         _canvas->setStyle(style);
     });
     fillColorMenu.addMenuEntry("Green", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setFillColor(Color::Green);
         _canvas->setStyle(style);
     });
     fillColorMenu.addMenuEntry("Blue", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setFillColor(Color::Blue);
         _canvas->setStyle(style);
     });
     fillColorMenu.addMenuEntry("Purple", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setFillColor(Color::Purple);
         _canvas->setStyle(style);
     });
@@ -308,32 +308,32 @@ void PaintWindow::setupPointMenu() {
     auto& pointMenu = _menu.addSubMenu("Point");
 
     pointMenu.addMenuEntry("1 px", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setPointSize(1);
         _canvas->setStyle(style);
     });
     pointMenu.addMenuEntry("3 px", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setPointSize(3);
         _canvas->setStyle(style);
     });
     pointMenu.addMenuEntry("5 px", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setPointSize(5);
         _canvas->setStyle(style);
     });
     pointMenu.addMenuEntry("10 px", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setPointSize(10);
         _canvas->setStyle(style);
     });
     pointMenu.addMenuEntry("25 px", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setPointSize(25);
         _canvas->setStyle(style);
     });
     pointMenu.addMenuEntry("50 px", [this]() {
-        auto style = _canvas->getStyle();
+        auto style = _canvas->style();
         style.setPointSize(50);
         _canvas->setStyle(style);
     });

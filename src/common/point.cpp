@@ -3,15 +3,15 @@
 namespace paint {
 
 float abs(const Vector& vec) {
-    return std::hypot(vec.getX(), vec.getY());
+    return std::hypot(vec.x(), vec.y());
 }
 
 float dot(const Vector& a, const Vector& b) {
-    return a.getX() * b.getX() + a.getY() * b.getY();
+    return a.x() * b.x() + a.y() * b.y();
 }
 
 float cross(const Vector& a, const Vector& b) {
-    return a.getX() * b.getY() - a.getY() * b.getX();
+    return a.x() * b.y() - a.y() * b.x();
 }
 
 Vector normalize(const Vector& vec) {
@@ -24,7 +24,7 @@ Vector normalize(const Vector& vec) {
 
 Vector perpendicular(const Vector& vec) {
     // 返回垂直於 vec 的向量，順時針旋轉 90 度
-    return Vector(-vec.getY(), vec.getX());
+    return Vector(-vec.y(), vec.x());
 }
 
 // 求直線 AB 與 CD 的交點；平行或共線時回傳 false

@@ -1,14 +1,14 @@
 #include "document/document.hpp"
 
-#include <utility>
 #include <stdexcept>
+#include <utility>
 
 #include "command/edit_command.hpp"
 #include "command/file_command.hpp"
 
 namespace paint {
 
-DocumentData Document::getData() const {
+DocumentData Document::data() const {
     DocumentData data{_filename, _scene, _canvasWidth, _canvasHeight};
     return data;
 }

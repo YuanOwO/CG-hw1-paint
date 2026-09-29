@@ -22,11 +22,11 @@ class CanvasElement : public Element {
     }
     bool isShowGrid() const { return _showGrid; }
 
+    const drawing::Tool currentTool() const { return _currentTool; }
     void setTool(drawing::Tool tool);
-    const drawing::Tool getTool() const { return _currentTool; }
 
+    const drawing::ShapeStyle& style() const { return _currentStyle; }
     void setStyle(const drawing::ShapeStyle& style);
-    const drawing::ShapeStyle& getStyle() const { return _currentStyle; }
 
     void undo();
     void redo();

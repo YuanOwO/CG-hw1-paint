@@ -4,7 +4,7 @@
 
 namespace paint {
 
-void ColorBuffer::capture(int width, int height) {
+void ColorBuffer::capture(int x, int y, int width, int height) {
     if (width <= 0 || height <= 0) {
         invalidate();
         return;
@@ -24,9 +24,9 @@ void ColorBuffer::capture(int width, int height) {
     // PACK 控制 OpenGL 寫入主記憶體時的列對齊；1 表示每列不補齊額外 bytes。
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-    // 讀取範圍從 framebuffer 左下角 (0, 0) 開始，不受投影矩陣影響。
+    // 讀取範圍從 framebuffer 左下角 (x, y) 開始，不受投影矩陣影響。
     // 資料逐列由下往上排列；restore 沿用此順序，因此不需要上下翻轉。
-    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, _pixels.data());
+    glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, _pixels.data());
 
     // 恢復之前的 OpenGL 狀態
     glPixelStorei(GL_PACK_ALIGNMENT, oldAlignment);

@@ -13,7 +13,7 @@ class PaintWindow : public Window {
    public:
     PaintWindow(const std::string& title, int width, int height);
 
-    CanvasElement& getCanvas() { return *_canvas; }
+    CanvasElement& canvas() { return *_canvas; }
 
    private:
     Document _document;

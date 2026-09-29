@@ -56,7 +56,7 @@ void InputState<ButtonType>::_clear() {
 template class InputState<Key>;
 template class InputState<MouseButton>;
 
-void MouseState::_setMousePosition(int x, int y) {
+void MouseState::_setPosition(int x, int y) {
     _mouseX = x;
     _mouseY = y;
 }

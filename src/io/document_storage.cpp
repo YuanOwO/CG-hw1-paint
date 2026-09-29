@@ -22,7 +22,7 @@ void DocumentStorage::write(const DocumentData& document) {
 
     file << "YUAN_PAINT 1\n";
 
-    for (const auto& shape : document.scene.getShapes()) {
+    for (const auto& shape : document.scene.shapes()) {
         // file << "Shape: " << shape->serialize() << std::endl;
     }
 

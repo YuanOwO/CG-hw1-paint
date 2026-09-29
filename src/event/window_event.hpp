@@ -12,8 +12,8 @@ class WindowResizeEvent : public WindowEvent {
    public:
     WindowResizeEvent(int width, int height) : _width(width), _height(height) {}
 
-    int getWidth() const { return _width; }
-    int getHeight() const { return _height; }
+    int width() const { return _width; }
+    int height() const { return _height; }
 
    private:
     int _width;
@@ -26,7 +26,7 @@ class WindowVisibilityEvent : public WindowEvent {
 
     WindowVisibilityEvent(WindowVisibilityState state) : _state(state) {}
 
-    WindowVisibilityState getState() const { return _state; }
+    WindowVisibilityState state() const { return _state; }
 
    private:
     WindowVisibilityState _state;

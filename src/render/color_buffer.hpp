@@ -8,7 +8,7 @@ namespace paint {
 
 class ColorBuffer {
    public:
-    void capture(int width, int height);
+    void capture(int x, int y, int width, int height);
     void restore() const;
 
     void resize(int width, int height);
@@ -17,8 +17,8 @@ class ColorBuffer {
 
     void invalidate() { _valid = false; }
 
-    int getWidth() const { return _width; }
-    int getHeight() const { return _height; }
+    int width() const { return _width; }
+    int height() const { return _height; }
 
     bool isValid() const { return _valid; }
 

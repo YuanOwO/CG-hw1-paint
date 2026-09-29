@@ -18,7 +18,7 @@ class Scene {
     std::size_t indexOf(const std::shared_ptr<Shape>& shape) const;
     std::size_t size() const { return _shapes.size(); }
 
-    const std::vector<std::shared_ptr<Shape>>& getShapes() const { return _shapes; }
+    const std::vector<std::shared_ptr<Shape>>& shapes() const { return _shapes; }
     void setShapes(const std::vector<std::shared_ptr<Shape>>& shapes);
 
    private:

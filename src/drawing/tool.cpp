@@ -18,11 +18,11 @@ class DragTool : public DrawingTool<TShape> {
             return ToolEventResult::NONE;
         }
 
-        if (event.getKey() == Key::Escape) {  // ESC
+        if (event.key() == Key::Escape) {  // ESC
             return ToolEventResult::CANCEL;
         }
 
-        if (isShiftKey(event.getKey())) {
+        if (isShiftKey(event.key())) {
             onShift(event);
             return ToolEventResult::UPDATE;
         }
@@ -35,8 +35,8 @@ class DragTool : public DrawingTool<TShape> {
             return ToolEventResult::NONE;
         }
 
-        if (isShiftKey(event.getKey())) {
-            this->_draft->setEnd(event.getPosition());
+        if (isShiftKey(event.key())) {
+            this->_draft->setEnd(event.position());
             return ToolEventResult::UPDATE;
         }
 
@@ -45,8 +45,8 @@ class DragTool : public DrawingTool<TShape> {
 
     ToolEventResult onMouseDown(const MouseEvent& event) override {
         this->beginDraft();
-        this->_draft->setStart(event.getPosition());
-        this->_draft->setEnd(event.getPosition());
+        this->_draft->setStart(event.position());
+        this->_draft->setEnd(event.position());
 
         return ToolEventResult::UPDATE;
     }
@@ -56,8 +56,8 @@ class DragTool : public DrawingTool<TShape> {
             return ToolEventResult::NONE;
         }
 
-        this->_draft->setEnd(event.getPosition());
-        if (event.getKeyboardState().isShiftDown()) {
+        this->_draft->setEnd(event.position());
+        if (event.keyboardState().isShiftDown()) {
             onShift(event);
         }
 
@@ -69,12 +69,12 @@ class DragTool : public DrawingTool<TShape> {
             return ToolEventResult::NONE;
         }
 
-        if (!event.getMouseState().isDown(MouseButton::MouseLeft)) {
+        if (!event.mouseState().isDown(MouseButton::MouseLeft)) {
             return ToolEventResult::NONE;
         }
 
-        this->_draft->setEnd(event.getPosition());
-        if (event.getKeyboardState().isShiftDown()) {
+        this->_draft->setEnd(event.position());
+        if (event.keyboardState().isShiftDown()) {
             onShift(event);
         }
 
@@ -84,16 +84,16 @@ class DragTool : public DrawingTool<TShape> {
    protected:
     // Shift 鍵被按下時，會畫出正方形、正圓或 45° 斜線。這個函式可以被子類別覆寫以實現不同的行為。
     virtual void onShift(const InputEvent& event) {
-        const Point& start = this->_draft->getStart();
-        const Point& now = event.getPosition();
+        const Point& start = this->_draft->start();
+        const Point& now = event.position();
 
-        float dx = now.getX() - start.getX();
-        float dy = now.getY() - start.getY();
+        float dx = now.x() - start.x();
+        float dy = now.y() - start.y();
 
         const auto size = std::max(std::abs(dx), std::abs(dy));
         Point newEnd;
-        newEnd.setX(start.getX() + (dx >= 0 ? size : -size));
-        newEnd.setY(start.getY() + (dy >= 0 ? size : -size));
+        newEnd.setX(start.x() + (dx >= 0 ? size : -size));
+        newEnd.setY(start.y() + (dy >= 0 ? size : -size));
         this->_draft->setEnd(newEnd);
     }
 };
@@ -105,11 +105,11 @@ class LineTool : public DragTool<Line> {
    protected:
     // Shift 鍵被按下時，會畫出水平、垂直或 45° 斜線。
     void onShift(const InputEvent& event) override {
-        const Point& start = this->_draft->getStart();
-        const Point& now = event.getPosition();
+        const Point& start = this->_draft->start();
+        const Point& now = event.position();
 
-        const float dx = now.getX() - start.getX();
-        const float dy = now.getY() - start.getY();
+        const float dx = now.x() - start.x();
+        const float dy = now.y() - start.y();
         const float ax = std::abs(dx);
         const float ay = std::abs(dy);
 
@@ -119,15 +119,15 @@ class LineTool : public DragTool<Line> {
         Point newEnd = start;
         if (ay <= ax * threshold) {
             // 水平線：固定 Y。
-            newEnd.setX(start.getX() + dx);
+            newEnd.setX(start.x() + dx);
         } else if (ax <= ay * threshold) {
             // 垂直線：固定 X。
-            newEnd.setY(start.getY() + dy);
+            newEnd.setY(start.y() + dy);
         } else {
             // 45° 斜線：投影到最近的對角線。
             const auto size = std::max(ax, ay);
-            newEnd.setX(start.getX() + (dx >= 0 ? size : -size));
-            newEnd.setY(start.getY() + (dy >= 0 ? size : -size));
+            newEnd.setX(start.x() + (dx >= 0 ? size : -size));
+            newEnd.setY(start.y() + (dy >= 0 ? size : -size));
         }
 
         this->_draft->setEnd(newEnd);
@@ -150,7 +150,7 @@ class PointTool : public DrawingTool<PointShape> {
 
     ToolEventResult onClick(const MouseClickEvent& event) override {
         beginDraft();
-        _draft->setPosition(event.getPosition());
+        _draft->setPosition(event.position());
         return ToolEventResult::COMMIT;
     }
 };
@@ -161,7 +161,7 @@ class PencilTool : public DrawingTool<Path> {
 
     ToolEventResult onMouseDown(const MouseEvent& event) override {
         this->beginDraft();
-        _draft->addPoint(event.getPosition(), true);
+        _draft->addPoint(event.position(), true);
 
         return ToolEventResult::UPDATE;
     }
@@ -171,7 +171,7 @@ class PencilTool : public DrawingTool<Path> {
             return ToolEventResult::NONE;
         }
 
-        _draft->addPoint(event.getPosition(), true);
+        _draft->addPoint(event.position(), true);
 
         return ToolEventResult::COMMIT;
     }
@@ -181,11 +181,11 @@ class PencilTool : public DrawingTool<Path> {
             return ToolEventResult::NONE;
         }
 
-        if (!event.getMouseState().isDown(MouseButton::MouseLeft)) {
+        if (!event.mouseState().isDown(MouseButton::MouseLeft)) {
             return ToolEventResult::NONE;
         }
 
-        _draft->addPoint(event.getPosition());
+        _draft->addPoint(event.position());
 
         return ToolEventResult::UPDATE;
     }
@@ -202,11 +202,11 @@ class PolygonTool : public DrawingTool<Polygon> {
 
         // 第一次點擊時，加入第一個點；之後的點擊，更新最後一個點並加入新點。
         if (_draft->pointCount() == 0) {
-            _draft->addPoint(event.getPosition());
+            _draft->addPoint(event.position());
         } else {
-            _draft->setLastPoint(event.getPosition());
+            _draft->setLastPoint(event.position());
         }
-        _draft->addPoint(event.getPosition());
+        _draft->addPoint(event.position());
 
         return ToolEventResult::UPDATE;
     }
@@ -216,7 +216,7 @@ class PolygonTool : public DrawingTool<Polygon> {
             return ToolEventResult::NONE;
         }
 
-        _draft->setLastPoint(event.getPosition());
+        _draft->setLastPoint(event.position());
         return ToolEventResult::COMMIT;
     }
 
@@ -225,12 +225,12 @@ class PolygonTool : public DrawingTool<Polygon> {
             return ToolEventResult::NONE;
         }
 
-        if (event.getMouseState().isUp(MouseButton::MouseLeft) && _draft->pointCount() == 0) {
+        if (event.mouseState().isUp(MouseButton::MouseLeft) && _draft->pointCount() == 0) {
             // 尚未加入任何點，無法預覽。
             return ToolEventResult::CANCEL;
         }
 
-        _draft->setLastPoint(event.getPosition());
+        _draft->setLastPoint(event.position());
         return ToolEventResult::UPDATE;
     }
 
@@ -239,15 +239,15 @@ class PolygonTool : public DrawingTool<Polygon> {
             return ToolEventResult::NONE;
         }
 
-        if (event.getKey() == Key::Enter) {
+        if (event.key() == Key::Enter) {
             return ToolEventResult::COMMIT;
         }
 
-        if (event.getKey() == Key::Escape) {
+        if (event.key() == Key::Escape) {
             return ToolEventResult::CANCEL;
         }
 
-        if (event.getKey() == Key::Backspace) {
+        if (event.key() == Key::Backspace) {
             if (_draft->pointCount() == 0) {
                 return ToolEventResult::CANCEL;
             }

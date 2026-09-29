@@ -39,10 +39,10 @@ class Window : public EventTarget {
     Window(const Window&) = delete;
     Window& operator=(const Window&) = delete;
 
-    int getId() const { return _id; }
-    int getWidth() const { return _width; }
-    int getHeight() const { return _height; }
-    const std::string& getTitle() const { return _title; }
+    int id() const { return _id; }
+    int width() const { return _width; }
+    int height() const { return _height; }
+    const std::string& title() const { return _title; }
 
     bool isResizable() const { return _resizable; }
 
@@ -50,8 +50,8 @@ class Window : public EventTarget {
 
    protected:
     // 回傳目前的輸入狀態。
-    const KeyboardState& getKeyboardState() const { return _keyboardState; }
-    const MouseState& getMouseState() const { return _mouseState; }
+    const KeyboardState& keyboardState() const { return _keyboardState; }
+    const MouseState& mouseState() const { return _mouseState; }
 
     virtual void onClose(const WindowCloseEvent& event) {}
 
@@ -146,7 +146,7 @@ class Window : public EventTarget {
     std::unordered_map<MouseButton, ClickCandidate> _clickCandidate;  // 記錄滑鼠按下的位置，方便判斷點擊事件
     std::unordered_map<MouseButton, ClickHistory> _lastClicks;  // 記錄上一次滑鼠點擊事件，方便判斷雙擊事件
 
-    static Window* getCurrentWindow();
+    static Window* currentWindow();
 
     // GLUT callbacks
     static void timerCallback(int windowId);

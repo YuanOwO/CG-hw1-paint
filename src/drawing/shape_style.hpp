@@ -18,8 +18,8 @@ struct FillStyle {
 
     // Setters and Getters
 
+    // const ColorRGBA& color() const { return color; }
     void setColor(const ColorRGBA& c) { color = c; }
-    const ColorRGBA& getColor() const { return color; }
 };
 
 struct StrokeStyle {
@@ -34,20 +34,20 @@ struct StrokeStyle {
 
     // Setters and Getters
 
+    // float width() const { return width; }
     void setWidth(float w) { width = std::max(1.0f, w); }
-    float getWidth() const { return width; }
 
+    // const ColorRGBA& color() const { return color; }
     void setColor(const ColorRGBA& c) { color = c; }
-    const ColorRGBA& getColor() const { return color; }
 
+    // LineJoin join() const { return join; }
     void setJoin(LineJoin j) { join = j; }
-    LineJoin getJoin() const { return join; }
 
+    // LineCap cap() const { return cap; }
     void setCap(LineCap c) { cap = c; }
-    LineCap getCap() const { return cap; }
 
+    // float miterLimit() const { return miterLimit; }
     void setMiterLimit(float limit) { miterLimit = std::max(1.0f, limit); }
-    float getMiterLimit() const { return miterLimit; }
 };
 
 struct ShapeStyle {
@@ -58,39 +58,39 @@ struct ShapeStyle {
 
     // Setters and Getters
 
+    // const FillMode fillMode() const { return fillMode; }
     void setFillMode(FillMode mode) { fillMode = mode; }
-    const FillMode getFillMode() const { return fillMode; }
 
+    // float pointSize() const { return pointSize; }
     void setPointSize(float size) { pointSize = std::max(1.0f, size); }
-    float getPointSize() const { return pointSize; }
 
     // Fill
 
-    void setFill(const FillStyle& f) { fill = f; }
-    const FillStyle& getFill() const { return fill; }
+    const FillStyle& fillStyle() const { return fill; }
+    void setFillStyle(const FillStyle& f) { fill = f; }
 
+    const ColorRGBA& fillColor() const { return fill.color; }
     void setFillColor(const ColorRGBA& c) { fill.setColor(c); }
-    const ColorRGBA& getFillColor() const { return fill.getColor(); }
 
     // Stroke
 
-    void setStroke(const StrokeStyle& s) { stroke = s; }
-    const StrokeStyle& getStroke() const { return stroke; }
+    const StrokeStyle& strokeStyle() const { return stroke; }
+    void setStrokeStyle(const StrokeStyle& s) { stroke = s; }
 
+    const ColorRGBA& strokeColor() const { return stroke.color; }
     void setStrokeColor(const ColorRGBA& c) { stroke.setColor(c); }
-    const ColorRGBA& getStrokeColor() const { return stroke.getColor(); }
 
+    float strokeWidth() const { return stroke.width; }
     void setStrokeWidth(float w) { stroke.setWidth(w); }
-    float getStrokeWidth() const { return stroke.getWidth(); }
 
+    LineJoin strokeJoin() const { return stroke.join; }
     void setStrokeJoin(LineJoin j) { stroke.setJoin(j); }
-    LineJoin getStrokeJoin() const { return stroke.getJoin(); }
 
+    LineCap strokeCap() const { return stroke.cap; }
     void setStrokeCap(LineCap c) { stroke.setCap(c); }
-    LineCap getStrokeCap() const { return stroke.getCap(); }
 
+    float strokeMiterLimit() const { return stroke.miterLimit; }
     void setStrokeMiterLimit(float limit) { stroke.setMiterLimit(limit); }
-    float getStrokeMiterLimit() const { return stroke.getMiterLimit(); }
 };
 
 }  // namespace paint::drawing

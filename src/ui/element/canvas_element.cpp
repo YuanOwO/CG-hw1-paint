@@ -19,7 +19,7 @@ CanvasElement::CanvasElement(int width, int height, Document& document)
 }
 
 void CanvasElement::onResize(const WindowResizeEvent& event) {
-    _document.setCanvasSize(event.getWidth(), event.getHeight());
+    _document.setCanvasSize(event.width(), event.height());
     Element::onResize(event);
 }
 
@@ -102,11 +102,11 @@ void CanvasElement::renderContent() {
 
 void CanvasElement::renderContent(bool includeGrid) {
     if (includeGrid) {
-        _renderer.drawGrid(_width, _height);
+        _renderer.drawGrid(width(), height());
     }
 
     // 先繪製歷史紀錄
-    for (const auto& shape : _document.getScene().getShapes()) {
+    for (const auto& shape : _document.scene().shapes()) {
         _renderer.draw(*shape);
     }
 
@@ -118,8 +118,8 @@ void CanvasElement::renderContent(bool includeGrid) {
 
 void CanvasElement::onKeyDown(const KeyboardEvent& event) {
     // 處理 Ctrl+Z / Command+Z 以及 Ctrl+Shift+Z / Command+Shift+Z 的快捷鍵
-    if (event.getKey() == Key::Z && event.getKeyboardState().isPrimaryModifierDown()) {
-        if (event.getKeyboardState().isShiftDown()) {
+    if (event.key() == Key::Z && event.keyboardState().isPrimaryModifierDown()) {
+        if (event.keyboardState().isShiftDown()) {
             redo();
         } else {
             undo();
@@ -146,7 +146,7 @@ void CanvasElement::onKeyUp(const KeyboardEvent& event) {
 
 void CanvasElement::onClick(const MouseClickEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.getButton() != MouseButton::MouseLeft) {
+    if (event.button() != MouseButton::MouseLeft) {
         return;
     }
 
@@ -155,7 +155,7 @@ void CanvasElement::onClick(const MouseClickEvent& event) {
 
 void CanvasElement::onDoubleClick(const MouseClickEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.getButton() != MouseButton::MouseLeft) {
+    if (event.button() != MouseButton::MouseLeft) {
         return;
     }
 
@@ -164,7 +164,7 @@ void CanvasElement::onDoubleClick(const MouseClickEvent& event) {
 
 void CanvasElement::onMouseDown(const MouseEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.getButton() != MouseButton::MouseLeft) {
+    if (event.button() != MouseButton::MouseLeft) {
         return;
     }
 
@@ -173,7 +173,7 @@ void CanvasElement::onMouseDown(const MouseEvent& event) {
 
 void CanvasElement::onMouseUp(const MouseEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.getButton() != MouseButton::MouseLeft) {
+    if (event.button() != MouseButton::MouseLeft) {
         return;
     }
 

@@ -21,7 +21,7 @@ class Menu {
     Menu(const Menu&) = delete;
     Menu& operator=(const Menu&) = delete;
 
-    int getId() const { return _menuId; }
+    int id() const { return _menuId; }
 
     bool isEnabled() const { return _attachedButton != MouseButton::Unknown; }
 

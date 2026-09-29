@@ -334,7 +334,7 @@ void Window::requestRedisplay() {
     glutPostWindowRedisplay(_id);
 }
 
-Window* Window::getCurrentWindow() {
+Window* Window::currentWindow() {
     const int currentWindowId = glutGetWindow();
 
     auto it = windows.find(currentWindowId);
@@ -366,7 +366,7 @@ void Window::timerCallback(int windowId) {
         // Timer 不會幫你選視窗，讀取 framebuffer 前要自行切換。
         glutSetWindow(windowId);
 
-        window->_colorBuffer.capture(window->_width, window->_height);
+        window->_colorBuffer.capture(0, 0, window->_width, window->_height);
         window->_needsCapture = false;
 
         if (previousWindow != 0) {
@@ -383,7 +383,7 @@ void Window::timerCallback(int windowId) {
 #pragma region GLUT window callbacks
 
 void Window::closeCallback() {
-    auto* window = getCurrentWindow();
+    auto* window = currentWindow();
 
     // 如果找不到當前視窗，直接返回
     if (!window) {
@@ -400,7 +400,7 @@ void Window::closeCallback() {
 }
 
 void Window::reshapeCallback(int width, int height) {
-    auto* window = getCurrentWindow();
+    auto* window = currentWindow();
 
     // 如果找不到當前視窗，直接返回
     if (!window) {
@@ -441,7 +441,7 @@ void Window::reshapeCallback(int width, int height) {
 }
 
 void Window::visibilityCallback(int state) {
-    auto* window = getCurrentWindow();
+    auto* window = currentWindow();
 
     // 如果找不到當前視窗，直接返回
     if (!window) {
@@ -463,7 +463,7 @@ void Window::visibilityCallback(int state) {
 }
 
 void Window::displayCallback() {
-    auto* window = getCurrentWindow();
+    auto* window = currentWindow();
 
     // 如果找不到當前視窗，直接返回
     if (!window) {
@@ -496,7 +496,7 @@ void Window::displayCallback() {
 #pragma region GLUT keyboard callbacks
 
 void Window::keyDownHandler(Key key, int x, int y) {
-    auto* window = getCurrentWindow();
+    auto* window = currentWindow();
 
     bool firstPress = _keyboardState._press(key);
 
@@ -505,7 +505,7 @@ void Window::keyDownHandler(Key key, int x, int y) {
         return;
     }
 
-    window->_mouseState._setMousePosition(x, y);
+    window->_mouseState._setPosition(x, y);
 
     const KeyboardEvent event(key, ButtonAction::Down, _keyboardState, window->_mouseState, !firstPress);
 
@@ -513,7 +513,7 @@ void Window::keyDownHandler(Key key, int x, int y) {
 }
 
 void Window::keyUpHandler(Key key, int x, int y) {
-    auto* window = getCurrentWindow();
+    auto* window = currentWindow();
 
     _keyboardState._release(key);
 
@@ -522,7 +522,7 @@ void Window::keyUpHandler(Key key, int x, int y) {
         return;
     }
 
-    window->_mouseState._setMousePosition(x, y);
+    window->_mouseState._setPosition(x, y);
 
     const KeyboardEvent event(key, ButtonAction::Up, _keyboardState, window->_mouseState);
 
@@ -578,7 +578,7 @@ void Window::specialUpCallback(int key, int x, int y) {
 #pragma region GLUT mouse callbacks
 
 void Window::mouseCallback(int button, int state, int x, int y) {
-    auto* window = getCurrentWindow();
+    auto* window = currentWindow();
 
     auto btn = mapMouseButton(button);
 
@@ -587,7 +587,7 @@ void Window::mouseCallback(int button, int state, int x, int y) {
         return;
     }
 
-    window->_mouseState._setMousePosition(x, y);
+    window->_mouseState._setPosition(x, y);
 
     if (state == GLUT_DOWN) {
         window->_mouseState._press(btn);
@@ -608,7 +608,7 @@ void Window::mouseCallback(int button, int state, int x, int y) {
         // 判斷是否為點擊事件
         // 如果滑鼠按下和釋放的位置距離小於閾值，則認為是點擊事件
         auto& press = window->_clickCandidate[btn];
-        if (press.active && abs(window->_mouseState.getPosition() - press.position) <= CLICK_MOVE_THRESHOLD) {
+        if (press.active && abs(window->_mouseState.position() - press.position) <= CLICK_MOVE_THRESHOLD) {
             // 判斷是否為雙擊事件
             // 1. 上一次點擊事件有效
             // 2. 距離現在的時間小於閾值
@@ -616,7 +616,7 @@ void Window::mouseCallback(int button, int state, int x, int y) {
 
             auto& lastClick = window->_lastClicks[btn];
             auto now = std::chrono::steady_clock::now();
-            const Point position = window->_mouseState.getPosition();
+            const Point position = window->_mouseState.position();
 
             const bool isDoubleClick = lastClick.active &&
                                        now - lastClick.time <= DOUBLE_CLICK_TIME_THRESHOLD &&
@@ -629,7 +629,7 @@ void Window::mouseCallback(int button, int state, int x, int y) {
                 window->onDoubleClick(doubleClickEvent);
             } else {
                 lastClick.active = true;
-                lastClick.position = window->_mouseState.getPosition();
+                lastClick.position = window->_mouseState.position();
                 lastClick.time = now;
 
                 const MouseClickEvent clickEvent(btn, 1, _keyboardState, window->_mouseState);
@@ -646,18 +646,18 @@ void Window::mouseCallback(int button, int state, int x, int y) {
 }
 
 void Window::mouseMoveHandler(int x, int y) {
-    auto* window = getCurrentWindow();
+    auto* window = currentWindow();
 
     // 如果找不到當前視窗，直接返回
     if (!window) {
         return;
     }
 
-    window->_mouseState._setMousePosition(x, y);
+    window->_mouseState._setPosition(x, y);
 
     // 移動距離超過閾值，則取消所有滑鼠按下狀態，避免誤判為點擊事件
     for (auto& [button, press] : window->_clickCandidate) {
-        if (press.active && abs(window->_mouseState.getPosition() - press.position) > CLICK_MOVE_THRESHOLD) {
+        if (press.active && abs(window->_mouseState.position() - press.position) > CLICK_MOVE_THRESHOLD) {
             press.active = false;
         }
     }
@@ -676,7 +676,7 @@ void Window::passiveMotionCallback(int x, int y) {
 }
 
 void Window::entryCallback(int state) {
-    auto* window = getCurrentWindow();
+    auto* window = currentWindow();
 
     // 如果找不到當前視窗，直接返回
     if (!window) {
