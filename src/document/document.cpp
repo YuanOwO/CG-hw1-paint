@@ -1,6 +1,7 @@
 #include "document/document.hpp"
 
 #include <utility>
+#include <stdexcept>
 
 #include "command/edit_command.hpp"
 #include "command/file_command.hpp"
@@ -8,9 +9,16 @@
 namespace paint {
 
 DocumentData Document::getData() const {
-    DocumentData data{_filename, _scene};
-    // 其他 Metadata 可以在這裡打包，例如畫布大小、背景顏色等
+    DocumentData data{_filename, _scene, _canvasWidth, _canvasHeight};
     return data;
+}
+
+void Document::setCanvasSize(int width, int height) {
+    if (width < 0 || height < 0) {
+        throw std::invalid_argument("Canvas dimensions cannot be negative");
+    }
+    _canvasWidth = width;
+    _canvasHeight = height;
 }
 
 void Document::replaceContent(Scene scene, Path filename) {
@@ -21,13 +29,12 @@ void Document::replaceContent(Scene scene, Path filename) {
 
 // 文件操作
 
-void Document::newDocument() {
-    NewDocumentCommand newDocCommand(*this);
-    newDocCommand.execute();
+void Document::newFile() {
+    NewFileCommand newFileCommand(*this);
+    newFileCommand.execute();
 }
 
 void Document::load(const Path& filename) {
-    // LoadCommand loadCommand;
     LoadCommand loadCommand(*this, filename);
     loadCommand.execute();
 }

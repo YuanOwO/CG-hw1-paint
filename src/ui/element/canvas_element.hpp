@@ -31,10 +31,13 @@ class CanvasElement : public Element {
     void undo();
     void redo();
     void clear();
+    void newFile();
 
    protected:
     void renderContent() override;
     void renderContent(bool includeGrid);
+
+    void onResize(const WindowResizeEvent& event) override;
 
     void onKeyDown(const KeyboardEvent& event) override;
     void onKeyUp(const KeyboardEvent& event) override;

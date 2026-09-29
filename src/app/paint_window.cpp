@@ -23,7 +23,7 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
 
 void PaintWindow::setupMenu() {
     auto& fileMenu = _menu.addSubMenu("File");
-    fileMenu.addMenuEntry("New", [this]() { _document.newDocument(); });
+    fileMenu.addMenuEntry("New", [this]() { _canvas->newFile(); });
     fileMenu.addMenuEntry("Load", [this]() {});
     fileMenu.addMenuEntry("Save", [this]() { _document.save(); });
     fileMenu.addMenuEntry("Save As", [this]() {});

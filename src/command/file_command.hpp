@@ -17,12 +17,12 @@ class FileCommand : public ICommand {
     Document& _document;
 };
 
-class NewDocumentCommand : public FileCommand {
+class NewFileCommand : public FileCommand {
    public:
-    NewDocumentCommand(Document& document) : FileCommand(document) {}
+    NewFileCommand(Document& document) : FileCommand(document) {}
 
     void execute() override {
-        _document.replaceContent(Scene(), "");  // 清空場景並重置文件名
+        _document.replaceContent(Scene{}, "");  // 清空場景並重置文件名
     }
 };
 
@@ -34,7 +34,7 @@ class LoadCommand : public FileCommand {
         auto data = DocumentStorage::read(_filename);
 
         // read 完全成功後才替換原文件。
-        _document.replaceContent(std::move(data._scene), _filename);
+        _document.replaceContent(std::move(data.scene), _filename);
     }
 
    private:
@@ -47,7 +47,7 @@ class SaveCommand : public FileCommand {
 
     void execute() override {
         auto data = _document.getData();
-        data._filename = _filename;
+        data.filename = _filename;
         DocumentStorage::write(data);
 
         // 必須等 write 成功後才更新。

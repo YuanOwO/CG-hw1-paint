@@ -5,46 +5,34 @@
 #include <filesystem>
 #include <fstream>
 
+#include "io/utils.hpp"
+
 namespace paint {
 
 void DocumentStorage::write(const DocumentData& document) {
-    const Path& filename = document._filename;
+    const Path& path = document.filename;
 
-    if (filename.empty()) {
-        throw std::runtime_error("Cannot write: file path is empty");
+    utils::validateWritePath(path);
+
+    std::ofstream file(path);
+
+    if (!file) {
+        throw std::runtime_error("Failed to open file for writing: " + path.string());
     }
 
-    if (std::filesystem::exists(filename)) {
-        if (std::filesystem::is_directory(filename)) {
-            throw std::runtime_error("Cannot write to a directory: " + filename.string());
-        } else if (!std::filesystem::is_regular_file(filename)) {
-            throw std::runtime_error("Cannot write to a non-regular file: " + filename.string());
-        }
+    file << "YUAN_PAINT 1\n";
 
-        // TODO: 文檔重複，提示使用者是否覆蓋
-    }
-
-    std::fstream file(filename, std::ios::out);
-
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open file for writing: " + filename.string());
-    }
-
-    // 實作寫入邏輯，將 document 的內容序列化並寫入文件
-    file << "YUAN_PAINT 1" << std::endl;
-    file << "START" << std::endl;
-    file << "Hello World!" << std::endl;
-
-    file << "Scene Size: " << document._scene.size() << std::endl;
-
-    for (auto& shape : document._scene.getShapes()) {
-        // 假設 Shape 有一個方法可以序列化自己
+    for (const auto& shape : document.scene.getShapes()) {
         // file << "Shape: " << shape->serialize() << std::endl;
     }
 
-    file << "END" << std::endl;
+    file << "END\n";
 
-    file.close();
+    file.flush();
+
+    if (!file) {
+        throw std::runtime_error("Failed while writing file: " + path.string());
+    }
 }
 
 // 讀取、解析、驗證成功後才回傳；失敗拋出例外。

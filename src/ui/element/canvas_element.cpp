@@ -8,6 +8,7 @@ namespace paint {
 
 CanvasElement::CanvasElement(int width, int height, Document& document)
     : Element(width, height), _showGrid(true), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
+    _document.setCanvasSize(width, height);
     _currentStyle.stroke.width = 1;
     _currentStyle.stroke.color = ColorRGBA(Color::Black);
     _currentStyle.fill.color = ColorRGBA(Color::Transparent);
@@ -15,6 +16,11 @@ CanvasElement::CanvasElement(int width, int height, Document& document)
     _currentStyle.stroke.cap = drawing::LineCap::ROUND;
 
     resetTool();
+}
+
+void CanvasElement::onResize(const WindowResizeEvent& event) {
+    _document.setCanvasSize(event.getWidth(), event.getHeight());
+    Element::onResize(event);
 }
 
 void CanvasElement::setTool(drawing::Tool tool) {
@@ -58,6 +64,12 @@ void CanvasElement::redo() {
 
 void CanvasElement::clear() {
     _document.clearScene();
+    resetTool();
+    invalidate();
+}
+
+void CanvasElement::newFile() {
+    _document.newFile();
     resetTool();
     invalidate();
 }

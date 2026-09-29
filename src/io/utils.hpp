@@ -4,4 +4,8 @@
 
 namespace fs = std::filesystem;
 
-namespace paint {}
+namespace paint::utils {
+
+void validateWritePath(const fs::path& path);
+
+}  // namespace paint::utils

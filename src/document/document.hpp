@@ -20,13 +20,14 @@ using Path = std::filesystem::path;
 const Path DEFAULT_FILEPATH = "untitled.paint";
 
 struct DocumentData {
-    Path _filename;
-    Scene _scene;
+    Path filename;
+    Scene scene;
+
+    int canvasWidth = 0;
+    int canvasHeight = 0;
 
     // Other Metadata
     // 未來可以加入：
-    // int canvasWidth;
-    // int canvasHeight;
     // ColorRGBA background;
 };
 
@@ -46,6 +47,11 @@ class Document {
     Path getFilename() const { return _filename; }
     void setFilename(const Path& filename) { _filename = filename; }
 
+    int getCanvasWidth() const { return _canvasWidth; }
+    int getCanvasHeight() const { return _canvasHeight; }
+    // 目前記錄可見畫布尺寸；0 表示尚未設定或沒有可繪製區域。
+    void setCanvasSize(int width, int height);
+
     bool isModified() const { return _history.isModified(); }
     void markSaved() { _history.markSaved(); }
 
@@ -53,7 +59,7 @@ class Document {
 
     // 文件操作
 
-    void newDocument();
+    void newFile();
     void load(const Path& filename);
     void save();  // 保存到當前文件名
     void save(const Path& filename);
@@ -74,6 +80,8 @@ class Document {
 
    private:
     Path _filename;
+    int _canvasWidth = 0;
+    int _canvasHeight = 0;
     CommandHistory _history;
     Scene _scene;
 };
