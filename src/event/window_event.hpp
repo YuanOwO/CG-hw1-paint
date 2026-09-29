@@ -4,7 +4,7 @@
 
 namespace paint {
 
-class WindowEvent : public IEvent {};
+class WindowEvent : public Event {};
 
 class WindowCloseEvent : public WindowEvent {};
 

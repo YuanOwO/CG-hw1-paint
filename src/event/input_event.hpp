@@ -6,7 +6,7 @@
 
 namespace paint {
 
-class InputEvent : public IEvent {
+class InputEvent : public Event {
    public:
     InputEvent(const KeyboardState& keyboardState, const MouseState& mouseState)
         : _keyboardState(keyboardState), _mouseState(mouseState) {}

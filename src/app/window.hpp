@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "event/event_target.hpp"
 #include "event/events.hpp"
 #include "input/input_state.hpp"
 #include "render/color_buffer.hpp"
@@ -18,7 +19,7 @@ const int CAPTURE_INTERVAL_MS = 1000 / CAPTURE_RATE;  // 每幀的時間間隔�
 const float CLICK_MOVE_THRESHOLD = 4.0f;              // 滑鼠移動距離超過此閾值，則取消點擊事件的判定。
 const std::chrono::milliseconds DOUBLE_CLICK_TIME_THRESHOLD(300);  // 滑鼠雙擊的時間閾值，單位為毫秒。
 
-class Window {
+class Window : public EventTarget {
    public:
     struct ClickCandidate {
         bool active = false;
