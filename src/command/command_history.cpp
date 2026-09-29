@@ -7,7 +7,16 @@ namespace paint {
 void CommandHistory::execute(std::unique_ptr<IUndoableCommand> command) {
     command->execute();
 
-    _undoStack.push_back(std::move(command));
+    const StateId newState = _nextState++;
+
+    _undoStack.push_back({
+        std::move(command),
+        _currentState,
+        newState,
+    });
+
+    _currentState = newState;  // 更新當前狀態為新狀態
+
     _redoStack.clear();
 }
 
@@ -16,12 +25,13 @@ void CommandHistory::undo() {
         return;
     }
 
-    auto command = std::move(_undoStack.back());
+    auto history = std::move(_undoStack.back());
     _undoStack.pop_back();
 
-    command->undo();
+    history.command->undo();
+    _currentState = history.stateBefore;  // 更新當前狀態為 undo 後的狀態
 
-    _redoStack.push_back(std::move(command));
+    _redoStack.push_back(std::move(history));
 }
 
 void CommandHistory::redo() {
@@ -29,12 +39,19 @@ void CommandHistory::redo() {
         return;
     }
 
-    auto command = std::move(_redoStack.back());
+    auto history = std::move(_redoStack.back());
     _redoStack.pop_back();
 
-    command->execute();
+    history.command->execute();
+    _currentState = history.stateAfter;  // 更新當前狀態為 redo 後的狀態
 
-    _undoStack.push_back(std::move(command));
+    _undoStack.push_back(std::move(history));
+}
+
+void CommandHistory::reset() {
+    markSaved();
+    _undoStack.clear();
+    _redoStack.clear();
 }
 
 }  // namespace paint

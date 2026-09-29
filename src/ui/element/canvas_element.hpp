@@ -34,6 +34,7 @@ class CanvasElement : public Element {
 
    protected:
     void renderContent() override;
+    void renderContent(bool includeGrid);
 
     void onKeyDown(const KeyboardEvent& event) override;
     void onKeyUp(const KeyboardEvent& event) override;

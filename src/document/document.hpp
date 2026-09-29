@@ -1,8 +1,10 @@
 #pragma once
 
 #include <cstddef>
+#include <filesystem>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "command/command_history.hpp"
 #include "drawing/scene.hpp"
@@ -13,19 +15,51 @@ using paint::drawing::Shape;
 
 namespace paint {
 
+using Path = std::filesystem::path;
+
+const Path DEFAULT_FILEPATH = "untitled.paint";
+
+struct DocumentData {
+    Path _filename;
+    Scene _scene;
+
+    // Other Metadata
+    // 未來可以加入：
+    // int canvasWidth;
+    // int canvasHeight;
+    // ColorRGBA background;
+};
+
 class Document {
    public:
-    Document() = default;
-    Document(const std::string& filename) : _filename(filename) {}
+    Document() {}
+    Document(const Path& filename) : _filename(filename) {}
 
     // 禁止拷貝和賦值
     Document(const Document& other) = delete;
     Document& operator=(const Document& other) = delete;
 
-    const Scene& getScene() { return _scene; }
+    DocumentData getData() const;  // 打包 Scene 與其他 Metadata 成 DocumentData 回傳。
 
-    std::string getFilename() const { return _filename; }
-    void setFilename(const std::string& filename) { _filename = filename; }
+    const Scene& getScene() const { return _scene; }
+
+    Path getFilename() const { return _filename; }
+    void setFilename(const Path& filename) { _filename = filename; }
+
+    bool isModified() const { return _history.isModified(); }
+    void markSaved() { _history.markSaved(); }
+
+    void replaceContent(Scene scene, Path filename);
+
+    // 文件操作
+
+    void newDocument();
+    void load(const Path& filename);
+    void save();  // 保存到當前文件名
+    void save(const Path& filename);
+    void exportImage(const Path& filename);
+
+    // 編輯操作
 
     void addShape(std::shared_ptr<Shape> shape);
     void insertShape(std::size_t index, std::shared_ptr<Shape> shape);
@@ -38,10 +72,8 @@ class Document {
     bool canUndo() const { return _history.canUndo(); }
     bool canRedo() const { return _history.canRedo(); }
 
-    // void saveToFile();
-
    private:
-    std::string _filename;
+    Path _filename;
     CommandHistory _history;
     Scene _scene;
 };

@@ -22,17 +22,24 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
 #pragma region Main Menu
 
 void PaintWindow::setupMenu() {
+    auto& fileMenu = _menu.addSubMenu("File");
+    fileMenu.addMenuEntry("New", [this]() { _document.newDocument(); });
+    fileMenu.addMenuEntry("Load", [this]() {});
+    fileMenu.addMenuEntry("Save", [this]() { _document.save(); });
+    fileMenu.addMenuEntry("Save As", [this]() {});
+    fileMenu.addMenuEntry("Export", [this]() {});
+
+    auto& editMenu = _menu.addSubMenu("Edit");
+    editMenu.addMenuEntry("Undo", [this]() { _canvas->undo(); });
+    editMenu.addMenuEntry("Redo", [this]() { _canvas->redo(); });
+    editMenu.addMenuEntry("Clear", [this]() { _canvas->clear(); });
+
     setupToolMenu();
     setupStrokeMenu();
     setupFillMenu();
     setupPointMenu();
 
     _menu.addMenuEntry("Grid", [this]() { _canvas->setShowGrid(!_canvas->isShowGrid()); });
-
-    auto& editMenu = _menu.addSubMenu("Edit");
-    editMenu.addMenuEntry("Undo", [this]() { _canvas->undo(); });
-    editMenu.addMenuEntry("Redo", [this]() { _canvas->redo(); });
-    editMenu.addMenuEntry("Clear", [this]() { _canvas->clear(); });
 
     _menu.addMenuEntry("Quit", []() { std::exit(0); });
 

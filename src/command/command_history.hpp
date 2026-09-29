@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -7,19 +8,36 @@
 
 namespace paint {
 
+using StateId = std::uint64_t;
+
 class CommandHistory {
    public:
+    struct HistoryEntry {
+        std::unique_ptr<IUndoableCommand> command;
+        StateId stateBefore;
+        StateId stateAfter;
+    };
+
     void execute(std::unique_ptr<IUndoableCommand> command);
 
     void undo();
     void redo();
+    void reset();
 
     bool canUndo() const { return !_undoStack.empty(); }
     bool canRedo() const { return !_redoStack.empty(); }
 
+    void markSaved() { _savedState = _currentState; }
+
+    bool isModified() const { return _currentState != _savedState; }
+
    private:
-    std::vector<std::unique_ptr<IUndoableCommand>> _undoStack;
-    std::vector<std::unique_ptr<IUndoableCommand>> _redoStack;
+    StateId _currentState = 0;
+    StateId _savedState = 0;
+    StateId _nextState = 1;  // 下一個未使用的狀態 ID
+
+    std::vector<HistoryEntry> _undoStack;
+    std::vector<HistoryEntry> _redoStack;
 };
 
 }  // namespace paint
