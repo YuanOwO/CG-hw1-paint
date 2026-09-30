@@ -43,7 +43,7 @@ class DragTool : public DrawingTool<TShape> {
         return ToolEventResult::NONE;
     }
 
-    ToolEventResult onMouseDown(const MouseEvent& event) override {
+    ToolEventResult onMouseDown(const MouseButtonEvent& event) override {
         this->beginDraft();
         this->_draft->setStart(event.position());
         this->_draft->setEnd(event.position());
@@ -51,7 +51,7 @@ class DragTool : public DrawingTool<TShape> {
         return ToolEventResult::UPDATE;
     }
 
-    ToolEventResult onMouseUp(const MouseEvent& event) override {
+    ToolEventResult onMouseUp(const MouseButtonEvent& event) override {
         if (!this->_draft) {
             return ToolEventResult::NONE;
         }
@@ -148,7 +148,7 @@ class PointTool : public DrawingTool<PointShape> {
    public:
     using DrawingTool<PointShape>::DrawingTool;
 
-    ToolEventResult onClick(const MouseClickEvent& event) override {
+    ToolEventResult onClick(const ClickEvent& event) override {
         beginDraft();
         _draft->setPosition(event.position());
         return ToolEventResult::COMMIT;
@@ -159,14 +159,14 @@ class PencilTool : public DrawingTool<Path> {
    public:
     using DrawingTool<Path>::DrawingTool;
 
-    ToolEventResult onMouseDown(const MouseEvent& event) override {
+    ToolEventResult onMouseDown(const MouseButtonEvent& event) override {
         this->beginDraft();
         _draft->addPoint(event.position(), true);
 
         return ToolEventResult::UPDATE;
     }
 
-    ToolEventResult onMouseUp(const MouseEvent& event) override {
+    ToolEventResult onMouseUp(const MouseButtonEvent& event) override {
         if (!this->_draft) {
             return ToolEventResult::NONE;
         }
@@ -195,7 +195,7 @@ class PolygonTool : public DrawingTool<Polygon> {
    public:
     using DrawingTool<Polygon>::DrawingTool;
 
-    ToolEventResult onClick(const MouseClickEvent& event) override {
+    ToolEventResult onClick(const ClickEvent& event) override {
         if (!_draft) {
             beginDraft();
         }
@@ -211,7 +211,7 @@ class PolygonTool : public DrawingTool<Polygon> {
         return ToolEventResult::UPDATE;
     }
 
-    ToolEventResult onDoubleClick(const MouseClickEvent& event) override {
+    ToolEventResult onDoubleClick(const ClickEvent& event) override {
         if (!this->_draft) {
             return ToolEventResult::NONE;
         }

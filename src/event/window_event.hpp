@@ -32,4 +32,36 @@ class WindowVisibilityEvent : public WindowEvent {
     WindowVisibilityState _state;
 };
 
+class WindowVisibleEvent : public WindowVisibilityEvent {
+   public:
+    WindowVisibleEvent() : WindowVisibilityEvent(WindowVisibilityState::Visible) {}
+};
+
+class WindowHiddenEvent : public WindowVisibilityEvent {
+   public:
+    WindowHiddenEvent() : WindowVisibilityEvent(WindowVisibilityState::Hidden) {}
+};
+
+class WindowEntryEvent : public WindowEvent {
+   public:
+    enum class WindowEnterState { Entered, Exited };
+
+    WindowEntryEvent(WindowEnterState state) : _state(state) {}
+
+    WindowEnterState state() const { return _state; }
+
+   private:
+    WindowEnterState _state;
+};
+
+class WindowEnterEvent : public WindowEntryEvent {
+   public:
+    WindowEnterEvent() : WindowEntryEvent(WindowEnterState::Entered) {}
+};
+
+class WindowLeaveEvent : public WindowEntryEvent {
+   public:
+    WindowLeaveEvent() : WindowEntryEvent(WindowEnterState::Exited) {}
+};
+
 }  // namespace paint

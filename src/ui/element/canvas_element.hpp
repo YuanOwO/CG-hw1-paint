@@ -37,16 +37,16 @@ class CanvasElement : public Element {
     void renderContent() override;
     void renderContent(bool includeGrid);
 
-    void onResize(const WindowResizeEvent& event) override;
+    void onResize(const WindowResizeEvent& event);
 
-    void onKeyDown(const KeyboardEvent& event) override;
-    void onKeyUp(const KeyboardEvent& event) override;
+    void onKeyDown(const KeyDownEvent& event);
+    void onKeyUp(const KeyUpEvent& event);
 
-    void onClick(const MouseClickEvent& event) override;
-    void onDoubleClick(const MouseClickEvent& event) override;
-    void onMouseDown(const MouseEvent& event) override;
-    void onMouseUp(const MouseEvent& event) override;
-    void onMouseMove(const MouseMoveEvent& event) override;
+    void onClick(const ClickEvent& event);
+    void onDoubleClick(const DoubleClickEvent& event);
+    void onMouseDown(const MouseDownEvent& event);
+    void onMouseUp(const MouseUpEvent& event);
+    void onMouseMove(const MouseMoveEvent& event);
 
    private:
     bool _showGrid;

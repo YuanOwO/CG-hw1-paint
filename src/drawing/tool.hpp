@@ -41,10 +41,10 @@ class IDrawingTool {
 
     virtual ToolEventResult onKeyDown(const KeyboardEvent& event) { return ToolEventResult::NONE; }
     virtual ToolEventResult onKeyUp(const KeyboardEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onClick(const MouseClickEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onDoubleClick(const MouseClickEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onMouseDown(const MouseEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onMouseUp(const MouseEvent& event) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onClick(const ClickEvent& event) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onDoubleClick(const ClickEvent& event) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onMouseDown(const MouseButtonEvent& event) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onMouseUp(const MouseButtonEvent& event) { return ToolEventResult::NONE; }
     virtual ToolEventResult onMouseMove(const MouseMoveEvent& event) { return ToolEventResult::NONE; }
 };
 

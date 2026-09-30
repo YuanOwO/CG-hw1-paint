@@ -119,7 +119,7 @@ enum class MouseButton {
     MouseButton5,
 };
 
-enum class ButtonAction { Down, Up, Unknown };
+enum class ButtonAction { Down, Up, Click, Unknown };
 
 bool isShiftKey(Key key);
 bool isCtrlKey(Key key);

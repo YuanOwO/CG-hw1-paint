@@ -15,12 +15,20 @@ CanvasElement::CanvasElement(int width, int height, Document& document)
     _currentStyle.stroke.join = drawing::LineJoin::MITER;
     _currentStyle.stroke.cap = drawing::LineCap::ROUND;
 
+    addEventListener<KeyDownEvent>([this](const KeyDownEvent& event) { onKeyDown(event); });
+    addEventListener<KeyUpEvent>([this](const KeyUpEvent& event) { onKeyUp(event); });
+    addEventListener<ClickEvent>([this](const ClickEvent& event) { onClick(event); });
+    addEventListener<DoubleClickEvent>([this](const DoubleClickEvent& event) { onDoubleClick(event); });
+    addEventListener<MouseDownEvent>([this](const MouseDownEvent& event) { onMouseDown(event); });
+    addEventListener<MouseUpEvent>([this](const MouseUpEvent& event) { onMouseUp(event); });
+    addEventListener<MouseMoveEvent>([this](const MouseMoveEvent& event) { onMouseMove(event); });
+
     resetTool();
 }
 
 void CanvasElement::onResize(const WindowResizeEvent& event) {
     _document.setCanvasSize(event.width(), event.height());
-    Element::onResize(event);
+    // Element::onResize(event);
 }
 
 void CanvasElement::setTool(drawing::Tool tool) {
@@ -116,7 +124,7 @@ void CanvasElement::renderContent(bool includeGrid) {
     }
 }
 
-void CanvasElement::onKeyDown(const KeyboardEvent& event) {
+void CanvasElement::onKeyDown(const KeyDownEvent& event) {
     // 處理 Ctrl+Z / Command+Z 以及 Ctrl+Shift+Z / Command+Shift+Z 的快捷鍵
     if (event.key() == Key::Z && event.keyboardState().isPrimaryModifierDown()) {
         if (event.keyboardState().isShiftDown()) {
@@ -135,7 +143,7 @@ void CanvasElement::onKeyDown(const KeyboardEvent& event) {
     handleDraftEvent(_activeTool->onKeyDown(event));
 }
 
-void CanvasElement::onKeyUp(const KeyboardEvent& event) {
+void CanvasElement::onKeyUp(const KeyUpEvent& event) {
     // 忽略重複按鍵事件
     if (event.isRepeat()) {
         return;
@@ -144,7 +152,7 @@ void CanvasElement::onKeyUp(const KeyboardEvent& event) {
     handleDraftEvent(_activeTool->onKeyUp(event));
 }
 
-void CanvasElement::onClick(const MouseClickEvent& event) {
+void CanvasElement::onClick(const ClickEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
     if (event.button() != MouseButton::MouseLeft) {
         return;
@@ -153,7 +161,7 @@ void CanvasElement::onClick(const MouseClickEvent& event) {
     handleDraftEvent(_activeTool->onClick(event));
 }
 
-void CanvasElement::onDoubleClick(const MouseClickEvent& event) {
+void CanvasElement::onDoubleClick(const DoubleClickEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
     if (event.button() != MouseButton::MouseLeft) {
         return;
@@ -162,7 +170,7 @@ void CanvasElement::onDoubleClick(const MouseClickEvent& event) {
     handleDraftEvent(_activeTool->onDoubleClick(event));
 }
 
-void CanvasElement::onMouseDown(const MouseEvent& event) {
+void CanvasElement::onMouseDown(const MouseDownEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
     if (event.button() != MouseButton::MouseLeft) {
         return;
@@ -171,7 +179,7 @@ void CanvasElement::onMouseDown(const MouseEvent& event) {
     handleDraftEvent(_activeTool->onMouseDown(event));
 }
 
-void CanvasElement::onMouseUp(const MouseEvent& event) {
+void CanvasElement::onMouseUp(const MouseUpEvent& event) {
     // 只處理左鍵點擊事件，其他按鍵忽略
     if (event.button() != MouseButton::MouseLeft) {
         return;

@@ -312,16 +312,18 @@ Window::~Window() {
 }
 
 void Window::setRootElement(std::unique_ptr<Element> rootElement) {
-    _rootElement = std::move(rootElement);
     if (_rootElement) {
-        // 設定根元素的 invalidate callback，當元素需要重新渲染時，呼叫此函式通知父視窗
-        _rootElement->setInvalidateCallback([this]() {
-            // 標記視窗內容為 dirty，並請求重新渲染
-            _contentDirty = true;
-            _needsCapture = false;
-            this->requestRedisplay();
-        });
+        _rootElement->_window = nullptr;
     }
+
+    _rootElement = std::move(rootElement);
+
+    if (_rootElement) {
+        _rootElement->_parent = nullptr;
+        _rootElement->_window = this;
+        _focusedElement = _rootElement.get();  // 將焦點設置為根元素
+    }
+
     requestRedisplay();
 }
 
@@ -330,6 +332,9 @@ void Window::requestRedisplay() {
     if (_id == 0) {
         return;
     }
+
+    _contentDirty = true;
+    _needsCapture = false;
 
     glutPostWindowRedisplay(_id);
 }
@@ -394,9 +399,9 @@ void Window::closeCallback() {
     windows.erase(window->_id);
     window->_id = 0;
 
-    const WindowCloseEvent event;
+    WindowCloseEvent event;
 
-    window->onClose(event);
+    window->dispatchEvent(event);
 }
 
 void Window::reshapeCallback(int width, int height) {
@@ -435,7 +440,7 @@ void Window::reshapeCallback(int width, int height) {
 
     const WindowResizeEvent event(width, height);
 
-    window->onResize(event);
+    // window->onResize(event);
 
     window->requestRedisplay();
 }
@@ -448,18 +453,15 @@ void Window::visibilityCallback(int state) {
         return;
     }
 
-    using State = WindowVisibilityEvent::WindowVisibilityState;
-
-    const WindowVisibilityEvent event(state == GLUT_VISIBLE ? State::Visible : State::Hidden);
-
     if (state == GLUT_VISIBLE) {
+        WindowVisibleEvent event;
+        window->dispatchEvent(event);
         window->requestRedisplay();
-    } else {
+    } else if (state == GLUT_NOT_VISIBLE) {
+        WindowHiddenEvent event;
         window->_contentDirty = true;
         window->_needsCapture = false;
     }
-
-    window->onVisibilityChange(event);
 }
 
 void Window::displayCallback() {
@@ -478,7 +480,7 @@ void Window::displayCallback() {
     // 或者 ColorBuffer 的大小與視窗不匹配，則重新渲染視窗內容
     if (window->_contentDirty || window->_needsCapture ||
         !window->_colorBuffer.matchesSize(window->_width, window->_height)) {
-        window->renderContent();
+        window->renderContent();  // 渲染視窗內容
 
         window->_contentDirty = false;
         window->_needsCapture = true;
@@ -507,9 +509,13 @@ void Window::keyDownHandler(Key key, int x, int y) {
 
     window->_mouseState._setPosition(x, y);
 
-    const KeyboardEvent event(key, ButtonAction::Down, _keyboardState, window->_mouseState, !firstPress);
+    KeyDownEvent event(_keyboardState, window->_mouseState, key, !firstPress);
 
-    window->onKeyDown(event);
+    if (window->_focusedElement != nullptr) {
+        window->_focusedElement->dispatchEvent(event);
+    } else {
+        window->dispatchEvent(event);
+    }
 }
 
 void Window::keyUpHandler(Key key, int x, int y) {
@@ -524,9 +530,13 @@ void Window::keyUpHandler(Key key, int x, int y) {
 
     window->_mouseState._setPosition(x, y);
 
-    const KeyboardEvent event(key, ButtonAction::Up, _keyboardState, window->_mouseState);
+    KeyUpEvent event(_keyboardState, window->_mouseState, key);
 
-    window->onKeyUp(event);
+    if (window->_focusedElement != nullptr) {
+        window->_focusedElement->dispatchEvent(event);
+    } else {
+        window->dispatchEvent(event);
+    }
 }
 
 void Window::keyboardCallback(unsigned char key, int x, int y) {
@@ -597,13 +607,13 @@ void Window::mouseCallback(int button, int state, int x, int y) {
         press.active = true;
         press.position = Point(x, y);
 
-        const MouseEvent event(btn, ButtonAction::Down, _keyboardState, window->_mouseState);
-        window->onMouseDown(event);
+        MouseDownEvent event(_keyboardState, window->_mouseState, btn);
+        window->dispatchMouseEvent<MouseDownEvent>(event);
     } else if (state == GLUT_UP) {
         window->_mouseState._release(btn);
 
-        const MouseEvent event(btn, ButtonAction::Up, _keyboardState, window->_mouseState);
-        window->onMouseUp(event);
+        MouseUpEvent event(_keyboardState, window->_mouseState, btn);
+        window->dispatchMouseEvent<MouseUpEvent>(event);
 
         // 判斷是否為點擊事件
         // 如果滑鼠按下和釋放的位置距離小於閾值，則認為是點擊事件
@@ -625,15 +635,15 @@ void Window::mouseCallback(int button, int state, int x, int y) {
             if (isDoubleClick) {
                 lastClick.active = false;  // 重置上一次點擊事件，避免三擊事件被誤判為雙擊事件
 
-                const MouseClickEvent doubleClickEvent(btn, 2, _keyboardState, window->_mouseState);
-                window->onDoubleClick(doubleClickEvent);
+                DoubleClickEvent doubleClickEvent(_keyboardState, window->_mouseState, btn);
+                window->dispatchMouseEvent<DoubleClickEvent>(doubleClickEvent);
             } else {
                 lastClick.active = true;
                 lastClick.position = window->_mouseState.position();
                 lastClick.time = now;
 
-                const MouseClickEvent clickEvent(btn, 1, _keyboardState, window->_mouseState);
-                window->onClick(clickEvent);
+                ClickEvent clickEvent(_keyboardState, window->_mouseState, btn);
+                window->dispatchMouseEvent<ClickEvent>(clickEvent);
             }
         }
 
@@ -662,9 +672,8 @@ void Window::mouseMoveHandler(int x, int y) {
         }
     }
 
-    const MouseMoveEvent event(_keyboardState, window->_mouseState);
-
-    window->onMouseMove(event);
+    MouseMoveEvent event(_keyboardState, window->_mouseState);
+    window->dispatchMouseEvent<MouseMoveEvent>(event);
 }
 
 void Window::motionCallback(int x, int y) {
@@ -687,11 +696,11 @@ void Window::entryCallback(int state) {
     window->_mouseState._clear();
 
     if (state == GLUT_ENTERED) {
-        MouseEnterEvent event(_keyboardState, window->_mouseState);
-        window->onMouseEnter(event);
+        WindowEnterEvent event;
+        window->dispatchEvent(event);
     } else if (state == GLUT_LEFT) {
-        MouseLeaveEvent event(_keyboardState, window->_mouseState);
-        window->onMouseLeave(event);
+        WindowLeaveEvent event;
+        window->dispatchEvent(event);
     }
 }
 

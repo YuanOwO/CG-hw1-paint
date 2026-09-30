@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common/point.hpp"
+
 namespace paint {
 
 struct BoundingBox {
@@ -8,6 +10,9 @@ struct BoundingBox {
     int x, y;  // 左上角座標
     int width, height;
 
+    Point topLeft() const { return Point(x, y); }
+
+    bool contains(const Point& point) const { return contains(point.x(), point.y()); }
     bool contains(int px, int py) const { return px >= x && px < x + width && py >= y && py < y + height; }
 };
 

@@ -49,78 +49,16 @@ class Window : public EventTarget {
     void setRootElement(std::unique_ptr<Element> rootElement);
 
    protected:
+    friend class Element;  // 允許 Element 訪問 Window 的私有成員
+
     // 回傳目前的輸入狀態。
     const KeyboardState& keyboardState() const { return _keyboardState; }
     const MouseState& mouseState() const { return _mouseState; }
-
-    virtual void onClose(const WindowCloseEvent& event) {}
-
-    virtual void onResize(const WindowResizeEvent& event) {
-        if (_rootElement) {
-            _rootElement->onResize(event);
-        }
-    }
-
-    virtual void onVisibilityChange(const WindowVisibilityEvent& event) {}
 
     // 當視窗需要重新渲染內容時，呼叫此函式。子類別可以覆寫此函式來實現自定義的渲染邏輯。
     virtual void renderContent() {
         if (_rootElement) {
             _rootElement->renderContent();
-        }
-    }
-
-    virtual void onKeyDown(const KeyboardEvent& event) {
-        if (_rootElement) {
-            _rootElement->onKeyDown(event);
-        }
-    }
-
-    virtual void onKeyUp(const KeyboardEvent& event) {
-        if (_rootElement) {
-            _rootElement->onKeyUp(event);
-        }
-    }
-
-    virtual void onClick(const MouseClickEvent& event) {
-        if (_rootElement) {
-            _rootElement->onClick(event);
-        }
-    }
-
-    virtual void onDoubleClick(const MouseClickEvent& event) {
-        if (_rootElement) {
-            _rootElement->onDoubleClick(event);
-        }
-    }
-
-    virtual void onMouseDown(const MouseEvent& event) {
-        if (_rootElement) {
-            _rootElement->onMouseDown(event);
-        }
-    }
-
-    virtual void onMouseUp(const MouseEvent& event) {
-        if (_rootElement) {
-            _rootElement->onMouseUp(event);
-        }
-    }
-
-    virtual void onMouseMove(const MouseMoveEvent& event) {
-        if (_rootElement) {
-            _rootElement->onMouseMove(event);
-        }
-    }
-
-    virtual void onMouseEnter(const MouseEnterEvent& event) {
-        if (_rootElement) {
-            _rootElement->onMouseEnter(event);
-        }
-    }
-
-    virtual void onMouseLeave(const MouseLeaveEvent& event) {
-        if (_rootElement) {
-            _rootElement->onMouseLeave(event);
         }
     }
 
@@ -132,19 +70,43 @@ class Window : public EventTarget {
     int _height;
     std::string _title;
 
+    bool _resizable;  // 是否允許調整視窗大小
+
     bool _contentDirty = true;   // 是否需要重新渲染視窗內容
     bool _needsCapture = false;  // 是否需要捕捉視窗內容到 ColorBuffer
     ColorBuffer _colorBuffer;
 
     std::unique_ptr<Element> _rootElement;  // 根元素
-
-    bool _resizable;  // 是否允許調整視窗大小
+    Element* _focusedElement = nullptr;     // 當前獲得焦點的元素
 
     static KeyboardState _keyboardState;  // 全局的鍵盤狀態
     MouseState _mouseState;               // 視窗的滑鼠狀態
 
     std::unordered_map<MouseButton, ClickCandidate> _clickCandidate;  // 記錄滑鼠按下的位置，方便判斷點擊事件
     std::unordered_map<MouseButton, ClickHistory> _lastClicks;  // 記錄上一次滑鼠點擊事件，方便判斷雙擊事件
+
+    Element* hitTest(Point point) {
+        if (_rootElement) {
+            return _rootElement->hitTest(point);
+        }
+        return nullptr;
+    }
+
+    template <typename EventType, typename... Args>
+    void dispatchMouseEvent(Args&&... args) {
+        EventType event(std::forward<Args>(args)...);
+
+        auto* target = hitTest(event.position());
+
+        // 決定事件的分派對象
+        // 1. 如果命中了一個元素，則將事件分派給該元素
+        // 2. 如果沒有命中任何元素，則將事件分派給視窗本身
+        if (target != nullptr) {
+            target->dispatchEvent(event);
+        } else {
+            dispatchEvent(event);
+        }
+    }
 
     static Window* currentWindow();
 
