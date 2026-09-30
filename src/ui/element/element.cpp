@@ -42,7 +42,7 @@ std::unique_ptr<Element> Element::removeChild(Element* child) {
     return removedChild;
 }
 
-Window* Element::window() const {
+const Window* Element::window() const {
     const Element* current = this;
 
     // 往上走到根元素，然後返回其 window 指標
@@ -53,18 +53,65 @@ Window* Element::window() const {
     return current->_window;
 }
 
-EventTarget* Element::eventParent() const {
-    if (_parent) {
-        return _parent;
+void Element::setVisible(bool visible) {
+    if (_visible == visible) {
+        return;
     }
-    return _window;
+
+    _visible = visible;
+
+    if (_visible) {
+        ElementVisibleEvent event;
+        dispatchEvent(event);
+    } else {
+        ElementHiddenEvent event;
+        dispatchEvent(event);
+    }
+
+    invalidate();
+}
+
+void Element::setEnabled(bool enabled) {
+    if (_enabled == enabled) {
+        return;
+    }
+
+    _enabled = enabled;
+    invalidate();
+}
+
+void Element::setFocusable(bool focusable) {
+    if (_focusable == focusable) {
+        return;
+    }
+
+    _focusable = focusable;
+    invalidate();
 }
 
 void Element::setBounds(const BoundingBox& bounds) {
     if (bounds.width < 0 || bounds.height < 0) {
         throw std::invalid_argument("Element size cannot be negative");
     }
+
+    const auto oldBounds = _bounds;
+
+    if (oldBounds == bounds) {
+        return;  // 如果邊界沒有改變，則不需要做任何操作
+    }
+
     _bounds = bounds;
+
+    if (oldBounds.topLeft() != bounds.topLeft()) {
+        ElementMoveEvent moveEvent(oldBounds.topLeft(), bounds.topLeft());
+        dispatchEvent(moveEvent);
+    }
+
+    if (oldBounds.width != bounds.width || oldBounds.height != bounds.height) {
+        ElementResizeEvent resizeEvent(bounds.width, bounds.height);
+        dispatchEvent(resizeEvent);
+    }
+
     invalidate();
 }
 
@@ -74,9 +121,9 @@ void Element::invalidate() {
     }
 }
 
-Element* Element::hitTest(Point point) {
-    // 如果沒命中自己，一切免談
-    if (!contains(point)) {
+const Element* Element::hitTest(Point point) const {
+    // 如果元素不可見、不可用，或者點不在元素範圍內，則返回 nullptr
+    if (!isVisible() || !isEnabled() || !contains(point)) {
         return nullptr;
     }
 
@@ -94,8 +141,27 @@ Element* Element::hitTest(Point point) {
     return this;
 }
 
-bool Element::contains(Point point) const {
-    return _bounds.contains(point);
+EventTarget* Element::eventParent() const {
+    if (_parent) {
+        return _parent;
+    }
+    return _window;
+}
+
+void Element::render() {
+    if (!isVisible()) {
+        return;
+    }
+
+    // transform to local coordinates
+
+    renderContent();
+
+    for (const auto& child : _children) {
+        child->render();
+    }
+
+    // restore to parent coordinates
 }
 
 }  // namespace paint

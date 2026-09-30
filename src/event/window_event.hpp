@@ -4,7 +4,11 @@
 
 namespace paint {
 
-class WindowEvent : public Event {};
+class WindowEvent : public Event {
+   public:
+    // 不支持冒泡，因為視窗事件不應該傳播到其他視窗或元素。
+    WindowEvent() : Event(false) {}
+};
 
 class WindowCloseEvent : public WindowEvent {};
 
@@ -42,10 +46,10 @@ class WindowHiddenEvent : public WindowVisibilityEvent {
     WindowHiddenEvent() : WindowVisibilityEvent(WindowVisibilityState::Hidden) {}
 };
 
+enum class WindowEnterState { Entered, Exited };
+
 class WindowEntryEvent : public WindowEvent {
    public:
-    enum class WindowEnterState { Entered, Exited };
-
     WindowEntryEvent(WindowEnterState state) : _state(state) {}
 
     WindowEnterState state() const { return _state; }

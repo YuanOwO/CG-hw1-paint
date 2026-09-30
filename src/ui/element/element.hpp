@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 #include "event/event_target.hpp"
@@ -30,36 +31,55 @@ class Element : public EventTarget {
     int width() const { return _bounds.width; }
     int height() const { return _bounds.height; }
 
-    BoundingBox bounds() const { return _bounds; }
+    const BoundingBox& bounds() const { return _bounds; }
 
-    Window* window() const;
-    Element* parent() const { return _parent; }
+    Window* window() { return const_cast<Window*>(std::as_const(*this).window()); }
+    const Window* window() const;
+    Element* parent() { return _parent; }
+    const Element* parent() const { return _parent; }
     const std::vector<std::unique_ptr<Element>>& children() const { return _children; }
 
     Element& appendChild(std::unique_ptr<Element> child);
     std::unique_ptr<Element> removeChild(Element* child);
 
-    Element* hitTest(Point point);
+    Element* hitTest(Point point) { return const_cast<Element*>(std::as_const(*this).hitTest(point)); }
+    const Element* hitTest(Point point) const;
+
+    bool isVisible() const { return _visible; }
+    void setVisible(bool visible);
+
+    bool isEnabled() const { return _enabled; }
+    void setEnabled(bool enabled);
+
+    bool isFocusable() const { return _focusable; }
+    void setFocusable(bool focusable);
 
    protected:
-    EventTarget* eventParent() const override;
-
     void setBounds(const BoundingBox& bounds);
 
     // 當元素需要重新渲染時，呼叫此函式通知父視窗
     void invalidate();
 
+    EventTarget* eventParent() const override;
+
     virtual void renderContent() {}
 
-    virtual bool contains(Point point) const;
+    virtual bool contains(Point point) const { return _bounds.contains(point); }
 
    private:
     friend class Window;  // 允許 Window 訪問 Element 的私有成員
 
     BoundingBox _bounds;
+
     Window* _window = nullptr;   // 只有根元素會有 window 指標，子元素的 window 指標為 nullptr
     Element* _parent = nullptr;  // 指向父元素的指標，若為 nullptr 則表示此元素為根元素
     std::vector<std::unique_ptr<Element>> _children;
+
+    bool _visible = true;     // 元素是否可見，默認為可見
+    bool _enabled = true;     // 元素是否可用，默認為可用
+    bool _focusable = false;  // 元素是否可聚焦，默認為不可聚焦
+
+    void render();
 
     static void validateBounds(const BoundingBox& bounds) {
         if (bounds.width < 0 || bounds.height < 0) {

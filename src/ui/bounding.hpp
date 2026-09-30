@@ -14,6 +14,11 @@ struct BoundingBox {
 
     bool contains(const Point& point) const { return contains(point.x(), point.y()); }
     bool contains(int px, int py) const { return px >= x && px < x + width && py >= y && py < y + height; }
+
+    bool operator==(const BoundingBox& other) const {
+        return x == other.x && y == other.y && width == other.width && height == other.height;
+    }
+    bool operator!=(const BoundingBox& other) const { return !(*this == other); }
 };
 
 }  // namespace paint
