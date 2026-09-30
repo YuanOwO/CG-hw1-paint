@@ -1,12 +1,12 @@
-#include "event/event_target.hpp"
+#include "ui/event_target.hpp"
 
 #include <algorithm>
 #include <type_traits>
 #include <utility>
 
-namespace paint {
+namespace paint::ui {
 
-void EventTarget::removeEventListener(std::size_t id) {
+void EventTarget::removeEventListener(ListenerId id) {
     // 遍歷所有事件類型的監聽器列表，尋找並移除具有指定 id 的監聽器
     for (auto& [_, listeners] : _listeners) {
         auto it = std::remove_if(listeners.begin(), listeners.end(),
@@ -46,4 +46,4 @@ void EventTarget::dispatchEvent(Event& event) {
     event._currentTarget = nullptr;  // 重置 currentTarget 為 nullptr，表示事件傳播結束
 }
 
-}  // namespace paint
+}  // namespace paint::ui

@@ -1,10 +1,10 @@
 #include "render/ui/canvas_renderer.hpp"
 
-#include "ui/element/canvas_element.hpp"
+#include "ui/elements/canvas_element.hpp"
 
 namespace paint {
 
-void CanvasRenderer::render(RenderContext& context, const CanvasElement& canvas) {
+void CanvasRenderer::render(RenderContext& context, const ui::CanvasElement& canvas) {
     // 1. 畫背景
     // context.setColor(canvas.backgroundColor());
     // context.fillRect({

@@ -6,14 +6,14 @@
 #include <unordered_map>
 #include <utility>
 
-#include "event/event_target.hpp"
 #include "event/events.hpp"
 #include "input/input_state.hpp"
 #include "render/color_buffer.hpp"
 #include "render/render_context.hpp"
-#include "ui/element/element.hpp"
+#include "ui/element.hpp"
+#include "ui/event_target.hpp"
 
-namespace paint {
+namespace paint::ui {
 
 const int CAPTURE_RATE = 60;                          // 每秒幀數
 const int CAPTURE_INTERVAL_MS = 1000 / CAPTURE_RATE;  // 每幀的時間間隔，單位為毫秒
@@ -52,6 +52,7 @@ class Window : public EventTarget {
     void setRootElement(std::unique_ptr<Element> rootElement);
 
    protected:
+    friend class Node;     // 允許 Node 訪問 Window 的私有成員
     friend class Element;  // 允許 Element 訪問 Window 的私有成員
 
     // 回傳目前的輸入狀態。
@@ -71,6 +72,11 @@ class Window : public EventTarget {
 
     // 請求顯示現有快取，不將內容標記為 dirty；快取尚未就緒時沿用正常渲染流程。
     void requestCachedRedisplay();
+
+    void resetInputState() {
+        _keyboardState._clear();
+        _mouseState._clear();
+    }
 
     void setFocusedElement(Element* element);
 
@@ -136,7 +142,7 @@ class Window : public EventTarget {
     }
 
     // 元素子樹即將脫離視窗時，清除所有指向該子樹的互動狀態。
-    void detachElementSubtree(Element* subtreeRoot);
+    void detachElementSubtree(Node* subtreeRoot);
 
     static Window* currentWindow();
 
@@ -165,4 +171,4 @@ class Window : public EventTarget {
     static void mouseMoveHandler(int x, int y);
 };
 
-}  // namespace paint
+}  // namespace paint::ui

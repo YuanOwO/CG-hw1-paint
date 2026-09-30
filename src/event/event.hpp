@@ -1,8 +1,12 @@
 #pragma once
 
-namespace paint {
+namespace paint::ui {
 
 class EventTarget;
+
+}  // namespace paint::ui
+
+namespace paint {
 
 class Event {
    public:
@@ -10,8 +14,8 @@ class Event {
 
     virtual ~Event() = default;
 
-    EventTarget* target() const { return _target; }
-    EventTarget* currentTarget() const { return _currentTarget; }
+    ui::EventTarget* target() const { return _target; }
+    ui::EventTarget* currentTarget() const { return _currentTarget; }
 
     bool bubbles() const { return _bubbles; }
     bool propagationStopped() const { return _propagationStopped; }
@@ -19,10 +23,10 @@ class Event {
     void stopPropagation() { _propagationStopped = true; }
 
    private:
-    friend class EventTarget;  // EventTarget 負責事件分派期間的內部狀態
+    friend class ui::EventTarget;  // EventTarget 負責事件分派期間的內部狀態
 
-    EventTarget* _target = nullptr;
-    EventTarget* _currentTarget = nullptr;
+    ui::EventTarget* _target = nullptr;
+    ui::EventTarget* _currentTarget = nullptr;
 
     bool _bubbles;
     bool _propagationStopped = false;

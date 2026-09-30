@@ -8,10 +8,10 @@
 #include "drawing/shape_style.hpp"
 #include "drawing/tool.hpp"
 #include "render/ui/canvas_renderer.hpp"
-#include "ui/bounding.hpp"
-#include "ui/element/element.hpp"
+#include "ui/element.hpp"
+#include "ui/layout/bounding.hpp"
 
-namespace paint {
+namespace paint::ui {
 
 class CanvasElement : public Element {
    public:
@@ -60,4 +60,4 @@ class CanvasElement : public Element {
     void handleDraftEvent(drawing::ToolEventResult result);
 };
 
-}  // namespace paint
+}  // namespace paint::ui

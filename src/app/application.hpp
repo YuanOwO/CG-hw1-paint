@@ -5,7 +5,7 @@
 #include <utility>
 #include <vector>
 
-#include "app/window.hpp"
+#include "ui/window.hpp"
 
 namespace paint {
 
@@ -28,7 +28,7 @@ class Application {
     template <typename WindowType, typename... Args>
     WindowType& createWindow(Args&&... args) {
         // 靜態斷言，確保 WindowType 是 Window 的衍生類
-        static_assert(std::is_base_of_v<Window, WindowType>, "WindowType must derive from Window");
+        static_assert(std::is_base_of_v<ui::Window, WindowType>, "WindowType must derive from Window");
 
         auto window = std::make_unique<WindowType>(std::forward<Args>(args)...);
 
@@ -39,7 +39,7 @@ class Application {
     }
 
    private:
-    std::vector<std::unique_ptr<Window>> _windows;  // 管理所有視窗的智能指針列表
+    std::vector<std::unique_ptr<ui::Window>> _windows;  // 管理所有視窗的智能指針列表
 };
 
 }  // namespace paint

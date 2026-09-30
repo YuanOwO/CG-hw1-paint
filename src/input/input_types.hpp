@@ -151,4 +151,8 @@ inline bool operator!=(Key lhs, Mod rhs) {
     return !(lhs == rhs);
 }
 
+Key mapCharacter(int glutKey);
+Key mapSpecialKey(int glutKey);
+MouseButton mapMouseButton(int glutButton);
+
 }  // namespace paint

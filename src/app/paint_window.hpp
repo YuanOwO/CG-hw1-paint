@@ -2,26 +2,26 @@
 
 #include <string>
 
-#include "app/window.hpp"
 #include "document/document.hpp"
 #include "input/shortcut_manager.hpp"
-#include "ui/elements.hpp"
+#include "ui/elements/canvas_element.hpp"
 #include "ui/menu.hpp"
+#include "ui/window.hpp"
 
 namespace paint {
 
-class PaintWindow : public Window {
+class PaintWindow : public ui::Window {
    public:
     PaintWindow(const std::string& title, int width, int height);
 
-    CanvasElement& canvas() { return *_canvas; }
+    ui::CanvasElement& canvas() { return *_canvas; }
 
    private:
     Document _document;
     Menu _menu;
     ShortcutManager _shortcutManager;
 
-    CanvasElement* _canvas = nullptr;
+    ui::CanvasElement* _canvas = nullptr;
 
     void setupMenu();
 

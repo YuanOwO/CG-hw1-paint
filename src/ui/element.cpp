@@ -1,62 +1,11 @@
-#include "ui/element/element.hpp"
+#include "ui/element.hpp"
 
 #include <algorithm>
 
-#include "app/window.hpp"
 #include "common/point.hpp"
+#include "ui/window.hpp"
 
-namespace paint {
-
-Element& Element::appendChild(std::unique_ptr<Element> child) {
-    if (!child) {
-        throw std::invalid_argument("Child element cannot be null");
-    }
-
-    child->_parent = this;
-    _children.push_back(std::move(child));
-
-    invalidate();  // 通知父視窗需要重新渲染
-
-    return *_children.back();
-}
-
-std::unique_ptr<Element> Element::removeChild(Element* child) {
-    if (!child) {
-        throw std::invalid_argument("Child element cannot be null");
-    }
-
-    auto it = std::find_if(_children.begin(), _children.end(),
-                           [child](const std::unique_ptr<Element>& ptr) { return ptr.get() == child; });
-
-    if (it == _children.end()) {
-        throw std::invalid_argument("Child element not found");
-    }
-
-    // 必須在清除 parent 前通知 Window，才能辨識完整子樹並正常派送生命週期事件。
-    if (auto* w = window()) {
-        w->detachElementSubtree(child);
-    }
-
-    std::unique_ptr<Element> removedChild = std::move(*it);
-    _children.erase(it);
-
-    removedChild->_parent = nullptr;
-
-    invalidate();  // 通知父視窗需要重新渲染
-
-    return removedChild;
-}
-
-const Window* Element::window() const {
-    const Element* current = this;
-
-    // 往上走到根元素，然後返回其 window 指標
-    while (current->_parent != nullptr) {
-        current = current->_parent;
-    }
-
-    return current->_window;
-}
+namespace paint::ui {
 
 void Element::setVisible(bool visible) {
     if (_visible == visible) {
@@ -147,8 +96,12 @@ const Element* Element::hitTest(Point point) const {
     Point localPoint = point - _bounds.topLeft();
 
     // 先檢查子元素，從後往前檢查，確保 Z-order 正確
-    for (auto it = _children.rbegin(); it != _children.rend(); it++) {
-        Element* child = it->get();
+    for (auto it = children().rbegin(); it != children().rend(); it++) {
+        Element* child = dynamic_cast<Element*>(it->get());
+
+        if (!child) {
+            continue;  // 如果子元素不是 Element，則跳過
+        }
 
         if (auto* target = child->hitTest(localPoint)) {
             return target;
@@ -156,13 +109,6 @@ const Element* Element::hitTest(Point point) const {
     }
 
     return this;
-}
-
-EventTarget* Element::eventParent() const {
-    if (_parent) {
-        return _parent;
-    }
-    return _window;
 }
 
 void Element::render(RenderContext& context) {
@@ -176,11 +122,13 @@ void Element::render(RenderContext& context) {
 
     renderContent(context);
 
-    for (const auto& child : _children) {
-        child->render(context);
+    for (const auto& child : children()) {
+        if (auto* it = dynamic_cast<Element*>(child.get())) {
+            it->render(context);
+        }
     }
 
     context.popTransform();  // 恢復父元素的座標系
 }
 
-}  // namespace paint
+}  // namespace paint::ui

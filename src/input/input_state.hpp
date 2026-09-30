@@ -5,6 +5,12 @@
 #include "common/point.hpp"
 #include "input/input_types.hpp"
 
+namespace paint::ui {
+
+class Window;
+
+}  // namespace paint::ui
+
 namespace paint {
 
 template <typename ButtonType>
@@ -17,7 +23,7 @@ class InputState {
     bool isExactlyDown(const std::unordered_set<ButtonType>& buttons) const;
 
    private:
-    friend class Window;
+    friend class ui::Window;
     std::unordered_set<ButtonType> _down;
 
     // 回傳是否真的發生 up -> down。
@@ -64,7 +70,7 @@ class MouseState : public InputState<MouseButton> {
     Point position() const { return Point(_mouseX, _mouseY); }
 
    private:
-    friend class Window;
+    friend class ui::Window;
 
     int _mouseX = 0;
     int _mouseY = 0;

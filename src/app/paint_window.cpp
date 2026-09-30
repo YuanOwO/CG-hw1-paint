@@ -4,7 +4,7 @@
 #include <memory>
 #include <utility>
 
-#include "ui/bounding.hpp"
+#include "ui/layout/bounding.hpp"
 
 using paint::drawing::LineCap;
 using paint::drawing::LineJoin;
@@ -18,18 +18,45 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
     BoundingBox canvasBounds(0, 0, width, height);  // 預留 10 像素給菜單
 
     // 設置根元素為 CanvasElement
-    auto canvas = std::make_unique<CanvasElement>(canvasBounds, _document);
+    auto canvas = std::make_unique<ui::CanvasElement>(canvasBounds, _document);
     _canvas = canvas.get();
     setRootElement(std::move(canvas));
     setFocusedElement(_canvas);  // 將焦點設置為 CanvasElement
 
     // 設置快捷鍵
-    _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::Z}, [this]() { _canvas->redo(); });
     _shortcutManager.bind({Mod::Primary, Key::Z}, [this]() { _canvas->undo(); });
+    _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::Z}, [this]() { _canvas->redo(); });
     _shortcutManager.bind({Mod::Primary, Key::S}, [this]() { _document.save(); });
     _shortcutManager.bind({Mod::Primary, Key::N}, [this]() { _canvas->newFile(); });
-    _shortcutManager.bind({Mod::Primary, Key::R}, [this]() { requestCachedRedisplay(); });
+    _shortcutManager.bind({Mod::Primary, Key::R}, [this]() {
+        requestCachedRedisplay();
+        resetInputState();
+    });
+    _shortcutManager.bind({Mod::Ctrl, Key::C}, [this]() { std::exit(0); });
     _shortcutManager.bind({Key::F5}, [this]() { _canvas->clear(); });
+
+    // 設置工具快捷鍵
+    _shortcutManager.bind({Key::Digit1}, [this]() { _canvas->setTool(Tool::TOOL_PENCIL); });
+    _shortcutManager.bind({Key::Digit2}, [this]() { _canvas->setTool(Tool::TOOL_LINE); });
+    _shortcutManager.bind({Key::Digit3}, [this]() { _canvas->setTool(Tool::TOOL_RECTANGLE); });
+    _shortcutManager.bind({Key::Digit4}, [this]() { _canvas->setTool(Tool::TOOL_ELLIPSE); });
+    _shortcutManager.bind({Key::Digit5}, [this]() { _canvas->setTool(Tool::TOOL_POLYGON); });
+
+    _shortcutManager.bind({Key::LeftBracket}, [this]() {
+        auto style = _canvas->style();
+        style.setStrokeWidth(std::max(1, static_cast<int>(style.stroke.width - 1)));
+        _canvas->setStyle(style);
+    });
+    _shortcutManager.bind({Key::RightBracket}, [this]() {
+        auto style = _canvas->style();
+        style.setStrokeWidth(style.stroke.width + 1);
+        _canvas->setStyle(style);
+    });
+    _shortcutManager.bind({Mod::Shift, Key::LeftBracket}, [this]() {
+        auto style = _canvas->style();
+        style.setStrokeColor(Color::Black);
+        _canvas->setStyle(style);
+    });
 
     addEventListener<KeyDownEvent>([this](KeyDownEvent& event) {
         if (_shortcutManager.handle(event)) {

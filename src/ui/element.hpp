@@ -5,16 +5,17 @@
 #include <utility>
 #include <vector>
 
-#include "event/event_target.hpp"
 #include "render/render_context.hpp"
-#include "ui/bounding.hpp"
+#include "ui/layout/bounding.hpp"
+#include "ui/node.hpp"
 
-namespace paint {
+namespace paint::ui {
 
 class Window;
 
-class Element : public EventTarget {
+class Element : public Node {
    public:
+    Element() : _bounds(0, 0, 0, 0) {}
     Element(int width, int height) : _bounds(0, 0, width, height) { validateBounds(_bounds); }
     Element(int x, int y, int width, int height) : _bounds(x, y, width, height) { validateBounds(_bounds); }
     explicit Element(const BoundingBox& bounds) : _bounds(bounds) { validateBounds(_bounds); }
@@ -34,18 +35,6 @@ class Element : public EventTarget {
 
     const BoundingBox& bounds() const { return _bounds; }
 
-    Window* window() { return const_cast<Window*>(std::as_const(*this).window()); }
-    const Window* window() const;
-    Element* parent() { return _parent; }
-    const Element* parent() const { return _parent; }
-    const std::vector<std::unique_ptr<Element>>& children() const { return _children; }
-
-    Element& appendChild(std::unique_ptr<Element> child);
-    std::unique_ptr<Element> removeChild(Element* child);
-
-    Element* hitTest(Point point) { return const_cast<Element*>(std::as_const(*this).hitTest(point)); }
-    const Element* hitTest(Point point) const;
-
     bool isVisible() const { return _visible; }
     void setVisible(bool visible);
 
@@ -55,29 +44,29 @@ class Element : public EventTarget {
     bool isFocusable() const { return _focusable; }
     void setFocusable(bool focusable);
 
+    Element* hitTest(Point point) { return const_cast<Element*>(std::as_const(*this).hitTest(point)); }
+    const Element* hitTest(Point point) const;
+
    protected:
     void setBounds(const BoundingBox& bounds);
 
     // 當元素需要重新渲染時，呼叫此函式通知父視窗
     void invalidate();
 
+    // 當元素需要捕獲滑鼠事件時，呼叫此函式通知父視窗
     void captureMouse();
     void releaseMouseCapture();
-
-    EventTarget* eventParent() const override;
 
     virtual void renderContent(RenderContext& context) {}
 
     virtual bool contains(Point point) const { return _bounds.contains(point); }
 
+    void onChildrenChanged() override { invalidate(); }
+
    private:
     friend class Window;  // 允許 Window 訪問 Element 的私有成員
 
     BoundingBox _bounds;
-
-    Window* _window = nullptr;   // 只有根元素會有 window 指標，子元素的 window 指標為 nullptr
-    Element* _parent = nullptr;  // 指向父元素的指標，若為 nullptr 則表示此元素為根元素
-    std::vector<std::unique_ptr<Element>> _children;
 
     bool _visible = true;     // 元素是否可見，默認為可見
     bool _enabled = true;     // 元素是否可用，默認為可用
@@ -92,4 +81,4 @@ class Element : public EventTarget {
     }
 };
 
-}  // namespace paint
+}  // namespace paint::ui

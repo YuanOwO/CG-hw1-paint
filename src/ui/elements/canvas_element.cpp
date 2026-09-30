@@ -1,10 +1,10 @@
-#include "ui/element/canvas_element.hpp"
+#include "ui/elements/canvas_element.hpp"
 
 #include <utility>
 
 #include "command/edit_command.hpp"
 
-namespace paint {
+namespace paint::ui {
 
 CanvasElement::CanvasElement(BoundingBox bounds, Document& document)
     : Element(bounds), _gridVisible(true), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
@@ -169,4 +169,4 @@ void CanvasElement::renderContent(RenderContext& context, bool includeGrid) {
     setGridVisibility(oldVisibility);
 }
 
-}  // namespace paint
+}  // namespace paint::ui

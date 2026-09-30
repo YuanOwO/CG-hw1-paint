@@ -9,14 +9,24 @@
 
 #include "event/event.hpp"
 
-namespace paint {
+namespace paint::ui {
 
 class EventTarget {
    public:
+    using ListenerId = std::size_t;
+    using Listener = std::function<void(Event&)>;
+
+    EventTarget() = default;
     virtual ~EventTarget() = default;
 
+    // 禁止拷貝與移動操作，確保事件目標的唯一性
+    EventTarget(const EventTarget&) = delete;
+    EventTarget& operator=(const EventTarget&) = delete;
+    EventTarget(EventTarget&&) = delete;
+    EventTarget& operator=(EventTarget&&) = delete;
+
     template <typename EventType, typename Callback>
-    std::size_t addEventListener(Callback&& callback) {
+    ListenerId addEventListener(Callback&& callback) {
         // 靜態斷言，確保 EventType 是 Event 的衍生類
         static_assert(std::is_base_of_v<Event, EventType>, "EventType must be derived from Event");
 
@@ -32,7 +42,7 @@ class EventTarget {
         return id;
     }
 
-    void removeEventListener(std::size_t id);
+    void removeEventListener(ListenerId id);
 
     // 分派事件給當前目標，並沿著事件目標樹向上冒泡（如果事件支持冒泡）
     void dispatchEvent(Event& event);
@@ -41,15 +51,13 @@ class EventTarget {
     virtual EventTarget* eventParent() const { return nullptr; }  // 默認沒有父級事件目標
 
    private:
-    using Listener = std::function<void(Event&)>;
-
     struct ListenerEntry {
-        std::size_t id;
+        ListenerId id;
         Listener callback;
     };
 
     std::unordered_map<std::type_index, std::vector<ListenerEntry>> _listeners;
-    std::size_t _nextListenerId = 0;
+    ListenerId _nextListenerId = 0;
 };
 
-}  // namespace paint
+}  // namespace paint::ui

@@ -49,10 +49,12 @@ bool ShortcutManager::handle(const KeyDownEvent& event) {
     const Shortcut* matchedShortcut = nullptr;
 
     for (const auto& shortcut : _shortcuts) {
+        // 如果按鍵不在 chord 中，或者 chord 與當前鍵盤狀態不匹配，則跳過該快捷鍵
         if (!shortcut.chord.contains(event.key()) || !shortcut.chord.matches(keyboard)) {
             continue;
         }
 
+        // 盡量匹配最長的 chord，避免短 chord 遮蔽長 chord
         if (matchedShortcut == nullptr || shortcut.chord.size() > matchedShortcut->chord.size()) {
             matchedShortcut = &shortcut;
         }
