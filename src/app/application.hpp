@@ -15,9 +15,11 @@ class Application {
 
     ~Application() = default;
 
-    // 禁止拷貝和賦值
+    // 禁止拷貝與移動操作，確保元素的唯一性
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
+    Application(Application&&) = delete;
+    Application& operator=(Application&&) = delete;
 
     // 運行應用程序，進入 GLUT 主循環
     void run();

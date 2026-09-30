@@ -35,9 +35,11 @@ class Window : public EventTarget {
     Window(const std::string& title, int width, int height, bool resizable = true);
     virtual ~Window();
 
-    // 禁止拷貝和賦值
+    // 禁止拷貝與移動操作，確保元素的唯一性
     Window(const Window&) = delete;
     Window& operator=(const Window&) = delete;
+    Window(Window&&) = delete;
+    Window& operator=(Window&&) = delete;
 
     int id() const { return _id; }
     int width() const { return _width; }
@@ -80,7 +82,10 @@ class Window : public EventTarget {
     ColorBuffer _colorBuffer;
 
     std::unique_ptr<Element> _rootElement;  // 根元素
-    Element* _focusedElement = nullptr;     // 當前獲得焦點的元素
+
+    Element* _focusedElement = nullptr;  // 當前獲得鍵盤焦點的元素
+    Element* _hoveredElement = nullptr;  // 當前滑鼠懸停的元素
+    Element* _mouseCapture = nullptr;    // 當前捕捉滑鼠事件的元素
 
     static KeyboardState _keyboardState;  // 全局的鍵盤狀態
     MouseState _mouseState;               // 視窗的滑鼠狀態

@@ -17,9 +17,11 @@ class Menu {
     Menu();
     ~Menu();
 
-    // 禁止拷貝和賦值
+    // 禁止拷貝與移動操作，確保元素的唯一性
     Menu(const Menu&) = delete;
     Menu& operator=(const Menu&) = delete;
+    Menu(Menu&&) = delete;
+    Menu& operator=(Menu&&) = delete;
 
     int id() const { return _menuId; }
 

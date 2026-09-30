@@ -36,9 +36,11 @@ class Document {
     Document() {}
     Document(const Path& filename) : _filename(filename) {}
 
-    // 禁止拷貝和賦值
-    Document(const Document& other) = delete;
-    Document& operator=(const Document& other) = delete;
+    // 禁止拷貝與移動操作，確保元素的唯一性
+    Document(const Document&) = delete;
+    Document& operator=(const Document&) = delete;
+    Document(Document&&) = delete;
+    Document& operator=(Document&&) = delete;
 
     DocumentData data() const;  // 打包 Scene 與其他 Metadata 成 DocumentData 回傳。
 
