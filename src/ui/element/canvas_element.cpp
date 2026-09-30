@@ -18,20 +18,68 @@ CanvasElement::CanvasElement(BoundingBox bounds, Document& document)
     _currentStyle.stroke.join = drawing::LineJoin::MITER;
     _currentStyle.stroke.cap = drawing::LineCap::ROUND;
 
-    addEventListener<KeyDownEvent>([this](const KeyDownEvent& event) { onKeyDown(event); });
-    addEventListener<KeyUpEvent>([this](const KeyUpEvent& event) { onKeyUp(event); });
-    addEventListener<ClickEvent>([this](const ClickEvent& event) { onClick(event); });
-    addEventListener<DoubleClickEvent>([this](const DoubleClickEvent& event) { onDoubleClick(event); });
-    addEventListener<MouseDownEvent>([this](const MouseDownEvent& event) { onMouseDown(event); });
-    addEventListener<MouseUpEvent>([this](const MouseUpEvent& event) { onMouseUp(event); });
-    addEventListener<MouseMoveEvent>([this](const MouseMoveEvent& event) { onMouseMove(event); });
+    addEventListener<KeyDownEvent>([this](const KeyDownEvent& event) {
+        // 忽略重複按鍵事件
+        if (event.isRepeat()) {
+            return;
+        }
+        handleDraftEvent(_activeTool->onKeyDown(event));
+    });
+
+    addEventListener<KeyUpEvent>([this](const KeyUpEvent& event) {  // 忽略重複按鍵事件
+        if (event.isRepeat()) {
+            return;
+        }
+        handleDraftEvent(_activeTool->onKeyUp(event));
+    });
+
+    addEventListener<ClickEvent>([this](const ClickEvent& event) {  // 只處理左鍵點擊事件，其他按鍵忽略
+        if (event.button() != MouseButton::MouseLeft) {
+            return;
+        }
+        handleDraftEvent(_activeTool->onClick(event));
+    });
+
+    addEventListener<DoubleClickEvent>(
+        [this](const DoubleClickEvent& event) {  // 只處理左鍵點擊事件，其他按鍵忽略
+            if (event.button() != MouseButton::MouseLeft) {
+                return;
+            }
+            handleDraftEvent(_activeTool->onDoubleClick(event));
+        });
+
+    addEventListener<MouseDownEvent>([this](const MouseDownEvent& event) {
+        // 只處理左鍵點擊事件，其他按鍵忽略
+        if (event.button() != MouseButton::MouseLeft) {
+            return;
+        }
+        captureMouse();  // 捕獲滑鼠事件，避免滑鼠移出畫布時無法接收 MouseUp 事件
+        handleDraftEvent(_activeTool->onMouseDown(event));
+    });
+
+    addEventListener<MouseUpEvent>([this](const MouseUpEvent& event) {
+        // 只處理左鍵點擊事件，其他按鍵忽略
+        if (event.button() != MouseButton::MouseLeft) {
+            return;
+        }
+        releaseMouseCapture();  // 釋放滑鼠事件捕獲
+        handleDraftEvent(_activeTool->onMouseUp(event));
+    });
+
+    addEventListener<MouseMoveEvent>([this](const MouseMoveEvent& event) {
+        // 如果沒有草稿，則不需要處理滑鼠移動事件，避免不必要的計算與渲染。
+        if (!isDrawing()) {
+            return;
+        }
+        handleDraftEvent(_activeTool->onMouseMove(event));
+    });
+
+    addEventListener<ElementResizeEvent>([this](const ElementResizeEvent& event) {
+        _document.setCanvasSize(event.width(), event.height());
+        // Element::onResize(event);
+    });
 
     resetTool();
-}
-
-void CanvasElement::onResize(const WindowResizeEvent& event) {
-    _document.setCanvasSize(event.width(), event.height());
-    // Element::onResize(event);
 }
 
 void CanvasElement::setTool(drawing::Tool tool) {
@@ -97,7 +145,8 @@ void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
     case drawing::ToolEventResult::CANCEL:  // 注意：這裡故意不 break，因為 COMMIT 也需要清除草稿
         resetTool();
         [[fallthrough]];
-    case drawing::ToolEventResult::UPDATE:  // 注意：這裡故意不 break，因為 COMMIT, CANCEL 也需要重新繪製畫布
+    case drawing::ToolEventResult::UPDATE:  // 注意：這裡故意不 break，因為 COMMIT, CANCEL
+                                            // 也需要重新繪製畫布
         invalidate();
         break;
     case drawing::ToolEventResult::NONE:
@@ -125,71 +174,6 @@ void CanvasElement::renderContent(bool includeGrid) {
     if (isDrawing()) {
         _renderer.draw(*_activeTool->preview());
     }
-}
-
-void CanvasElement::onKeyDown(const KeyDownEvent& event) {
-    // 忽略重複按鍵事件
-    if (event.isRepeat()) {
-        return;
-    }
-
-    handleDraftEvent(_activeTool->onKeyDown(event));
-}
-
-void CanvasElement::onKeyUp(const KeyUpEvent& event) {
-    // 忽略重複按鍵事件
-    if (event.isRepeat()) {
-        return;
-    }
-
-    handleDraftEvent(_activeTool->onKeyUp(event));
-}
-
-void CanvasElement::onClick(const ClickEvent& event) {
-    // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.button() != MouseButton::MouseLeft) {
-        return;
-    }
-
-    handleDraftEvent(_activeTool->onClick(event));
-}
-
-void CanvasElement::onDoubleClick(const DoubleClickEvent& event) {
-    // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.button() != MouseButton::MouseLeft) {
-        return;
-    }
-
-    handleDraftEvent(_activeTool->onDoubleClick(event));
-}
-
-void CanvasElement::onMouseDown(const MouseDownEvent& event) {
-    // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.button() != MouseButton::MouseLeft) {
-        return;
-    }
-
-    captureMouse();  // 捕獲滑鼠事件，避免滑鼠移出畫布時無法接收 MouseUp 事件
-    handleDraftEvent(_activeTool->onMouseDown(event));
-}
-
-void CanvasElement::onMouseUp(const MouseUpEvent& event) {
-    // 只處理左鍵點擊事件，其他按鍵忽略
-    if (event.button() != MouseButton::MouseLeft) {
-        return;
-    }
-
-    releaseMouseCapture();  // 釋放滑鼠事件捕獲
-    handleDraftEvent(_activeTool->onMouseUp(event));
-}
-
-void CanvasElement::onMouseMove(const MouseMoveEvent& event) {
-    // 如果沒有草稿，則不需要處理滑鼠移動事件，避免不必要的計算與渲染。
-    if (!isDrawing()) {
-        return;
-    }
-
-    handleDraftEvent(_activeTool->onMouseMove(event));
 }
 
 }  // namespace paint

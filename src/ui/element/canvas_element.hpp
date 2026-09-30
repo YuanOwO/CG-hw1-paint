@@ -17,11 +17,11 @@ class CanvasElement : public Element {
    public:
     CanvasElement(BoundingBox bounds, Document& document);
 
+    bool isShowGrid() const { return _showGrid; }
     void setShowGrid(bool show) {
         _showGrid = show;
         invalidate();
     }
-    bool isShowGrid() const { return _showGrid; }
 
     const drawing::Tool currentTool() const { return _currentTool; }
     void setTool(drawing::Tool tool);
@@ -37,17 +37,6 @@ class CanvasElement : public Element {
    protected:
     void renderContent() override;
     void renderContent(bool includeGrid);
-
-    void onResize(const WindowResizeEvent& event);
-
-    void onKeyDown(const KeyDownEvent& event);
-    void onKeyUp(const KeyUpEvent& event);
-
-    void onClick(const ClickEvent& event);
-    void onDoubleClick(const DoubleClickEvent& event);
-    void onMouseDown(const MouseDownEvent& event);
-    void onMouseUp(const MouseUpEvent& event);
-    void onMouseMove(const MouseMoveEvent& event);
 
    private:
     bool _showGrid;
