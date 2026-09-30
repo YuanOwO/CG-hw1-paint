@@ -10,6 +10,7 @@
 #include "event/events.hpp"
 #include "input/input_state.hpp"
 #include "render/color_buffer.hpp"
+#include "render/render_context.hpp"
 #include "ui/element/element.hpp"
 
 namespace paint {
@@ -59,8 +60,10 @@ class Window : public EventTarget {
 
     // 當視窗需要重新渲染內容時，呼叫此函式。子類別可以覆寫此函式來實現自定義的渲染邏輯。
     virtual void render() {
+        RenderContext context;
+
         if (_rootElement) {
-            _rootElement->render();
+            _rootElement->render(context);
         }
     }
 

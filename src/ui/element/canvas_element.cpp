@@ -7,7 +7,7 @@
 namespace paint {
 
 CanvasElement::CanvasElement(BoundingBox bounds, Document& document)
-    : Element(bounds), _showGrid(true), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
+    : Element(bounds), _gridVisible(true), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
     setFocusable(true);  // CanvasElement 可以接收鍵盤事件
 
     _document.setCanvasSize(bounds.width, bounds.height);
@@ -156,24 +156,17 @@ void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
     }
 }
 
-void CanvasElement::renderContent() {
-    renderContent(_showGrid);
+void CanvasElement::renderContent(RenderContext& context) {
+    renderContent(context, _gridVisible);
 }
 
-void CanvasElement::renderContent(bool includeGrid) {
-    if (includeGrid) {
-        _renderer.drawGrid(width(), height());
-    }
+void CanvasElement::renderContent(RenderContext& context, bool includeGrid) {
+    auto oldVisibility = isGridVisible();
+    setGridVisibility(includeGrid);
 
-    // 先繪製歷史紀錄
-    for (const auto& shape : _document.scene().shapes()) {
-        _renderer.draw(*shape);
-    }
+    _renderer.render(context, *this);
 
-    // 再繪製草稿
-    if (isDrawing()) {
-        _renderer.draw(*_activeTool->preview());
-    }
+    setGridVisibility(oldVisibility);
 }
 
 }  // namespace paint

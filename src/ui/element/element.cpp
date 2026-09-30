@@ -160,20 +160,22 @@ EventTarget* Element::eventParent() const {
     return _window;
 }
 
-void Element::render() {
+void Element::render(RenderContext& context) {
     if (!isVisible()) {
         return;
     }
 
-    // transform to local coordinates
+    context.pushTransform();  // 保存父元素的座標系
 
-    renderContent();
+    context.translate(static_cast<float>(x()), static_cast<float>(y()));  // 將原點移動到目前元素的局部座標
+
+    renderContent(context);
 
     for (const auto& child : _children) {
-        child->render();
+        child->render(context);
     }
 
-    // restore to parent coordinates
+    context.popTransform();  // 恢復父元素的座標系
 }
 
 }  // namespace paint

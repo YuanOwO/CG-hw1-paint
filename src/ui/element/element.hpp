@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "event/event_target.hpp"
+#include "render/render_context.hpp"
 #include "ui/bounding.hpp"
 
 namespace paint {
@@ -65,7 +66,7 @@ class Element : public EventTarget {
 
     EventTarget* eventParent() const override;
 
-    virtual void renderContent() {}
+    virtual void renderContent(RenderContext& context) {}
 
     virtual bool contains(Point point) const { return _bounds.contains(point); }
 
@@ -82,7 +83,7 @@ class Element : public EventTarget {
     bool _enabled = true;     // 元素是否可用，默認為可用
     bool _focusable = false;  // 元素是否可聚焦，默認為不可聚焦
 
-    void render();
+    void render(RenderContext& context);
 
     static void validateBounds(const BoundingBox& bounds) {
         if (bounds.width < 0 || bounds.height < 0) {

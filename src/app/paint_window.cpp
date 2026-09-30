@@ -59,7 +59,7 @@ void PaintWindow::setupMenu() {
     setupFillMenu();
     setupPointMenu();
 
-    _menu.addMenuEntry("Grid", [this]() { _canvas->setShowGrid(!_canvas->isShowGrid()); });
+    _menu.addMenuEntry("Grid", [this]() { _canvas->setGridVisibility(!_canvas->isGridVisible()); });
 
     _menu.addMenuEntry("Quit", []() { std::exit(0); });
 

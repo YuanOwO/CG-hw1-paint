@@ -1,4 +1,4 @@
-#include "render/renderer.hpp"
+#include "render/shape_renderer.hpp"
 
 #include <GL/freeglut.h>
 
@@ -435,7 +435,7 @@ void basicDraw(const std::vector<Point>& vertices, const bool isClosed, const Sh
 ////////////////////////////////////////////////////////////////////////
 
 // renderer.cpp
-void Renderer::drawGrid(int width, int height, int spacing) const {
+void ShapeRenderer::drawGrid(RenderContext& context, int width, int height, int spacing) const {
     if (width <= 0 || height <= 0 || spacing <= 0) {
         return;
     }
@@ -458,7 +458,7 @@ void Renderer::drawGrid(int width, int height, int spacing) const {
     glEnd();
 }
 
-void Renderer::draw(const drawing::Shape& shape) const {
+void ShapeRenderer::draw(RenderContext& context, const drawing::Shape& shape) const {
     auto vertices = shape.getVertices();
     uniquefilter(vertices);
 
