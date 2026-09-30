@@ -32,6 +32,11 @@ std::unique_ptr<Element> Element::removeChild(Element* child) {
         throw std::invalid_argument("Child element not found");
     }
 
+    // 必須在清除 parent 前通知 Window，才能辨識完整子樹並正常派送生命週期事件。
+    if (auto* w = window()) {
+        w->detachElementSubtree(child);
+    }
+
     std::unique_ptr<Element> removedChild = std::move(*it);
     _children.erase(it);
 

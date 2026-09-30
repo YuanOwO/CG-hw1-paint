@@ -135,6 +135,9 @@ class Window : public EventTarget {
         }
     }
 
+    // 元素子樹即將脫離視窗時，清除所有指向該子樹的互動狀態。
+    void detachElementSubtree(Element* subtreeRoot);
+
     static Window* currentWindow();
 
     // GLUT callbacks

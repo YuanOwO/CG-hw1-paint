@@ -96,3 +96,7 @@ target_compile_options(main PRIVATE
     $<$<CONFIG:Debug>:-g -O1 -fsanitize=undefined>
     $<$<CONFIG:Release>:-O2 -DNDEBUG>
 )
+
+target_link_options(main PRIVATE
+    $<$<CONFIG:Debug>:-fsanitize=undefined>
+)

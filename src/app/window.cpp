@@ -348,6 +348,36 @@ void Window::setFocusedElement(Element* element) {
     }
 }
 
+void Window::detachElementSubtree(Element* subtreeRoot) {
+    // 互動狀態可能指向子樹中的任一後代，因此沿 parent 鏈判斷。
+    const auto belongsToSubtree = [subtreeRoot](Element* element) {
+        while (element != nullptr) {
+            if (element == subtreeRoot) {
+                return true;
+            }
+            element = element->parent();
+        }
+        return false;
+    };
+
+    if (belongsToSubtree(_focusedElement)) {
+        // 在 parent 關係仍完整時派送 Blur，讓事件可以正常向上冒泡。
+        setFocusedElement(nullptr);
+    }
+
+    if (belongsToSubtree(_hoveredElement)) {
+        // 在拆除子樹前通知目前的懸停元素。
+        UnhoverEvent event;
+        _hoveredElement->dispatchEvent(event);
+        _hoveredElement = nullptr;
+    }
+
+    if (belongsToSubtree(_mouseCapture)) {
+        // 避免後續滑鼠事件被分派到已經脫離或遭銷毀的元素。
+        _mouseCapture = nullptr;
+    }
+}
+
 void Window::requestRedisplay() {
     // 如果視窗已經關閉，直接返回
     if (_id == 0) {
