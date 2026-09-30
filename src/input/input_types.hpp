@@ -108,6 +108,15 @@ enum class Key {
     ScrollLock,  // unsupported by current GLUT backend
 };
 
+// 用於表示修飾鍵，不分左右
+enum class Mod {
+    Shift,
+    Ctrl,
+    Alt,
+    Super,
+    Primary,
+};
+
 enum class MouseButton {
     Unknown,
 
@@ -127,5 +136,19 @@ bool isAltKey(Key key);
 bool isSuperKey(Key key);
 bool isModifierKey(Key key);
 bool isPrimaryModifierKey(Key key);
+
+bool operator==(Mod lhs, Key rhs);
+
+inline bool operator!=(Mod lhs, Key rhs) {
+    return !(lhs == rhs);
+}
+
+inline bool operator==(Key lhs, Mod rhs) {
+    return rhs == lhs;
+}
+
+inline bool operator!=(Key lhs, Mod rhs) {
+    return !(lhs == rhs);
+}
 
 }  // namespace paint

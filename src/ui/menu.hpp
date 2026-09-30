@@ -12,7 +12,7 @@ namespace paint {
 
 class Menu {
    public:
-    using Action = std::function<void()>;
+    using MenuAction = std::function<void()>;
 
     Menu();
     ~Menu();
@@ -25,7 +25,7 @@ class Menu {
 
     bool isEnabled() const { return _attachedButton != MouseButton::Unknown; }
 
-    void addMenuEntry(const std::string& label, Action action);
+    void addMenuEntry(const std::string& label, MenuAction action);
     Menu& addSubMenu(const std::string& label);
 
     void attach(MouseButton button);
@@ -35,7 +35,7 @@ class Menu {
     struct MenuItem {
         int id;
         std::string label;
-        Action action;
+        MenuAction action;
     };
 
     int _windowId = 0;

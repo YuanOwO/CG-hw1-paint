@@ -336,6 +336,14 @@ void Window::requestRedisplay() {
     _contentDirty = true;
     _needsCapture = false;
 
+    requestCachedRedisplay();
+}
+
+void Window::requestCachedRedisplay() {
+    if (_id == 0) {
+        return;
+    }
+
     glutPostWindowRedisplay(_id);
 }
 

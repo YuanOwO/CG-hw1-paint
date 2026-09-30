@@ -30,7 +30,7 @@ Menu::~Menu() {
     _menuId = 0;
 }
 
-void Menu::addMenuEntry(const std::string& label, Action action) {
+void Menu::addMenuEntry(const std::string& label, MenuAction action) {
     const auto prevWindowId = glutGetWindow();
     const auto prevMenuId = glutGetMenu();
 

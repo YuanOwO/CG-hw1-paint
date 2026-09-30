@@ -64,6 +64,9 @@ class Window : public EventTarget {
 
     void requestRedisplay();
 
+    // 請求顯示現有快取，不將內容標記為 dirty；快取尚未就緒時沿用正常渲染流程。
+    void requestCachedRedisplay();
+
    private:
     int _id = 0;  // GLUT window ID
     int _width;

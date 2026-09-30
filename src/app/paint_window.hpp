@@ -4,6 +4,7 @@
 
 #include "app/window.hpp"
 #include "document/document.hpp"
+#include "input/shortcut_manager.hpp"
 #include "ui/elements.hpp"
 #include "ui/menu.hpp"
 
@@ -18,6 +19,7 @@ class PaintWindow : public Window {
    private:
     Document _document;
     Menu _menu;
+    ShortcutManager _shortcutManager;
 
     CanvasElement* _canvas = nullptr;
 

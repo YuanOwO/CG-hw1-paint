@@ -33,6 +33,10 @@ class KeyboardState : public InputState<Key> {
    public:
     using InputState<Key>::InputState;
 
+    using InputState<Key>::isDown;  // 繼承父類別的 isDown 方法，避免被覆蓋
+    using InputState<Key>::isUp;    // 繼承父類別的 isUp 方法，避免被覆蓋
+    bool isDown(Mod mod) const;     // 判斷指定的修飾鍵是否按下
+
     bool isShiftDown() const { return isDown(Key::LeftShift) || isDown(Key::RightShift); }
     bool isCtrlDown() const { return isDown(Key::LeftCtrl) || isDown(Key::RightCtrl); }
     bool isAltDown() const { return isDown(Key::LeftAlt) || isDown(Key::RightAlt); }

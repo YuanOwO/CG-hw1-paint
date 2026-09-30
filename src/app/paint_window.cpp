@@ -17,6 +17,21 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
     auto canvas = std::make_unique<CanvasElement>(width, height, _document);
     _canvas = canvas.get();
     setRootElement(std::move(canvas));
+
+    // 設置快捷鍵
+    _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::Z}, [this]() { _canvas->redo(); });
+    _shortcutManager.bind({Mod::Primary, Key::Z}, [this]() { _canvas->undo(); });
+    _shortcutManager.bind({Mod::Primary, Key::S}, [this]() { _document.save(); });
+    _shortcutManager.bind({Mod::Primary, Key::N}, [this]() { _canvas->newFile(); });
+    _shortcutManager.bind({Mod::Primary, Key::R}, [this]() { requestCachedRedisplay(); });
+    _shortcutManager.bind({Key::F5}, [this]() { _canvas->clear(); });
+
+    addEventListener<KeyDownEvent>([this](KeyDownEvent& event) {
+        if (_shortcutManager.handle(event)) {
+            event.stopPropagation();
+            return;
+        }
+    });
 }
 
 #pragma region Main Menu

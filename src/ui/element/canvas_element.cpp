@@ -125,16 +125,6 @@ void CanvasElement::renderContent(bool includeGrid) {
 }
 
 void CanvasElement::onKeyDown(const KeyDownEvent& event) {
-    // 處理 Ctrl+Z / Command+Z 以及 Ctrl+Shift+Z / Command+Shift+Z 的快捷鍵
-    if (event.key() == Key::Z && event.keyboardState().isPrimaryModifierDown()) {
-        if (event.keyboardState().isShiftDown()) {
-            redo();
-        } else {
-            undo();
-        }
-        return;
-    }
-
     // 忽略重複按鍵事件
     if (event.isRepeat()) {
         return;

@@ -30,4 +30,21 @@ bool isPrimaryModifierKey(Key key) {
 #endif
 }
 
+bool operator==(Mod lhs, Key rhs) {
+    switch (lhs) {
+    case Mod::Shift:
+        return isShiftKey(rhs);
+    case Mod::Ctrl:
+        return isCtrlKey(rhs);
+    case Mod::Alt:
+        return isAltKey(rhs);
+    case Mod::Super:
+        return isSuperKey(rhs);
+    case Mod::Primary:
+        return isPrimaryModifierKey(rhs);
+    default:
+        return false;
+    }
+}
+
 }  // namespace paint
