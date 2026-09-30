@@ -60,6 +60,9 @@ class Element : public EventTarget {
     // 當元素需要重新渲染時，呼叫此函式通知父視窗
     void invalidate();
 
+    void captureMouse();
+    void releaseMouseCapture();
+
     EventTarget* eventParent() const override;
 
     virtual void renderContent() {}

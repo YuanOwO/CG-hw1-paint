@@ -47,6 +47,16 @@ class BlurEvent : public ElementEvent {
     BlurEvent() : ElementEvent() {}
 };
 
+class HoverEvent : public ElementEvent {
+   public:
+    HoverEvent() : ElementEvent() {}
+};
+
+class UnhoverEvent : public ElementEvent {
+   public:
+    UnhoverEvent() : ElementEvent() {}
+};
+
 enum class ElementVisibilityState { Visible, Hidden };
 
 class ElementVisibilityEvent : public ElementEvent {

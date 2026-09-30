@@ -4,6 +4,8 @@
 #include <memory>
 #include <utility>
 
+#include "ui/bounding.hpp"
+
 using paint::drawing::LineCap;
 using paint::drawing::LineJoin;
 using paint::drawing::Tool;
@@ -13,10 +15,13 @@ namespace paint {
 PaintWindow::PaintWindow(const std::string& title, int width, int height) : Window(title, width, height) {
     setupMenu();
 
+    BoundingBox canvasBounds(0, 0, width, height);  // 預留 10 像素給菜單
+
     // 設置根元素為 CanvasElement
-    auto canvas = std::make_unique<CanvasElement>(width, height, _document);
+    auto canvas = std::make_unique<CanvasElement>(canvasBounds, _document);
     _canvas = canvas.get();
     setRootElement(std::move(canvas));
+    setFocusedElement(_canvas);  // 將焦點設置為 CanvasElement
 
     // 設置快捷鍵
     _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::Z}, [this]() { _canvas->redo(); });

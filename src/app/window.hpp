@@ -58,9 +58,9 @@ class Window : public EventTarget {
     const MouseState& mouseState() const { return _mouseState; }
 
     // 當視窗需要重新渲染內容時，呼叫此函式。子類別可以覆寫此函式來實現自定義的渲染邏輯。
-    virtual void renderContent() {
+    virtual void render() {
         if (_rootElement) {
-            _rootElement->renderContent();
+            _rootElement->render();
         }
     }
 
@@ -68,6 +68,8 @@ class Window : public EventTarget {
 
     // 請求顯示現有快取，不將內容標記為 dirty；快取尚未就緒時沿用正常渲染流程。
     void requestCachedRedisplay();
+
+    void setFocusedElement(Element* element);
 
    private:
     int _id = 0;  // GLUT window ID
@@ -101,10 +103,14 @@ class Window : public EventTarget {
     }
 
     template <typename EventType, typename... Args>
-    void dispatchMouseEvent(Args&&... args) {
+    Element* dispatchMouseEvent(Args&&... args) {
         EventType event(std::forward<Args>(args)...);
 
-        auto* target = hitTest(event.position());
+        Element* target = _mouseCapture;
+
+        if (target == nullptr) {
+            target = hitTest(event.position());
+        }
 
         // 決定事件的分派對象
         // 1. 如果命中了一個元素，則將事件分派給該元素
@@ -113,6 +119,16 @@ class Window : public EventTarget {
             target->dispatchEvent(event);
         } else {
             dispatchEvent(event);
+        }
+
+        return target;
+    }
+
+    void captureMouse(Element* element) { _mouseCapture = element; }
+    void releaseMouseCapure() { _mouseCapture = nullptr; }
+    void releaseMouseCaptureIf(Element* element) {
+        if (_mouseCapture == element) {
+            _mouseCapture = nullptr;
         }
     }
 

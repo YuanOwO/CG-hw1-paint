@@ -6,9 +6,12 @@
 
 namespace paint {
 
-CanvasElement::CanvasElement(int width, int height, Document& document)
-    : Element(width, height), _showGrid(true), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
-    _document.setCanvasSize(width, height);
+CanvasElement::CanvasElement(BoundingBox bounds, Document& document)
+    : Element(bounds), _showGrid(true), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
+    setFocusable(true);  // CanvasElement 可以接收鍵盤事件
+
+    _document.setCanvasSize(bounds.width, bounds.height);
+
     _currentStyle.stroke.width = 1;
     _currentStyle.stroke.color = ColorRGBA(Color::Black);
     _currentStyle.fill.color = ColorRGBA(Color::Transparent);
@@ -166,6 +169,7 @@ void CanvasElement::onMouseDown(const MouseDownEvent& event) {
         return;
     }
 
+    captureMouse();  // 捕獲滑鼠事件，避免滑鼠移出畫布時無法接收 MouseUp 事件
     handleDraftEvent(_activeTool->onMouseDown(event));
 }
 
@@ -175,6 +179,7 @@ void CanvasElement::onMouseUp(const MouseUpEvent& event) {
         return;
     }
 
+    releaseMouseCapture();  // 釋放滑鼠事件捕獲
     handleDraftEvent(_activeTool->onMouseUp(event));
 }
 

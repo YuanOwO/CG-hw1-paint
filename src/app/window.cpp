@@ -316,15 +316,36 @@ void Window::setRootElement(std::unique_ptr<Element> rootElement) {
         _rootElement->_window = nullptr;
     }
 
+    _focusedElement = nullptr;
+    _hoveredElement = nullptr;
+    _mouseCapture = nullptr;
+
     _rootElement = std::move(rootElement);
 
     if (_rootElement) {
         _rootElement->_parent = nullptr;
         _rootElement->_window = this;
-        _focusedElement = _rootElement.get();  // 將焦點設置為根元素
     }
 
     requestRedisplay();
+}
+
+void Window::setFocusedElement(Element* element) {
+    if (_focusedElement == element) {
+        return;
+    }
+
+    if (_focusedElement != nullptr) {
+        BlurEvent event;
+        _focusedElement->dispatchEvent(event);
+    }
+
+    _focusedElement = element;
+
+    if (_focusedElement != nullptr) {
+        FocusEvent event;
+        _focusedElement->dispatchEvent(event);
+    }
 }
 
 void Window::requestRedisplay() {
@@ -446,9 +467,9 @@ void Window::reshapeCallback(int width, int height) {
         glLoadIdentity();
     }
 
-    const WindowResizeEvent event(width, height);
+    WindowResizeEvent event(width, height);
 
-    // window->onResize(event);
+    window->dispatchEvent(event);
 
     window->requestRedisplay();
 }
@@ -469,6 +490,7 @@ void Window::visibilityCallback(int state) {
         WindowHiddenEvent event;
         window->_contentDirty = true;
         window->_needsCapture = false;
+        window->dispatchEvent(event);
     }
 }
 
@@ -488,7 +510,7 @@ void Window::displayCallback() {
     // 或者 ColorBuffer 的大小與視窗不匹配，則重新渲染視窗內容
     if (window->_contentDirty || window->_needsCapture ||
         !window->_colorBuffer.matchesSize(window->_width, window->_height)) {
-        window->renderContent();  // 渲染視窗內容
+        window->render();  // 渲染視窗內容
 
         window->_contentDirty = false;
         window->_needsCapture = true;
@@ -616,7 +638,13 @@ void Window::mouseCallback(int button, int state, int x, int y) {
         press.position = Point(x, y);
 
         MouseDownEvent event(_keyboardState, window->_mouseState, btn);
-        window->dispatchMouseEvent<MouseDownEvent>(event);
+
+        auto target = window->dispatchMouseEvent<MouseDownEvent>(event);
+
+        if (target && target->isFocusable()) {
+            window->setFocusedElement(target);
+        }
+
     } else if (state == GLUT_UP) {
         window->_mouseState._release(btn);
 
@@ -680,6 +708,27 @@ void Window::mouseMoveHandler(int x, int y) {
         }
     }
 
+    // 處理滑鼠懸停事件
+
+    // Hover 永遠依照實際位置判斷，
+    // 不受 mouse capture 影響。
+    Element* hoverTarget = window->hitTest(window->_mouseState.position());
+
+    if (hoverTarget != window->_hoveredElement) {
+        if (window->_hoveredElement != nullptr) {
+            UnhoverEvent event;
+            window->_hoveredElement->dispatchEvent(event);
+        }
+
+        window->_hoveredElement = hoverTarget;
+
+        if (window->_hoveredElement != nullptr) {
+            HoverEvent event;
+            window->_hoveredElement->dispatchEvent(event);
+        }
+    }
+
+    // MouseMove 本身則遵守 mouse capture
     MouseMoveEvent event(_keyboardState, window->_mouseState);
     window->dispatchMouseEvent<MouseMoveEvent>(event);
 }

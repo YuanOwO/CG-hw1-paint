@@ -8,13 +8,14 @@
 #include "drawing/shape_style.hpp"
 #include "drawing/tool.hpp"
 #include "render/renderer.hpp"
+#include "ui/bounding.hpp"
 #include "ui/element/element.hpp"
 
 namespace paint {
 
 class CanvasElement : public Element {
    public:
-    CanvasElement(int width, int height, Document& document);
+    CanvasElement(BoundingBox bounds, Document& document);
 
     void setShowGrid(bool show) {
         _showGrid = show;

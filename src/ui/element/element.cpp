@@ -121,6 +121,18 @@ void Element::invalidate() {
     }
 }
 
+void Element::captureMouse() {
+    if (auto* w = window()) {
+        w->captureMouse(this);
+    }
+}
+
+void Element::releaseMouseCapture() {
+    if (auto* w = window()) {
+        w->releaseMouseCaptureIf(this);
+    }
+}
+
 const Element* Element::hitTest(Point point) const {
     // 如果元素不可見、不可用，或者點不在元素範圍內，則返回 nullptr
     if (!isVisible() || !isEnabled() || !contains(point)) {
