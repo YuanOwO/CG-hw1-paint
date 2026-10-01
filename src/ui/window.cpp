@@ -16,35 +16,35 @@ std::unordered_map<int, Window*> windows;
 
 KeyboardState Window::_keyboardState{};  // 全局的鍵盤狀態
 
-Window::Window(const std::string& title, int width, int height, bool resizable)
-    : _title(title), _width(width), _height(height), _resizable(resizable) {
+Window::Window(app::Application& app, const std::string& title, int width, int height, bool resizable)
+    : _app(app), _title(title), _width(width), _height(height), _resizable(resizable) {
     // 創建 GLUT 視窗
     glutInitWindowSize(_width, _height);
     _id = glutCreateWindow(_title.c_str());
 
     // 註冊 GLUT 回調函數
 
-    glutCloseFunc(Window::closeCallback);
+    glutCloseFunc(closeCallback);
 
-    glutReshapeFunc(Window::reshapeCallback);
-    glutVisibilityFunc(Window::visibilityCallback);
-    glutDisplayFunc(Window::displayCallback);
+    glutReshapeFunc(reshapeCallback);
+    glutVisibilityFunc(visibilityCallback);
+    glutDisplayFunc(displayCallback);
 
-    glutKeyboardFunc(Window::keyboardCallback);
-    glutKeyboardUpFunc(Window::keyboardUpCallback);
-    glutSpecialFunc(Window::specialCallback);
-    glutSpecialUpFunc(Window::specialUpCallback);
+    glutKeyboardFunc(keyboardCallback);
+    glutKeyboardUpFunc(keyboardUpCallback);
+    glutSpecialFunc(specialCallback);
+    glutSpecialUpFunc(specialUpCallback);
 
-    glutMouseFunc(Window::mouseCallback);
-    glutMotionFunc(Window::motionCallback);
-    glutPassiveMotionFunc(Window::passiveMotionCallback);
-    glutEntryFunc(Window::entryCallback);
+    glutMouseFunc(mouseCallback);
+    glutMotionFunc(motionCallback);
+    glutPassiveMotionFunc(passiveMotionCallback);
+    glutEntryFunc(entryCallback);
 
     // 將視窗加入管理列表
     windows[_id] = this;
 
     // 啟動定時器，確保持續更新視窗內容
-    glutTimerFunc(CAPTURE_INTERVAL_MS, Window::timerCallback, _id);  // 16ms 對應約 60 FPS
+    glutTimerFunc(CAPTURE_INTERVAL_MS, timerCallback, _id);  // 16ms 對應約 60 FPS
 }
 
 Window::~Window() {
@@ -52,6 +52,17 @@ Window::~Window() {
         windows.erase(_id);
         glutDestroyWindow(_id);
     }
+}
+
+void Window::setTitle(const std::string& title) {
+    _title = title;
+    if (_id != 0) {
+        glutSetWindowTitle(_title.c_str());
+    }
+}
+
+void Window::close() {
+    _shouldClose = true;
 }
 
 #pragma region Content
@@ -240,7 +251,7 @@ void Window::timerCallback(int windowId) {
     }
 
     // 重新啟動 timer，確保持續更新
-    glutTimerFunc(CAPTURE_INTERVAL_MS, Window::timerCallback, windowId);
+    glutTimerFunc(CAPTURE_INTERVAL_MS, timerCallback, windowId);
 }
 
 #pragma endregion  // GLUT timer callback

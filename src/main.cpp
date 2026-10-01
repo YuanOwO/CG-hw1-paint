@@ -1,13 +1,15 @@
 #include <GL/freeglut.h>
 
 #include "app/application.hpp"
-#include "app/paint_window.hpp"
+#include "app/windows/paint_window.hpp"
+
+using namespace paint::app;
 
 int main(int argc, char** argv) {
-    paint::Application app(argc, argv);
+    Application app(argc, argv);
 
     // 在這裡創建視窗
-    app.createWindow<paint::PaintWindow>("Drawing Panel", 800, 600);
+    app.createWindow<PaintWindow>(app.name(), 800, 600);
 
     // 運行應用程序
     app.run();

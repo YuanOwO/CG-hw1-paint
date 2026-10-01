@@ -2,7 +2,10 @@
 
 #include <string>
 
-#include "document/document.hpp"
+#include "app/document.hpp"
+
+using paint::app::Document;
+using paint::app::DocumentData;
 
 namespace paint {
 

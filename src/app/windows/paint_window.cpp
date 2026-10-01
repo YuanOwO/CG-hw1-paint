@@ -1,18 +1,20 @@
-#include "app/paint_window.hpp"
+#include "app/windows/paint_window.hpp"
 
 #include <cstdlib>
 #include <memory>
 #include <utility>
 
+#include "app/application.hpp"
 #include "ui/layout/bounding.hpp"
 
 using paint::drawing::LineCap;
 using paint::drawing::LineJoin;
 using paint::drawing::Tool;
 
-namespace paint {
+namespace paint::app {
 
-PaintWindow::PaintWindow(const std::string& title, int width, int height) : Window(title, width, height) {
+PaintWindow::PaintWindow(Application& app, const std::string& title, int width, int height)
+    : Window(app, title, width, height) {
     setupMenu();
 
     BoundingBox canvasBounds(0, 0, width, height);  // 預留 10 像素給菜單
@@ -26,8 +28,10 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
     // 設置快捷鍵
     _shortcutManager.bind({Mod::Primary, Key::Z}, [this]() { _canvas->undo(); });
     _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::Z}, [this]() { _canvas->redo(); });
+
     _shortcutManager.bind({Mod::Primary, Key::S}, [this]() { _document.save(); });
-    _shortcutManager.bind({Mod::Primary, Key::N}, [this]() { _canvas->newFile(); });
+    _shortcutManager.bind({Mod::Primary, Key::N}, [this]() { newFile(); });
+    _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::N}, [this]() { newWindow(); });
     _shortcutManager.bind({Mod::Primary, Key::R}, [this]() {
         requestCachedRedisplay();
         resetInputState();
@@ -66,11 +70,21 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
     });
 }
 
+void PaintWindow::newFile() {
+    _document.newFile();
+    requestRedisplay();
+}
+
+void PaintWindow::newWindow() {
+    app().createWindow<PaintWindow>(app().name(), width(), height());
+}
+
 #pragma region Main Menu
 
 void PaintWindow::setupMenu() {
     auto& fileMenu = _menu.addSubMenu("File");
-    fileMenu.addMenuEntry("New", [this]() { _canvas->newFile(); });
+    fileMenu.addMenuEntry("New", [this]() { newFile(); });
+    fileMenu.addMenuEntry("New Window", [this]() { newWindow(); });
     fileMenu.addMenuEntry("Load", [this]() {});
     fileMenu.addMenuEntry("Save", [this]() { _document.save(); });
     fileMenu.addMenuEntry("Save As", [this]() {});
@@ -88,7 +102,7 @@ void PaintWindow::setupMenu() {
 
     _menu.addMenuEntry("Grid", [this]() { _canvas->setGridVisibility(!_canvas->isGridVisible()); });
 
-    _menu.addMenuEntry("Quit", []() { std::exit(0); });
+    _menu.addMenuEntry("Close", [this]() { this->close(); });
 
     _menu.attach(MouseButton::MouseRight);
 }
@@ -388,4 +402,4 @@ void PaintWindow::setupPointMenu() {
 
 #pragma endregion  // Point Menu
 
-}  // namespace paint
+}  // namespace paint::app

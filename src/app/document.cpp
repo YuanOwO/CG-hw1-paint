@@ -1,4 +1,4 @@
-#include "document/document.hpp"
+#include "app/document.hpp"
 
 #include <stdexcept>
 #include <utility>
@@ -6,7 +6,7 @@
 #include "command/edit_command.hpp"
 #include "command/file_command.hpp"
 
-namespace paint {
+namespace paint::app {
 
 DocumentData Document::data() const {
     DocumentData data{_filename, _scene, _canvasWidth, _canvasHeight};
@@ -93,4 +93,4 @@ void Document::redo() {
     _history.redo();
 }
 
-}  // namespace paint
+}  // namespace paint::app

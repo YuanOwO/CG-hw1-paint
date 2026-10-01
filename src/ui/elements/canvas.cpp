@@ -127,12 +127,6 @@ void CanvasElement::clear() {
     invalidate();
 }
 
-void CanvasElement::newFile() {
-    _document.newFile();
-    resetTool();
-    invalidate();
-}
-
 void CanvasElement::resetTool() {
     _activeTool = drawing::createDrawingTool(_currentTool, _currentStyle);
 }

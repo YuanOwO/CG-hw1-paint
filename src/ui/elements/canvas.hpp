@@ -4,12 +4,14 @@
 #include <memory>
 #include <vector>
 
-#include "document/document.hpp"
+#include "app/document.hpp"
 #include "drawing/shape_style.hpp"
 #include "drawing/tool.hpp"
 #include "render/ui/canvas_renderer.hpp"
 #include "ui/element.hpp"
 #include "ui/layout/bounding.hpp"
+
+using paint::app::Document;
 
 namespace paint::ui {
 
@@ -35,7 +37,6 @@ class CanvasElement : public Element {
     void undo();
     void redo();
     void clear();
-    void newFile();
 
    protected:
     void renderContent(RenderContext& context) override;

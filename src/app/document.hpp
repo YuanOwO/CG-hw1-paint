@@ -12,10 +12,9 @@
 
 using paint::drawing::Scene;
 using paint::drawing::Shape;
-
-namespace paint {
-
 using Path = std::filesystem::path;
+
+namespace paint::app {
 
 const Path DEFAULT_FILEPATH = "untitled.paint";
 
@@ -88,4 +87,4 @@ class Document {
     Scene _scene;
 };
 
-}  // namespace paint
+}  // namespace paint::app

@@ -2,10 +2,12 @@
 
 #include <string>
 
+#include "app/document.hpp"
 #include "command/command.hpp"
-#include "document/document.hpp"
 #include "io/document_storage.hpp"
 #include "io/image_exporter.hpp"
+
+using paint::app::Document;
 
 namespace paint {
 

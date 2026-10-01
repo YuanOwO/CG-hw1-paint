@@ -12,6 +12,12 @@
 #include "render/render_context.hpp"
 #include "ui/event_target.hpp"
 
+namespace paint::app {
+
+class Application;
+
+}
+
 namespace paint::ui {
 
 const int CAPTURE_RATE = 60;
@@ -23,7 +29,7 @@ class Element;
 
 class Window : public EventTarget {
    public:
-    Window(const std::string& title, int width, int height, bool resizable = true);
+    Window(app::Application& app, const std::string& title, int width, int height, bool resizable = true);
     virtual ~Window();
 
     Window(const Window&) = delete;
@@ -42,12 +48,22 @@ class Window : public EventTarget {
 
     bool isResizable() const { return _resizable; }
 
+    bool shouldClose() const { return _shouldClose; }
+
+    void setTitle(const std::string& title);
+
+    void close();
+
     // Content
 
     void setRootElement(std::unique_ptr<Element> rootElement);
 
    protected:
     friend class Element;
+
+    // Properties
+
+    app::Application& app() { return _app; }
 
     // Input state
 
@@ -109,6 +125,10 @@ class Window : public EventTarget {
 
     std::string _title;
     bool _resizable;
+
+    bool _shouldClose = false;
+
+    app::Application& _app;
 
     // Rendering
 
