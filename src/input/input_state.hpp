@@ -58,7 +58,7 @@ class KeyboardState : public InputState<Key> {
     }
 
    private:
-    friend class Window;
+    friend class ui::Window;
 };
 
 class MouseState : public InputState<MouseButton> {

@@ -8,7 +8,7 @@
 
 #include "input/input_types.hpp"
 
-namespace paint {
+namespace paint::ui {
 
 class Menu {
    public:
@@ -53,4 +53,4 @@ class Menu {
     static void menuCallback(int option);
 };
 
-}  // namespace paint
+}  // namespace paint::ui

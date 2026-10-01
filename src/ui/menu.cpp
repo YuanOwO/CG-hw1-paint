@@ -4,10 +4,12 @@
 
 #include <utility>
 
-namespace paint {
+namespace paint::ui {
 
 namespace {
+
 std::unordered_map<int, Menu*> menus;
+
 }  // namespace
 
 Menu::Menu() {
@@ -149,4 +151,4 @@ void Menu::menuCallback(int option) {
     }
 }
 
-}  // namespace paint
+}  // namespace paint::ui

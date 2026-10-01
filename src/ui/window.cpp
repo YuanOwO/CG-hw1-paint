@@ -4,6 +4,8 @@
 
 #include <unordered_map>
 
+#include "ui/element.hpp"
+
 namespace paint::ui {
 
 namespace {
@@ -12,7 +14,7 @@ std::unordered_map<int, Window*> windows;
 
 }  // namespace
 
-KeyboardState Window::_keyboardState;  // 全局的鍵盤狀態
+KeyboardState Window::_keyboardState{};  // 全局的鍵盤狀態
 
 Window::Window(const std::string& title, int width, int height, bool resizable)
     : _title(title), _width(width), _height(height), _resizable(resizable) {
@@ -52,6 +54,8 @@ Window::~Window() {
     }
 }
 
+#pragma region Content
+
 void Window::setRootElement(std::unique_ptr<Element> rootElement) {
     if (_rootElement) {
         _rootElement->_window = nullptr;
@@ -69,6 +73,15 @@ void Window::setRootElement(std::unique_ptr<Element> rootElement) {
     }
 
     requestRedisplay();
+}
+
+#pragma endregion  // Content
+
+#pragma region Input state
+
+void Window::resetInputState() {
+    _keyboardState._clear();
+    _mouseState._clear();
 }
 
 void Window::setFocusedElement(Element* element) {
@@ -89,9 +102,74 @@ void Window::setFocusedElement(Element* element) {
     }
 }
 
-void Window::detachElementSubtree(Node* subtreeRoot) {
+#pragma endregion  // Input state
+
+#pragma region Rendering
+
+void Window::render() {
+    RenderContext context;
+
+    if (_rootElement) {
+        _rootElement->render(context);
+    }
+}
+
+void Window::requestRedisplay() {
+    // 如果視窗已經關閉，直接返回
+    if (_id == 0) {
+        return;
+    }
+
+    _contentDirty = true;
+    _needsCapture = false;
+
+    requestCachedRedisplay();
+}
+
+void Window::requestCachedRedisplay() {
+    if (_id == 0) {
+        return;
+    }
+
+    glutPostWindowRedisplay(_id);
+}
+
+#pragma endregion  // Rendering
+
+#pragma region Element interaction
+
+Element* Window::hitTest(Point point) {
+    if (_rootElement) {
+        return _rootElement->hitTest(point);
+    }
+    return nullptr;
+}
+
+template <typename EventType, typename... Args>
+Element* Window::dispatchMouseEvent(Args&&... args) {
+    EventType event(std::forward<Args>(args)...);
+
+    Element* target = _mouseCapture;
+
+    if (target == nullptr) {
+        target = hitTest(event.position());
+    }
+
+    // 決定事件的分派對象
+    // 1. 如果命中了一個元素，則將事件分派給該元素
+    // 2. 如果沒有命中任何元素，則將事件分派給視窗本身
+    if (target != nullptr) {
+        target->dispatchEvent(event);
+    } else {
+        dispatchEvent(event);
+    }
+
+    return target;
+}
+
+void Window::detachElementSubtree(Element* subtreeRoot) {
     // 互動狀態可能指向子樹中的任一後代，因此沿 parent 鏈判斷。
-    const auto belongsToSubtree = [subtreeRoot](Node* element) {
+    const auto belongsToSubtree = [subtreeRoot](Element* element) {
         while (element != nullptr) {
             if (element == subtreeRoot) {
                 return true;
@@ -119,25 +197,7 @@ void Window::detachElementSubtree(Node* subtreeRoot) {
     }
 }
 
-void Window::requestRedisplay() {
-    // 如果視窗已經關閉，直接返回
-    if (_id == 0) {
-        return;
-    }
-
-    _contentDirty = true;
-    _needsCapture = false;
-
-    requestCachedRedisplay();
-}
-
-void Window::requestCachedRedisplay() {
-    if (_id == 0) {
-        return;
-    }
-
-    glutPostWindowRedisplay(_id);
-}
+#pragma endregion  // Element interaction
 
 Window* Window::currentWindow() {
     const int currentWindowId = glutGetWindow();

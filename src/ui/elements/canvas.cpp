@@ -1,4 +1,4 @@
-#include "ui/elements/canvas_element.hpp"
+#include "ui/elements/canvas.hpp"
 
 #include <utility>
 

@@ -1,6 +1,6 @@
 #include "render/ui/canvas_renderer.hpp"
 
-#include "ui/elements/canvas_element.hpp"
+#include "ui/elements/canvas.hpp"
 
 namespace paint {
 

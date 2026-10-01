@@ -4,7 +4,7 @@
 
 #include "document/document.hpp"
 #include "input/shortcut_manager.hpp"
-#include "ui/elements/canvas_element.hpp"
+#include "ui/elements/canvas.hpp"
 #include "ui/menu.hpp"
 #include "ui/window.hpp"
 
@@ -18,8 +18,8 @@ class PaintWindow : public ui::Window {
 
    private:
     Document _document;
-    Menu _menu;
     ShortcutManager _shortcutManager;
+    ui::Menu _menu;
 
     ui::CanvasElement* _canvas = nullptr;
 
