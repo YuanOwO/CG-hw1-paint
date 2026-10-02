@@ -19,9 +19,6 @@ class Window;
 class Element : public EventTarget {
    public:
     Element() {}
-    Element(Size size) : _preferredSize(size) {}
-    Element(Size size, Margin margin, Padding padding)
-        : _preferredSize(size), _margin(margin), _padding(padding) {}
 
     virtual ~Element() = default;
 
@@ -96,7 +93,7 @@ class Element : public EventTarget {
     bool contains(Point point) const { return _bounds.contains(point); }
 
     virtual Size measureContent(const Size& availableSize) { return {0, 0}; }  // 由子類別實現
-    virtual void arrangeContent(const BoundingBox& bounds) {}                  // 由子類別實現
+    virtual void arrangeContent(const BoundingBox& contentBounds) {}           // 由子類別實現
 
     void invalidateLayout();
 

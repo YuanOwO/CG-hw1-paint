@@ -6,7 +6,8 @@
 
 namespace paint::ui {
 
-void CanvasElement::initialize(Document& document) {
+CanvasElement::CanvasElement(Document& document)
+    : Element(), _gridVisible(true), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
     setFocusable(true);  // CanvasElement 可以接收鍵盤事件
     setHorizontalAlignment(Alignment::Stretch);
     setVerticalAlignment(Alignment::Stretch);

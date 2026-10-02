@@ -17,16 +17,7 @@ namespace paint::ui {
 
 class CanvasElement : public Element {
    public:
-    template <typename... Args>
-    CanvasElement(Document& document, Args&&... args)
-        : Element(std::forward<Args>(args)...),
-          _gridVisible(true),
-          _document(document),
-          _currentTool(drawing::Tool::TOOL_PENCIL) {
-        initialize(document);
-    }
-
-    void initialize(Document& document);
+    CanvasElement(Document& document);
 
     bool isGridVisible() const { return _gridVisible; }
     void setGridVisibility(bool visible) {
