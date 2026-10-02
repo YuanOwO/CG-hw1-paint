@@ -1,4 +1,4 @@
-#include "app/windows/paint_window.hpp"
+#include "app/windows/paint.hpp"
 
 #include <cstdlib>
 #include <memory>
