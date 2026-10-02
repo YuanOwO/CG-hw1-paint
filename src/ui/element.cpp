@@ -35,6 +35,26 @@ void Element::setVerticalAlignment(Alignment alignment) {
     invalidateLayout();
 }
 
+Point Element::windowToLocal(Point point) const {
+    auto current = this;
+    while (current != nullptr) {
+        point = point - current->_bounds.topLeft();
+        current = current->_parent;
+    }
+
+    return point;
+}
+
+Point Element::localToWindow(Point point) const {
+    auto current = this;
+    while (current != nullptr) {
+        point = point + current->_bounds.topLeft();
+        current = current->_parent;
+    }
+
+    return point;
+}
+
 const Element* Element::hitTest(Point point) const {
     // 如果元素不可見、不可用，或者點不在元素範圍內，則返回 nullptr
     if (!isVisible() || !isEnabled() || !contains(point)) {
@@ -60,75 +80,145 @@ const Element* Element::hitTest(Point point) const {
 }
 
 Size Element::measure(const Size& availableSize) {
+    const auto marginWidth = _margin.horizontal();
+    const auto marginHeight = _margin.vertical();
     const auto paddingWidth = _padding.horizontal();
     const auto paddingHeight = _padding.vertical();
 
-    Size contentAvailableSize = availableSize;
+    // 1. 扣掉 margin，得到元素可用大小
+    Size elementAvailableSize = availableSize;
 
-    // 減去 padding 後的可用大小
-    if (contentAvailableSize.width) {
+    if (elementAvailableSize.width.has_value()) {
+        elementAvailableSize.width = std::max(0, *elementAvailableSize.width - marginWidth);
+    }
+
+    if (elementAvailableSize.height.has_value()) {
+        elementAvailableSize.height = std::max(0, *elementAvailableSize.height - marginHeight);
+    }
+
+    // 2. 扣掉 padding，得到內容可用大小
+    Size contentAvailableSize = elementAvailableSize;
+
+    if (contentAvailableSize.width.has_value()) {
         contentAvailableSize.width = std::max(0, *contentAvailableSize.width - paddingWidth);
     }
-    if (contentAvailableSize.height) {
+
+    if (contentAvailableSize.height.has_value()) {
         contentAvailableSize.height = std::max(0, *contentAvailableSize.height - paddingHeight);
     }
 
+    // 3. 由子類別量測內容
     const Size contentDesiredSize = measureContent(contentAvailableSize);
 
-    // 檢查 measureContent() 返回的需求大小是否合法
     if (!contentDesiredSize.width.has_value() || !contentDesiredSize.height.has_value()) {
         throw std::runtime_error("measureContent() must return a concrete desired size");
     }
+
     if (*contentDesiredSize.width < 0 || *contentDesiredSize.height < 0) {
         throw std::runtime_error("measureContent() returned a negative desired size");
     }
 
-    // 計算元素的最終需求大小，考慮 padding 與優先大小
-    _desiredSize.width = std::max(_preferredSize.width.value_or(0), *contentDesiredSize.width + paddingWidth);
-    _desiredSize.height =
-        std::max(_preferredSize.height.value_or(0), *contentDesiredSize.height + paddingHeight);
+    // 4. 加回 padding，並考慮 preferredSize。
+    int width = std::max(_preferredSize.width.value_or(0), *contentDesiredSize.width + _padding.horizontal());
 
-    // 如果 availableSize 有限制，則將需求大小限制在 availableSize 內
-    if (availableSize.width) {
-        _desiredSize.width = std::min(*_desiredSize.width, *availableSize.width);
-    }
-    if (availableSize.height) {
-        _desiredSize.height = std::min(*_desiredSize.height, *availableSize.height);
+    int height =
+        std::max(_preferredSize.height.value_or(0), *contentDesiredSize.height + _padding.vertical());
+
+    // 5. 本體需求不能超過本體可用大小。
+    if (elementAvailableSize.width.has_value()) {
+        width = std::min(width, *elementAvailableSize.width);
     }
 
+    if (elementAvailableSize.height.has_value()) {
+        height = std::min(height, *elementAvailableSize.height);
+    }
+
+    _desiredElementSize = {width, height};
+
+    // 6. 加回 margin，得到要回報父容器的占用大小。
+    int outerWidth = std::max(0, width + _margin.horizontal());
+    int outerHeight = std::max(0, height + _margin.vertical());
+
+    if (availableSize.width.has_value()) {
+        outerWidth = std::min(outerWidth, *availableSize.width);
+    }
+
+    if (availableSize.height.has_value()) {
+        outerHeight = std::min(outerHeight, *availableSize.height);
+    }
+
+    _desiredSize = {outerWidth, outerHeight};
     return _desiredSize;
 }
 
-void Element::arrange(const BoundingBox& bounds) {
+void Element::arrange(const BoundingBox& slot) {
     const auto oldBounds = _bounds;
 
-    const bool moved = oldBounds.topLeft() != bounds.topLeft();
-    const bool resized = oldBounds.width != bounds.width || oldBounds.height != bounds.height;
+    // 1. 扣除 margin，得到本體可用區域。
+    //    此時仍使用父元素的座標系。
+    const int availableX = slot.x + _margin.left;
+    const int availableY = slot.y + _margin.top;
 
-    _bounds = bounds;  // 記錄元素的邊界
+    const int availableWidth = std::max(0, slot.width - _margin.horizontal());
 
-    // 重新計算元素內的局域座標系，考慮 padding
-    BoundingBox contentBounds{
+    const int availableHeight = std::max(0, slot.height - _margin.vertical());
+
+    // 2. Stretch 填滿可用大小；
+    //    其他對齊使用量測大小，但不能超過可用大小。
+    const int width = _horizontalAlignment == Alignment::Stretch
+                          ? availableWidth
+                          : std::min(*_desiredElementSize.width, availableWidth);
+
+    const int height = _verticalAlignment == Alignment::Stretch
+                           ? availableHeight
+                           : std::min(*_desiredElementSize.height, availableHeight);
+
+    // 3. 根據 alignment 決定位置。
+    int x = availableX;
+    int y = availableY;
+
+    if (_horizontalAlignment == Alignment::Center) {
+        x += (availableWidth - width) / 2;
+    } else if (_horizontalAlignment == Alignment::End) {
+        x += availableWidth - width;
+    }
+
+    if (_verticalAlignment == Alignment::Center) {
+        y += (availableHeight - height) / 2;
+    } else if (_verticalAlignment == Alignment::End) {
+        y += availableHeight - height;
+    }
+
+    // bounds 的位置相對父元素，大小不包含 margin。
+    _bounds = {x, y, width, height};
+
+    // 4. 內容區域改用自己的局部座標。
+    //    自己的左上角是 (0, 0)，因此不用再加 x、y。
+    const BoundingBox contentBounds{
         _padding.left,
         _padding.top,
-        std::max(0, bounds.width - _padding.horizontal()),
-        std::max(0, bounds.height - _padding.vertical()),
+        std::max(0, width - _padding.horizontal()),
+        std::max(0, height - _padding.vertical()),
     };
 
     arrangeContent(contentBounds);
 
+    // 5. 根據實際 bounds 的變化發送事件。
+    const bool moved = oldBounds.topLeft() != _bounds.topLeft();
+    const bool resized = oldBounds.width != width || oldBounds.height != height;
+
     if (moved) {
-        ElementMoveEvent event(oldBounds.topLeft(), bounds.topLeft());
+        ElementMoveEvent event(oldBounds.topLeft(), _bounds.topLeft());
         dispatchEvent(event);
     }
 
     if (resized) {
-        ElementResizeEvent event(bounds.width, bounds.height);
+        ElementResizeEvent event(width, height);
         dispatchEvent(event);
     }
 
     if (moved || resized) {
-        invalidateDisplay();  // 標記元素需要重繪
+        invalidateDisplay();
     }
 }
 

@@ -39,13 +39,27 @@ class IDrawingTool {
 
     virtual ToolEventResult finish() = 0;
 
-    virtual ToolEventResult onKeyDown(const KeyboardEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onKeyUp(const KeyboardEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onClick(const ClickEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onDoubleClick(const ClickEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onMouseDown(const MouseButtonEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onMouseUp(const MouseButtonEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onMouseMove(const MouseMoveEvent& event) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onKeyDown(const KeyboardEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
+    virtual ToolEventResult onKeyUp(const KeyboardEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
+    virtual ToolEventResult onClick(const ClickEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
+    virtual ToolEventResult onDoubleClick(const ClickEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
+    virtual ToolEventResult onMouseDown(const MouseButtonEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
+    virtual ToolEventResult onMouseUp(const MouseButtonEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
+    virtual ToolEventResult onMouseMove(const MouseMoveEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
 };
 
 template <typename TShape>

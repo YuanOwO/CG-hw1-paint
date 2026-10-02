@@ -20,7 +20,7 @@ PaintWindow::PaintWindow(Application& app, const std::string& title, int width, 
     // 設置根元素為 CanvasElement
     auto canvas = std::make_unique<ui::CanvasElement>(_document);
     _canvas = canvas.get();
-    setRootElement(std::move(canvas));
+    setContent(std::move(canvas));
     setFocusedElement(_canvas);  // 將焦點設置為 CanvasElement
 
     // 設置快捷鍵

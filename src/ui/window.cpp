@@ -5,6 +5,7 @@
 #include <unordered_map>
 
 #include "ui/element.hpp"
+#include "ui/elements/root.hpp"
 
 namespace paint::ui {
 
@@ -17,7 +18,12 @@ std::unordered_map<int, Window*> windows;
 KeyboardState Window::_keyboardState{};  // 全局的鍵盤狀態
 
 Window::Window(app::Application& app, const std::string& title, int width, int height, bool resizable)
-    : _app(app), _title(title), _width(width), _height(height), _resizable(resizable) {
+    : _app(app),
+      _title(title),
+      _width(width),
+      _height(height),
+      _resizable(resizable),
+      _rootElement(std::make_unique<RootElement>()) {
     // 創建 GLUT 視窗
     glutInitWindowSize(_width, _height);
     _id = glutCreateWindow(_title.c_str());
@@ -43,6 +49,9 @@ Window::Window(app::Application& app, const std::string& title, int width, int h
     // 將視窗加入管理列表
     windows[_id] = this;
 
+    // 將根元素的 window 指針設置為當前視窗
+    _rootElement->_window = this;
+
     // 啟動定時器，確保持續更新視窗內容
     glutTimerFunc(CAPTURE_INTERVAL_MS, timerCallback, _id);  // 16ms 對應約 60 FPS
 }
@@ -56,6 +65,7 @@ Window::~Window() {
 
 void Window::setTitle(const std::string& title) {
     _title = title;
+
     if (_id != 0) {
         glutSetWindowTitle(_title.c_str());
     }
@@ -67,21 +77,8 @@ void Window::close() {
 
 #pragma region Content
 
-void Window::setRootElement(std::unique_ptr<Element> rootElement) {
-    if (_rootElement) {
-        _rootElement->_window = nullptr;
-    }
-
-    _focusedElement = nullptr;
-    _hoveredElement = nullptr;
-    _mouseCapture = nullptr;
-
-    _rootElement = std::move(rootElement);
-
-    if (_rootElement) {
-        _rootElement->_parent = nullptr;
-        _rootElement->_window = this;
-    }
+void Window::setContent(std::unique_ptr<Element> content) {
+    _rootElement->setContent(std::move(content));
 
     requestLayout();
 }
@@ -100,6 +97,7 @@ void Window::setFocusedElement(Element* element) {
         return;
     }
 
+    // 在更改焦點前，先派送 Blur 事件給原本的焦點元素
     if (_focusedElement != nullptr) {
         BlurEvent event;
         _focusedElement->dispatchEvent(event);
@@ -107,6 +105,7 @@ void Window::setFocusedElement(Element* element) {
 
     _focusedElement = element;
 
+    // 在更改焦點後，派送 Focus 事件給新的焦點元素
     if (_focusedElement != nullptr) {
         FocusEvent event;
         _focusedElement->dispatchEvent(event);
@@ -123,15 +122,7 @@ void Window::requestLayout() {
 }
 
 void Window::updateLayout() {
-    // 如果沒有根元素，則不需要進行佈局計算
-    if (!_rootElement) {
-        _layoutDirty = false;
-        return;
-    }
-
-    const Size availableSize{_width, _height};
-
-    _rootElement->measure(availableSize);
+    _rootElement->measure({_width, _height});
     _rootElement->arrange({0, 0, _width, _height});
 
     _layoutDirty = false;
@@ -152,9 +143,7 @@ void Window::render() {
 
     RenderContext context;
 
-    if (_rootElement) {
-        _rootElement->render(context);
-    }
+    _rootElement->render(context);
 }
 
 void Window::requestRedisplay() {
@@ -182,13 +171,9 @@ void Window::requestCachedRedisplay() {
 #pragma region Element interaction
 
 Element* Window::hitTest(Point point) {
-    ensureLayout();
+    ensureLayout();  // 確保佈局是最新的，才能正確命中測試
 
-    if (_rootElement) {
-        return _rootElement->hitTest(point);
-    }
-
-    return nullptr;
+    return _rootElement->hitTest(point);
 }
 
 template <typename EventType, typename... Args>

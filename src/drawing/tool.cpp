@@ -13,7 +13,7 @@ class DragTool : public DrawingTool<TShape> {
    public:
     using DrawingTool<TShape>::DrawingTool;
 
-    ToolEventResult onKeyDown(const KeyboardEvent& event) override {
+    ToolEventResult onKeyDown(const KeyboardEvent& event, Point localPosition) override {
         if (!this->_draft) {
             return ToolEventResult::NONE;
         }
@@ -23,48 +23,48 @@ class DragTool : public DrawingTool<TShape> {
         }
 
         if (isShiftKey(event.key())) {
-            onShift(event);
+            onShift(event, localPosition);
             return ToolEventResult::UPDATE;
         }
 
         return ToolEventResult::NONE;
     }
 
-    ToolEventResult onKeyUp(const KeyboardEvent& event) override {
+    ToolEventResult onKeyUp(const KeyboardEvent& event, Point localPosition) override {
         if (!this->_draft) {
             return ToolEventResult::NONE;
         }
 
         if (isShiftKey(event.key())) {
-            this->_draft->setEnd(event.position());
+            this->_draft->setEnd(localPosition);
             return ToolEventResult::UPDATE;
         }
 
         return ToolEventResult::NONE;
     }
 
-    ToolEventResult onMouseDown(const MouseButtonEvent& event) override {
+    ToolEventResult onMouseDown(const MouseButtonEvent& event, Point localPosition) override {
         this->beginDraft();
-        this->_draft->setStart(event.position());
-        this->_draft->setEnd(event.position());
+        this->_draft->setStart(localPosition);
+        this->_draft->setEnd(localPosition);
 
         return ToolEventResult::UPDATE;
     }
 
-    ToolEventResult onMouseUp(const MouseButtonEvent& event) override {
+    ToolEventResult onMouseUp(const MouseButtonEvent& event, Point localPosition) override {
         if (!this->_draft) {
             return ToolEventResult::NONE;
         }
 
-        this->_draft->setEnd(event.position());
+        this->_draft->setEnd(localPosition);
         if (event.keyboardState().isShiftDown()) {
-            onShift(event);
+            onShift(event, localPosition);
         }
 
         return ToolEventResult::COMMIT;
     }
 
-    ToolEventResult onMouseMove(const MouseMoveEvent& event) override {
+    ToolEventResult onMouseMove(const MouseMoveEvent& event, Point localPosition) override {
         if (!this->_draft) {
             return ToolEventResult::NONE;
         }
@@ -73,9 +73,9 @@ class DragTool : public DrawingTool<TShape> {
             return ToolEventResult::NONE;
         }
 
-        this->_draft->setEnd(event.position());
+        this->_draft->setEnd(localPosition);
         if (event.keyboardState().isShiftDown()) {
-            onShift(event);
+            onShift(event, localPosition);
         }
 
         return ToolEventResult::UPDATE;
@@ -83,9 +83,9 @@ class DragTool : public DrawingTool<TShape> {
 
    protected:
     // Shift 鍵被按下時，會畫出正方形、正圓或 45° 斜線。這個函式可以被子類別覆寫以實現不同的行為。
-    virtual void onShift(const InputEvent& event) {
+    virtual void onShift(const InputEvent& event, Point localPosition) {
         const Point& start = this->_draft->start();
-        const Point& now = event.position();
+        const Point& now = localPosition;
 
         float dx = now.x() - start.x();
         float dy = now.y() - start.y();
@@ -104,9 +104,9 @@ class LineTool : public DragTool<Line> {
 
    protected:
     // Shift 鍵被按下時，會畫出水平、垂直或 45° 斜線。
-    void onShift(const InputEvent& event) override {
+    void onShift(const InputEvent& event, Point localPosition) override {
         const Point& start = this->_draft->start();
-        const Point& now = event.position();
+        const Point& now = localPosition;
 
         const float dx = now.x() - start.x();
         const float dy = now.y() - start.y();
@@ -148,9 +148,9 @@ class PointTool : public DrawingTool<PointShape> {
    public:
     using DrawingTool<PointShape>::DrawingTool;
 
-    ToolEventResult onClick(const ClickEvent& event) override {
+    ToolEventResult onClick(const ClickEvent& event, Point localPosition) override {
         beginDraft();
-        _draft->setPosition(event.position());
+        _draft->setPosition(localPosition);
         return ToolEventResult::COMMIT;
     }
 };
@@ -159,24 +159,24 @@ class PencilTool : public DrawingTool<Path> {
    public:
     using DrawingTool<Path>::DrawingTool;
 
-    ToolEventResult onMouseDown(const MouseButtonEvent& event) override {
+    ToolEventResult onMouseDown(const MouseButtonEvent& event, Point localPosition) override {
         this->beginDraft();
-        _draft->addPoint(event.position(), true);
+        _draft->addPoint(localPosition, true);
 
         return ToolEventResult::UPDATE;
     }
 
-    ToolEventResult onMouseUp(const MouseButtonEvent& event) override {
+    ToolEventResult onMouseUp(const MouseButtonEvent& event, Point localPosition) override {
         if (!this->_draft) {
             return ToolEventResult::NONE;
         }
 
-        _draft->addPoint(event.position(), true);
+        _draft->addPoint(localPosition, true);
 
         return ToolEventResult::COMMIT;
     }
 
-    ToolEventResult onMouseMove(const MouseMoveEvent& event) override {
+    ToolEventResult onMouseMove(const MouseMoveEvent& event, Point localPosition) override {
         if (!this->_draft) {
             return ToolEventResult::NONE;
         }
@@ -185,7 +185,7 @@ class PencilTool : public DrawingTool<Path> {
             return ToolEventResult::NONE;
         }
 
-        _draft->addPoint(event.position());
+        _draft->addPoint(localPosition);
 
         return ToolEventResult::UPDATE;
     }
@@ -195,32 +195,32 @@ class PolygonTool : public DrawingTool<Polygon> {
    public:
     using DrawingTool<Polygon>::DrawingTool;
 
-    ToolEventResult onClick(const ClickEvent& event) override {
+    ToolEventResult onClick(const ClickEvent& event, Point localPosition) override {
         if (!_draft) {
             beginDraft();
         }
 
         // 第一次點擊時，加入第一個點；之後的點擊，更新最後一個點並加入新點。
         if (_draft->pointCount() == 0) {
-            _draft->addPoint(event.position());
+            _draft->addPoint(localPosition);
         } else {
-            _draft->setLastPoint(event.position());
+            _draft->setLastPoint(localPosition);
         }
-        _draft->addPoint(event.position());
+        _draft->addPoint(localPosition);
 
         return ToolEventResult::UPDATE;
     }
 
-    ToolEventResult onDoubleClick(const ClickEvent& event) override {
+    ToolEventResult onDoubleClick(const ClickEvent& event, Point localPosition) override {
         if (!this->_draft) {
             return ToolEventResult::NONE;
         }
 
-        _draft->setLastPoint(event.position());
+        _draft->setLastPoint(localPosition);
         return ToolEventResult::COMMIT;
     }
 
-    ToolEventResult onMouseMove(const MouseMoveEvent& event) override {
+    ToolEventResult onMouseMove(const MouseMoveEvent& event, Point localPosition) override {
         if (!this->_draft) {
             return ToolEventResult::NONE;
         }
@@ -230,11 +230,11 @@ class PolygonTool : public DrawingTool<Polygon> {
             return ToolEventResult::CANCEL;
         }
 
-        _draft->setLastPoint(event.position());
+        _draft->setLastPoint(localPosition);
         return ToolEventResult::UPDATE;
     }
 
-    ToolEventResult onKeyDown(const KeyboardEvent& event) override {
+    ToolEventResult onKeyDown(const KeyboardEvent& event, Point localPosition) override {
         if (!this->_draft) {
             return ToolEventResult::NONE;
         }

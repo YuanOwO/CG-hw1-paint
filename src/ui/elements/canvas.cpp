@@ -24,21 +24,24 @@ void CanvasElement::initialize(Document& document) {
         if (event.isRepeat()) {
             return;
         }
-        handleDraftEvent(_activeTool->onKeyDown(event));
+        Point localPosition = windowToLocal(event.position());
+        handleDraftEvent(_activeTool->onKeyDown(event, localPosition));
     });
 
     addEventListener<KeyUpEvent>([this](const KeyUpEvent& event) {  // 忽略重複按鍵事件
         if (event.isRepeat()) {
             return;
         }
-        handleDraftEvent(_activeTool->onKeyUp(event));
+        Point localPosition = windowToLocal(event.position());
+        handleDraftEvent(_activeTool->onKeyUp(event, localPosition));
     });
 
     addEventListener<ClickEvent>([this](const ClickEvent& event) {  // 只處理左鍵點擊事件，其他按鍵忽略
         if (event.button() != MouseButton::MouseLeft) {
             return;
         }
-        handleDraftEvent(_activeTool->onClick(event));
+        Point localPosition = windowToLocal(event.position());
+        handleDraftEvent(_activeTool->onClick(event, localPosition));
     });
 
     addEventListener<DoubleClickEvent>(
@@ -46,7 +49,8 @@ void CanvasElement::initialize(Document& document) {
             if (event.button() != MouseButton::MouseLeft) {
                 return;
             }
-            handleDraftEvent(_activeTool->onDoubleClick(event));
+            Point localPosition = windowToLocal(event.position());
+            handleDraftEvent(_activeTool->onDoubleClick(event, localPosition));
         });
 
     addEventListener<MouseDownEvent>([this](const MouseDownEvent& event) {
@@ -55,7 +59,8 @@ void CanvasElement::initialize(Document& document) {
             return;
         }
         captureMouse();  // 捕獲滑鼠事件，避免滑鼠移出畫布時無法接收 MouseUp 事件
-        handleDraftEvent(_activeTool->onMouseDown(event));
+        Point localPosition = windowToLocal(event.position());
+        handleDraftEvent(_activeTool->onMouseDown(event, localPosition));
     });
 
     addEventListener<MouseUpEvent>([this](const MouseUpEvent& event) {
@@ -64,7 +69,8 @@ void CanvasElement::initialize(Document& document) {
             return;
         }
         releaseMouseCapture();  // 釋放滑鼠事件捕獲
-        handleDraftEvent(_activeTool->onMouseUp(event));
+        Point localPosition = windowToLocal(event.position());
+        handleDraftEvent(_activeTool->onMouseUp(event, localPosition));
     });
 
     addEventListener<MouseMoveEvent>([this](const MouseMoveEvent& event) {
@@ -72,12 +78,8 @@ void CanvasElement::initialize(Document& document) {
         if (!isDrawing()) {
             return;
         }
-        handleDraftEvent(_activeTool->onMouseMove(event));
-    });
-
-    addEventListener<ElementResizeEvent>([this](const ElementResizeEvent& event) {
-        _document.setCanvasSize(event.width(), event.height());
-        // Element::onResize(event);
+        Point localPosition = windowToLocal(event.position());
+        handleDraftEvent(_activeTool->onMouseMove(event, localPosition));
     });
 
     resetTool();

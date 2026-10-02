@@ -26,6 +26,7 @@ const float CLICK_MOVE_THRESHOLD = 4.0f;
 const std::chrono::milliseconds DOUBLE_CLICK_TIME_THRESHOLD(300);
 
 class Element;
+class RootElement;
 
 class Window : public EventTarget {
    public:
@@ -52,7 +53,7 @@ class Window : public EventTarget {
 
     // Content
 
-    void setRootElement(std::unique_ptr<Element> rootElement);
+    void setContent(std::unique_ptr<Element> content);
 
    protected:
     friend class Element;
@@ -150,7 +151,7 @@ class Window : public EventTarget {
 
     // Element tree
 
-    std::unique_ptr<Element> _rootElement;
+    std::unique_ptr<RootElement> _rootElement;
 
     // Interaction state
 

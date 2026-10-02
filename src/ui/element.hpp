@@ -39,12 +39,29 @@ class Element : public EventTarget {
     int height() const { return _bounds.height; }
 
     const Size& preferredSize() const { return _preferredSize; }
+    void setPreferredSize(const Size& size);
+
     const Size& desiredSize() const { return _desiredSize; }
+
     const Margin& margin() const { return _margin; }
+    void setMargin(const Margin& margin);
+
     const Padding& padding() const { return _padding; }
+    void setPadding(const Padding& padding);
+
     const Alignment& horizontalAlignment() const { return _horizontalAlignment; }
+    void setHorizontalAlignment(Alignment alignment);
+
     const Alignment& verticalAlignment() const { return _verticalAlignment; }
+    void setVerticalAlignment(Alignment alignment);
+
     const BoundingBox& bounds() const { return _bounds; }
+
+    Point windowToLocal(Point point) const;
+    Point localToWindow(Point point) const;
+
+    Size measure(const Size& availableSize);  // 傳入可用大小，返回元素的需求大小
+    void arrange(const BoundingBox& slots);   // 傳入元素的邊界，安排元素的佈局
 
     Element* hitTest(Point point) { return const_cast<Element*>(std::as_const(*this).hitTest(point)); }
     const Element* hitTest(Point point) const;
@@ -52,8 +69,13 @@ class Element : public EventTarget {
     // State
 
     bool isVisible() const { return _visible; }
+    void setVisible(bool visible);
+
     bool isEnabled() const { return _enabled; }
+    void setEnabled(bool enabled);
+
     bool isFocusable() const { return _focusable; }
+    void setFocusable(bool focusable);
 
     // Tree
 
@@ -71,27 +93,12 @@ class Element : public EventTarget {
    protected:
     // Geometry
 
-    void setPreferredSize(const Size& size);
-    void setMargin(const Margin& margin);
-    void setPadding(const Padding& padding);
-    void setHorizontalAlignment(Alignment alignment);
-    void setVerticalAlignment(Alignment alignment);
-
-    Size measure(const Size& availableSize);  // 傳入可用大小，返回元素的需求大小
-    void arrange(const BoundingBox& bounds);  // 傳入元素的邊界，安排元素的佈局
-
     bool contains(Point point) const { return _bounds.contains(point); }
 
     virtual Size measureContent(const Size& availableSize) { return {0, 0}; }  // 由子類別實現
     virtual void arrangeContent(const BoundingBox& bounds) {}                  // 由子類別實現
 
     void invalidateLayout();
-
-    // State
-
-    void setVisible(bool visible);
-    void setEnabled(bool enabled);
-    void setFocusable(bool focusable);
 
     // Interaction
 
@@ -110,13 +117,10 @@ class Element : public EventTarget {
    private:
     friend class Window;
 
-    // Rendering
-
-    void render(RenderContext& context);
-
     // Geometry
 
-    Size _preferredSize, _desiredSize;  // 優先大小與實際需求大小
+    Size _preferredSize;                     // 元素的首選大小，可能為 auto
+    Size _desiredSize, _desiredElementSize;  // 實際需求大小(含 margin)、內容需求大小(不含 margin)
     Margin _margin;
     Padding _padding;
     Alignment _horizontalAlignment = Alignment::Start;
@@ -128,6 +132,10 @@ class Element : public EventTarget {
     bool _visible = true;
     bool _enabled = true;
     bool _focusable = false;
+
+    // Rendering
+
+    void render(RenderContext& context);
 
     // Tree
 
