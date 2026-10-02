@@ -201,7 +201,7 @@ Element& Element::appendChild(std::unique_ptr<Element> child) {
     child->_parent = this;
     _children.push_back(std::move(child));
 
-    invalidateDisplay();
+    invalidateLayout();
 
     return *_children.back();
 }
@@ -228,7 +228,7 @@ std::unique_ptr<Element> Element::removeChild(Element* child) {
 
     removedChild->_parent = nullptr;
 
-    invalidateDisplay();
+    invalidateLayout();
 
     return removedChild;
 }
