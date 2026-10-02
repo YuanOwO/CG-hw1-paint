@@ -83,7 +83,7 @@ void Window::setRootElement(std::unique_ptr<Element> rootElement) {
         _rootElement->_window = this;
     }
 
-    requestRedisplay();
+    requestLayout();
 }
 
 #pragma endregion  // Content
@@ -115,9 +115,41 @@ void Window::setFocusedElement(Element* element) {
 
 #pragma endregion  // Input state
 
+#pragma region Geometry
+
+void Window::requestLayout() {
+    _layoutDirty = true;
+    requestRedisplay();  // 標記視窗需要重繪，因為佈局變化可能影響渲染
+}
+
+void Window::updateLayout() {
+    // 如果沒有根元素，則不需要進行佈局計算
+    if (!_rootElement) {
+        _layoutDirty = false;
+        return;
+    }
+
+    const Size availableSize{_width, _height};
+
+    _rootElement->measure(availableSize);
+    _rootElement->arrange({0, 0, _width, _height});
+
+    _layoutDirty = false;
+}
+
+void Window::ensureLayout() {
+    if (_layoutDirty) {
+        updateLayout();
+    }
+}
+
+#pragma endregion  // Geometry
+
 #pragma region Rendering
 
 void Window::render() {
+    ensureLayout();  // 確保佈局是最新的
+
     RenderContext context;
 
     if (_rootElement) {
@@ -150,9 +182,12 @@ void Window::requestCachedRedisplay() {
 #pragma region Element interaction
 
 Element* Window::hitTest(Point point) {
+    ensureLayout();
+
     if (_rootElement) {
         return _rootElement->hitTest(point);
     }
+
     return nullptr;
 }
 
@@ -313,7 +348,7 @@ void Window::reshapeCallback(int width, int height) {
 
     window->dispatchEvent(event);
 
-    window->requestRedisplay();
+    window->requestLayout();
 }
 
 void Window::visibilityCallback(int state) {

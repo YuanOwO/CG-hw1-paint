@@ -17,10 +17,8 @@ PaintWindow::PaintWindow(Application& app, const std::string& title, int width, 
     : Window(app, title, width, height) {
     setupMenu();
 
-    BoundingBox canvasBounds(0, 0, width, height);  // 預留 10 像素給菜單
-
     // 設置根元素為 CanvasElement
-    auto canvas = std::make_unique<ui::CanvasElement>(canvasBounds, _document);
+    auto canvas = std::make_unique<ui::CanvasElement>(_document);
     _canvas = canvas.get();
     setRootElement(std::move(canvas));
     setFocusedElement(_canvas);  // 將焦點設置為 CanvasElement
@@ -32,11 +30,11 @@ PaintWindow::PaintWindow(Application& app, const std::string& title, int width, 
     _shortcutManager.bind({Mod::Primary, Key::S}, [this]() { _document.save(); });
     _shortcutManager.bind({Mod::Primary, Key::N}, [this]() { newFile(); });
     _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::N}, [this]() { newWindow(); });
+    _shortcutManager.bind({Mod::Primary, Key::C}, [this]() { close(); });
     _shortcutManager.bind({Mod::Primary, Key::R}, [this]() {
         requestCachedRedisplay();
         resetInputState();
     });
-    _shortcutManager.bind({Mod::Ctrl, Key::C}, [this]() { std::exit(0); });
     _shortcutManager.bind({Key::F5}, [this]() { _canvas->clear(); });
 
     // 設置工具快捷鍵
@@ -102,7 +100,7 @@ void PaintWindow::setupMenu() {
 
     _menu.addMenuEntry("Grid", [this]() { _canvas->setGridVisibility(!_canvas->isGridVisible()); });
 
-    _menu.addMenuEntry("Close", [this]() { this->close(); });
+    _menu.addMenuEntry("Close", [this]() { close(); });
 
     _menu.attach(MouseButton::MouseRight);
 }

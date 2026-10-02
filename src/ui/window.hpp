@@ -50,10 +50,6 @@ class Window : public EventTarget {
 
     bool shouldClose() const { return _shouldClose; }
 
-    void setTitle(const std::string& title);
-
-    void close();
-
     // Content
 
     void setRootElement(std::unique_ptr<Element> rootElement);
@@ -65,6 +61,10 @@ class Window : public EventTarget {
 
     app::Application& app() { return _app; }
 
+    void setTitle(const std::string& title);
+
+    void close();
+
     // Input state
 
     const KeyboardState& keyboardState() const { return _keyboardState; }
@@ -74,9 +74,14 @@ class Window : public EventTarget {
     void resetInputState();
     void setFocusedElement(Element* element);
 
+    // Geometry
+
+    void requestLayout();
+    void ensureLayout();
+
     // Rendering
 
-    virtual void render();
+    void render();
 
     void requestRedisplay();
     void requestCachedRedisplay();
@@ -129,6 +134,12 @@ class Window : public EventTarget {
     bool _shouldClose = false;
 
     app::Application& _app;
+
+    // Geometry
+
+    void updateLayout();  // 更新佈局
+
+    bool _layoutDirty = true;
 
     // Rendering
 

@@ -17,12 +17,21 @@ namespace paint::ui {
 
 class CanvasElement : public Element {
    public:
-    CanvasElement(BoundingBox bounds, Document& document);
+    template <typename... Args>
+    CanvasElement(Document& document, Args&&... args)
+        : Element(std::forward<Args>(args)...),
+          _gridVisible(true),
+          _document(document),
+          _currentTool(drawing::Tool::TOOL_PENCIL) {
+        initialize(document);
+    }
+
+    void initialize(Document& document);
 
     bool isGridVisible() const { return _gridVisible; }
     void setGridVisibility(bool visible) {
         _gridVisible = visible;
-        invalidate();
+        invalidateDisplay();
     }
 
     const drawing::Tool currentTool() const { return _currentTool; }
@@ -39,6 +48,8 @@ class CanvasElement : public Element {
     void clear();
 
    protected:
+    Size measureContent(const Size& availableSize) override;
+
     void renderContent(RenderContext& context) override;
     void renderContent(RenderContext& context, bool includeGrid);
 

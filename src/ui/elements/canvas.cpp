@@ -6,11 +6,12 @@
 
 namespace paint::ui {
 
-CanvasElement::CanvasElement(BoundingBox bounds, Document& document)
-    : Element(bounds), _gridVisible(true), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
+void CanvasElement::initialize(Document& document) {
     setFocusable(true);  // CanvasElement 可以接收鍵盤事件
+    setHorizontalAlignment(Alignment::Stretch);
+    setVerticalAlignment(Alignment::Stretch);
 
-    _document.setCanvasSize(bounds.width, bounds.height);
+    _document.setCanvasSize(bounds().width, bounds().height);
 
     _currentStyle.stroke.width = 1;
     _currentStyle.stroke.color = ColorRGBA(Color::Black);
@@ -109,7 +110,7 @@ void CanvasElement::undo() {
         _document.undo();
     }
 
-    invalidate();
+    invalidateDisplay();
 }
 
 void CanvasElement::redo() {
@@ -118,13 +119,13 @@ void CanvasElement::redo() {
     }
 
     _document.redo();
-    invalidate();
+    invalidateDisplay();
 }
 
 void CanvasElement::clear() {
     _document.clearScene();
     resetTool();
-    invalidate();
+    invalidateDisplay();
 }
 
 void CanvasElement::resetTool() {
@@ -141,13 +142,18 @@ void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
         [[fallthrough]];
     case drawing::ToolEventResult::UPDATE:  // 注意：這裡故意不 break，因為 COMMIT, CANCEL
                                             // 也需要重新繪製畫布
-        invalidate();
+        invalidateDisplay();
         break;
     case drawing::ToolEventResult::NONE:
     default:
         // 不需要提交草稿，繼續繪製
         break;
     }
+}
+
+Size CanvasElement::measureContent(const Size& availableSize) {
+    // 如果 availableSize 為 auto，則返回 (0, 0) 作為需求大小，表示畫布可以自由擴展。
+    return {availableSize.width.value_or(0), availableSize.height.value_or(0)};
 }
 
 void CanvasElement::renderContent(RenderContext& context) {

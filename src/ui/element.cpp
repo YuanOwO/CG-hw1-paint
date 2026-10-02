@@ -3,11 +3,37 @@
 #include <algorithm>
 
 #include "common/point.hpp"
+#include "event/events.hpp"
 #include "ui/window.hpp"
 
 namespace paint::ui {
 
 #pragma region Geometry
+
+void Element::setPreferredSize(const Size& size) {
+    _preferredSize = size;
+    invalidateLayout();
+}
+
+void Element::setMargin(const Margin& margin) {
+    _margin = margin;
+    invalidateLayout();
+}
+
+void Element::setPadding(const Padding& padding) {
+    _padding = padding;
+    invalidateLayout();
+}
+
+void Element::setHorizontalAlignment(Alignment alignment) {
+    _horizontalAlignment = alignment;
+    invalidateLayout();
+}
+
+void Element::setVerticalAlignment(Alignment alignment) {
+    _verticalAlignment = alignment;
+    invalidateLayout();
+}
 
 const Element* Element::hitTest(Point point) const {
     // 如果元素不可見、不可用，或者點不在元素範圍內，則返回 nullptr
@@ -33,30 +59,83 @@ const Element* Element::hitTest(Point point) const {
     return this;
 }
 
-void Element::setBounds(const BoundingBox& bounds) {
-    if (bounds.width < 0 || bounds.height < 0) {
-        throw std::invalid_argument("Element size cannot be negative");
+Size Element::measure(const Size& availableSize) {
+    const auto paddingWidth = _padding.horizontal();
+    const auto paddingHeight = _padding.vertical();
+
+    Size contentAvailableSize = availableSize;
+
+    // 減去 padding 後的可用大小
+    if (contentAvailableSize.width) {
+        contentAvailableSize.width = std::max(0, *contentAvailableSize.width - paddingWidth);
+    }
+    if (contentAvailableSize.height) {
+        contentAvailableSize.height = std::max(0, *contentAvailableSize.height - paddingHeight);
     }
 
+    const Size contentDesiredSize = measureContent(contentAvailableSize);
+
+    // 檢查 measureContent() 返回的需求大小是否合法
+    if (!contentDesiredSize.width.has_value() || !contentDesiredSize.height.has_value()) {
+        throw std::runtime_error("measureContent() must return a concrete desired size");
+    }
+    if (*contentDesiredSize.width < 0 || *contentDesiredSize.height < 0) {
+        throw std::runtime_error("measureContent() returned a negative desired size");
+    }
+
+    // 計算元素的最終需求大小，考慮 padding 與優先大小
+    _desiredSize.width = std::max(_preferredSize.width.value_or(0), *contentDesiredSize.width + paddingWidth);
+    _desiredSize.height =
+        std::max(_preferredSize.height.value_or(0), *contentDesiredSize.height + paddingHeight);
+
+    // 如果 availableSize 有限制，則將需求大小限制在 availableSize 內
+    if (availableSize.width) {
+        _desiredSize.width = std::min(*_desiredSize.width, *availableSize.width);
+    }
+    if (availableSize.height) {
+        _desiredSize.height = std::min(*_desiredSize.height, *availableSize.height);
+    }
+
+    return _desiredSize;
+}
+
+void Element::arrange(const BoundingBox& bounds) {
     const auto oldBounds = _bounds;
 
-    if (oldBounds == bounds) {
-        return;  // 如果邊界沒有改變，則不需要做任何操作
+    const bool moved = oldBounds.topLeft() != bounds.topLeft();
+    const bool resized = oldBounds.width != bounds.width || oldBounds.height != bounds.height;
+
+    _bounds = bounds;  // 記錄元素的邊界
+
+    // 重新計算元素內的局域座標系，考慮 padding
+    BoundingBox contentBounds{
+        _padding.left,
+        _padding.top,
+        std::max(0, bounds.width - _padding.horizontal()),
+        std::max(0, bounds.height - _padding.vertical()),
+    };
+
+    arrangeContent(contentBounds);
+
+    if (moved) {
+        ElementMoveEvent event(oldBounds.topLeft(), bounds.topLeft());
+        dispatchEvent(event);
     }
 
-    _bounds = bounds;
-
-    if (oldBounds.topLeft() != bounds.topLeft()) {
-        ElementMoveEvent moveEvent(oldBounds.topLeft(), bounds.topLeft());
-        dispatchEvent(moveEvent);
+    if (resized) {
+        ElementResizeEvent event(bounds.width, bounds.height);
+        dispatchEvent(event);
     }
 
-    if (oldBounds.width != bounds.width || oldBounds.height != bounds.height) {
-        ElementResizeEvent resizeEvent(bounds.width, bounds.height);
-        dispatchEvent(resizeEvent);
+    if (moved || resized) {
+        invalidateDisplay();  // 標記元素需要重繪
     }
+}
 
-    invalidate();
+void Element::invalidateLayout() {
+    if (auto* w = window()) {
+        w->requestLayout();
+    }
 }
 
 #pragma endregion  // Geometry
@@ -78,7 +157,7 @@ void Element::setVisible(bool visible) {
         dispatchEvent(event);
     }
 
-    invalidate();
+    invalidateDisplay();
 }
 
 void Element::setEnabled(bool enabled) {
@@ -87,7 +166,7 @@ void Element::setEnabled(bool enabled) {
     }
 
     _enabled = enabled;
-    invalidate();
+    invalidateDisplay();
 }
 
 void Element::setFocusable(bool focusable) {
@@ -96,7 +175,7 @@ void Element::setFocusable(bool focusable) {
     }
 
     _focusable = focusable;
-    invalidate();
+    invalidateDisplay();
 }
 
 #pragma endregion  // State
@@ -122,7 +201,7 @@ Element& Element::appendChild(std::unique_ptr<Element> child) {
     child->_parent = this;
     _children.push_back(std::move(child));
 
-    invalidate();
+    invalidateDisplay();
 
     return *_children.back();
 }
@@ -149,7 +228,7 @@ std::unique_ptr<Element> Element::removeChild(Element* child) {
 
     removedChild->_parent = nullptr;
 
-    invalidate();
+    invalidateDisplay();
 
     return removedChild;
 }
@@ -181,7 +260,7 @@ void Element::releaseMouseCapture() {
 
 #pragma region Rendering
 
-void Element::invalidate() {
+void Element::invalidateDisplay() {
     if (auto* w = window()) {
         w->requestRedisplay();
     }
