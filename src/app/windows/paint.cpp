@@ -6,6 +6,7 @@
 
 #include "app/application.hpp"
 #include "app/windows/confirm.hpp"
+#include "app/windows/input_dialog.hpp"
 #include "common/font.hpp"
 #include "ui/elements/dock_panel.hpp"
 #include "ui/elements/stack_panel.hpp"
@@ -120,9 +121,42 @@ void PaintWindow::newFile() {
 }
 
 void PaintWindow::loadFile() {
-    const Path filename = "example.gpt";  // 這裡可以替換為實際的文件選擇邏輯
-    _document.load(filename);
-    requestRedisplay();
+    const std::string initialFilename =
+        _document.filename().empty() ? "" : _document.filename().string();
+
+    auto& app = app::Application::current();
+    app.createWindow<InputDialogWindow>(
+        "Open", "Please enter a filename:", initialFilename,
+        [this](const std::string& value) {
+            Path filename(value);
+            if (!filename.has_extension()) {
+                filename += ".gpt";
+            }
+
+            _document.load(filename);
+            requestRedisplay();
+        },
+        nullptr,
+        [](const std::string& value) -> std::optional<std::string> {
+            Path filename(value);
+            if (!filename.has_extension()) {
+                filename += ".gpt";
+            }
+
+            std::error_code error;
+            const bool exists = std::filesystem::exists(filename, error);
+            if (error) {
+                return "Unable to access the file.";
+            }
+            if (!exists || !std::filesystem::is_regular_file(filename, error)) {
+                return "File does not exist.";
+            }
+            if (error) {
+                return "Unable to access the file.";
+            }
+
+            return std::nullopt;
+        });
 }
 
 void PaintWindow::saveFile() {
@@ -134,13 +168,57 @@ void PaintWindow::saveFile() {
 }
 
 void PaintWindow::saveFileAs() {
-    const Path filename = "example_save.gpt";  // 這裡可以替換為實際的文件選擇邏輯
-    _document.save(filename);
+    const std::string initialFilename =
+        _document.filename().empty() ? "untitled.gpt" : _document.filename().filename().string();
+
+    auto& app = app::Application::current();
+    app.createWindow<InputDialogWindow>(
+        "Save As", "Please enter a filename:", initialFilename, [this](const std::string& value) {
+            Path filename(value);
+
+            if (!filename.has_extension()) {
+                filename += ".gpt";
+            }
+
+            if (!std::filesystem::exists(filename)) {
+                _document.save(filename);
+                return;
+            }
+
+            auto& app = Application::current();
+
+            app.createWindow<ConfirmWindow>(
+                "File Already Exists",
+                "The file \"" + filename.string() + "\" already exists.\nDo you want to replace it?",
+                [this, filename]() { _document.save(filename); });
+        });
 }
 
 void PaintWindow::exportFile() {
-    const Path filename = "example_export.ppm";  // 這裡可以替換為實際的文件選擇邏輯
-    _document.exportImage(filename);
+    const std::string initialFilename =
+        _document.filename().empty() ? "untitled.ppm" : _document.filename().stem().string() + ".ppm";
+
+    auto& app = app::Application::current();
+    app.createWindow<InputDialogWindow>(
+        "Export", "Please enter an image filename:", initialFilename,
+        [this](const std::string& value) {
+            Path filename(value);
+
+            if (!filename.has_extension()) {
+                filename += ".ppm";
+            }
+
+            if (!std::filesystem::exists(filename)) {
+                _document.exportImage(filename);
+                return;
+            }
+
+            auto& app = Application::current();
+            app.createWindow<ConfirmWindow>(
+                "File Already Exists",
+                "The file \"" + filename.string() + "\" already exists.\nDo you want to replace it?",
+                [this, filename]() { _document.exportImage(filename); });
+        });
 }
 
 void PaintWindow::newWindow() {
