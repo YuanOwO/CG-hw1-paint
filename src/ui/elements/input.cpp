@@ -24,9 +24,6 @@ InputElement::InputElement(std::string value, std::string placeholder)
     auto text = std::make_unique<TextElement>("", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
     _textElement = text.get();
 
-    // TextElement 只負責顯示。讓 hit test 落在 InputElement，點擊文字時
-    // InputElement 才能成為 Window 的 focused element。
-    _textElement->setEnabled(false);
     _textElement->setVerticalAlignment(Alignment::Center);
     appendChild(std::move(text));
 

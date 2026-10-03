@@ -311,9 +311,8 @@ void Window::timerCallback(int windowId) {
         window->_colorBuffer.capture(0, 0, window->_width, window->_height);
         window->_needsCapture = false;
 
-        // glutGetWindow() may briefly keep returning the ID of a window whose
-        // native X11 drawable has already been destroyed. Restoring that stale
-        // window makes the next pixel operation fail with X11 BadDrawable.
+        // glutGetWindow() 可能暫時回傳已被銷毀的視窗 ID。若切回這個失效視窗，
+        // 下一次像素操作就會觸發 X11 BadDrawable 錯誤。
         if (previousWindow != 0 && previousWindow != windowId &&
             windows.find(previousWindow) != windows.end()) {
             glutSetWindow(previousWindow);
@@ -608,9 +607,13 @@ void Window::mouseCallback(int button, int state, int x, int y) {
 
         auto target = window->dispatchMouseEvent<MouseDownEvent>(event);
 
-        if (target && target->isFocusable()) {
-            window->setFocusedElement(target);
+        // 滑鼠事件仍送到最深層的命中元素；鍵盤焦點則沿 parent 往上尋找
+        // 最近的可聚焦元素。
+        Element* focusTarget = target;
+        while (focusTarget != nullptr && !focusTarget->isFocusable()) {
+            focusTarget = focusTarget->parent();
         }
+        window->setFocusedElement(focusTarget);
 
     } else if (state == GLUT_UP) {
         window->_mouseState._release(btn);
