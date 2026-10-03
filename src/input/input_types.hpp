@@ -152,6 +152,7 @@ inline bool operator!=(Key lhs, Mod rhs) {
 }
 
 Key mapCharacter(int glutKey);
+Key mapCharacterWithCtrl(int glutKey);
 Key mapSpecialKey(int glutKey);
 MouseButton mapMouseButton(int glutButton);
 

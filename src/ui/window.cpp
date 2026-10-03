@@ -483,7 +483,12 @@ void Window::keyUpHandler(Key key, int x, int y) {
 }
 
 void Window::keyboardCallback(unsigned char key, int x, int y) {
-    auto btn = mapCharacter(key);
+    Key btn;
+    if (_keyboardState.isDown(Key::LeftCtrl) || _keyboardState.isDown(Key::RightCtrl)) {
+        btn = mapCharacterWithCtrl(key);
+    } else {
+        btn = mapCharacter(key);
+    }
 
     // 未知按鈕，直接返回
     if (btn == Key::Unknown) {
@@ -494,7 +499,12 @@ void Window::keyboardCallback(unsigned char key, int x, int y) {
 }
 
 void Window::keyboardUpCallback(unsigned char key, int x, int y) {
-    auto btn = mapCharacter(key);
+    Key btn;
+    if (_keyboardState.isDown(Key::LeftCtrl) || _keyboardState.isDown(Key::RightCtrl)) {
+        btn = mapCharacterWithCtrl(key);
+    } else {
+        btn = mapCharacter(key);
+    }
 
     // 未知按鈕，直接返回
     if (btn == Key::Unknown) {

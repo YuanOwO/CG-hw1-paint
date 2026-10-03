@@ -221,6 +221,81 @@ Key mapCharacter(int glutKey) {
     }
 }
 
+Key mapCharacterWithCtrl(int glutKey) {
+    switch (glutKey) {
+    case 0:  // ^@
+        return Key::Digit2;
+    case 1:  // ^A
+        return Key::A;
+    case 2:  // ^B
+        return Key::B;
+    case 3:  // ^C
+        return Key::C;
+    case 4:  // ^D
+        return Key::D;
+    case 5:  // ^E
+        return Key::E;
+    case 6:  // ^F
+        return Key::F;
+    case 7:  // ^G
+        return Key::G;
+    case 8:  // ^H
+        return Key::H;
+    case 9:  // ^I
+        return Key::I;
+    case 10:  // ^J
+        return Key::J;
+    case 11:  // ^K
+        return Key::K;
+    case 12:  // ^L
+        return Key::L;
+    case 13:  // ^M
+        return Key::M;
+    case 14:  // ^N
+        return Key::N;
+    case 15:  // ^O
+        return Key::O;
+    case 16:  // ^P
+        return Key::P;
+    case 17:  // ^Q
+        return Key::Q;
+    case 18:  // ^R
+        return Key::R;
+    case 19:  // ^S
+        return Key::S;
+    case 20:  // ^T
+        return Key::T;
+    case 21:  // ^U
+        return Key::U;
+    case 22:  // ^V
+        return Key::V;
+    case 23:  // ^W
+        return Key::W;
+    case 24:  // ^X
+        return Key::X;
+    case 25:  // ^Y
+        return Key::Y;
+    case 26:  // ^Z
+        return Key::Z;
+    case 27:  // ^[
+        return Key::LeftBracket;
+    case 28:  // ^Backslash
+        return Key::Backslash;
+    case 29:  // ^]
+        return Key::RightBracket;
+    case 30:  // ^^
+        return Key::Digit6;
+    case 31:  // ^_
+        return Key::Minus;
+    case 127:  // ^?
+        return Key::Slash;
+
+    // Unhandled keys
+    default:
+        return Key::Unknown;
+    }
+}
+
 Key mapSpecialKey(int glutKey) {
     switch (glutKey) {
     // Navigation
