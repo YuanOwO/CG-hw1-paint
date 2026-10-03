@@ -67,6 +67,9 @@ class ExportCommand : public FileCommand {
 
     void execute() override {
         // 實現導出圖像的邏輯
+        auto data = _document.data();
+        data.filename = _filename;
+        PpmExporter::write(data);
     }
 
    private:

@@ -39,7 +39,7 @@ class Application {
         // 靜態斷言，確保 WindowType 是 Window 的衍生類
         static_assert(std::is_base_of_v<ui::Window, WindowType>, "WindowType must derive from Window");
 
-        auto window = std::make_unique<WindowType>(*this, std::forward<Args>(args)...);
+        auto window = std::make_unique<WindowType>(std::forward<Args>(args)...);
 
         WindowType& windowRef = *window;
         _windows.push_back(std::move(window));

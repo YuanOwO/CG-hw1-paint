@@ -1,6 +1,7 @@
 #include "app/windows/paint.hpp"
 
 #include <cstdlib>
+#include <iostream>
 #include <memory>
 #include <utility>
 
@@ -16,8 +17,7 @@ using paint::drawing::Tool;
 
 namespace paint::app {
 
-PaintWindow::PaintWindow(Application& app, const std::string& title, int width, int height)
-    : Window(app, title, width, height) {
+PaintWindow::PaintWindow(const std::string& title, int width, int height) : Window(title, width, height) {
     setupContent();
     setupMenu();
     setupShortcuts();
@@ -32,19 +32,18 @@ PaintWindow::PaintWindow(Application& app, const std::string& title, int width, 
     });
 
     addEventListener<MouseMoveEvent>([this](MouseMoveEvent& event) {
-        if (_canvas) {
-            Point position = _canvas->windowToLocal(event.position());
-            _positionText->setText("Pos: (" + std::to_string(position.x()) + ", " +
-                                   std::to_string(position.y()) + ")");
-        }
+        Point position = _canvas->windowToLocal(event.position());
+        _positionText->setText("Pos: (" + std::to_string(position.x()) + ", " + std::to_string(position.y()) +
+                               ")");
     });
 
     _canvas->addEventListener<ElementResizeEvent>([this](ElementResizeEvent& event) {
-        if (_canvas) {
-            Size size = _canvas->desiredSize();
-            _sizeText->setText("Size: (" + std::to_string(size.width.value()) + ", " +
-                               std::to_string(size.height.value()) + ")");
-        }
+        _document.setCanvasSize(event.width(), event.height());
+
+        std::cout << "Canvas resized to: " << event.width() << "x" << event.height() << std::endl;
+
+        _sizeText->setText("Size: (" + std::to_string(event.width()) + ", " + std::to_string(event.height()) +
+                           ")");
     });
 }
 
@@ -158,7 +157,8 @@ void PaintWindow::newFile() {
 }
 
 void PaintWindow::newWindow() {
-    app().createWindow<PaintWindow>(app().name(), width(), height());
+    auto& app = app::Application::current();
+    app.createWindow<PaintWindow>(app.name(), width(), height());
 }
 
 #pragma region Main Menu
@@ -170,7 +170,10 @@ void PaintWindow::setupMenu() {
     fileMenu.addMenuEntry("Load", [this]() {});
     fileMenu.addMenuEntry("Save", [this]() { _document.save(); });
     fileMenu.addMenuEntry("Save As", [this]() {});
-    fileMenu.addMenuEntry("Export", [this]() {});
+    fileMenu.addMenuEntry("Export", [this]() {
+        const Path output = std::filesystem::absolute("drawing.ppm");
+        _document.exportImage(output);
+    });
 
     auto& editMenu = _menu.addSubMenu("Edit");
     editMenu.addMenuEntry("Undo", [this]() { _canvas->undo(); });

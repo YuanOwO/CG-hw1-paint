@@ -5,72 +5,83 @@
 namespace paint {
 
 void ColorBuffer::capture(int x, int y, int width, int height) {
+    // 擷取目前 GLUT 視窗的指定區域；呼叫前需先選定視窗並完成繪製。
+    // (x, y) 為區域左上角的視窗座標，擷取範圍須位於視窗內。
     if (width <= 0 || height <= 0) {
         invalidate();
         return;
     }
 
-    // 每個像素依序保存 R、G、B、A，各占 1 byte。
-    _pixels.resize(static_cast<std::size_t>(width) * height * 4);  // RGBA
+    // 視窗座標以左上角為原點、Y 向下；glReadPixels 以左下角為原點、Y 向上。
+    // 將區域左上角的 Y 轉成左下角的 Y，X 不變。
+    const int windowHeight = glutGet(GLUT_WINDOW_HEIGHT);
+    const int bottom = windowHeight - y - height;
 
-    // OpenGL 設定由同一 context 的繪圖程式共用，先保存本函式會修改的設定。
+    // 每個像素儲存 RGBA 四個通道，各占 1 byte。
+    _pixels.resize(static_cast<std::size_t>(width) * height * 4);
+
+    // 保存本函式會修改的 OpenGL 狀態。
     GLint oldAlignment;
     GLint oldReadBuffer;
     glGetIntegerv(GL_PACK_ALIGNMENT, &oldAlignment);
     glGetIntegerv(GL_READ_BUFFER, &oldReadBuffer);
 
-    // 目前使用 GLUT_SINGLE，顯示與繪製都在 front buffer。
+    // 目前使用 GLUT_SINGLE，因此從 front buffer 讀取。
+    // PACK_ALIGNMENT 設為 1，讓輸出的每列像素緊密排列，不加入對齊填補。
     glReadBuffer(GL_FRONT);
-    // PACK 控制 OpenGL 寫入主記憶體時的列對齊；1 表示每列不補齊額外 bytes。
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-    // 讀取範圍從 framebuffer 左下角 (x, y) 開始，不受投影矩陣影響。
-    // 資料逐列由下往上排列；restore 沿用此順序，因此不需要上下翻轉。
-    glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, _pixels.data());
+    // 像素由下往上逐列讀回；上述座標轉換不會翻轉像素資料。
+    glReadPixels(x, bottom, width, height, GL_RGBA, GL_UNSIGNED_BYTE, _pixels.data());
 
-    // 恢復之前的 OpenGL 狀態
+    // 還原 OpenGL 狀態，避免影響後續操作。
     glPixelStorei(GL_PACK_ALIGNMENT, oldAlignment);
     glReadBuffer(oldReadBuffer);
 
+    // 記錄擷取尺寸，並將緩衝區標記為有效。
     _width = width;
     _height = height;
     _valid = true;
 }
 
-void ColorBuffer::restore() const {
+void ColorBuffer::restore(int x, int y) const {
     if (!_valid) {
         return;
     }
 
-    // UNPACK_ALIGNMENT 屬於 client pixel-store 狀態，不由下方 glPushAttrib 保存，
-    // 因此需另外記錄並恢復。
+    // (x, y) 為還原區域左上角的視窗座標。
+    // 將 Y 轉成 OpenGL 視窗座標中的區域底部位置。
+    const int windowHeight = glutGet(GLUT_WINDOW_HEIGHT);
+    const int bottom = windowHeight - y - _height;
+
+    // UNPACK_ALIGNMENT 屬於 client 狀態，需另外保存。
     GLint oldAlignment;
     glGetIntegerv(GL_UNPACK_ALIGNMENT, &oldAlignment);
 
-    // 保存接下來會改動的 buffer、測試、像素縮放與光柵位置等狀態。
+    // 保存接下來會修改的繪圖、測試與像素操作狀態。
     glPushAttrib(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT | GL_SCISSOR_BIT |
                  GL_PIXEL_MODE_BIT | GL_CURRENT_BIT);
 
-    // 直接覆寫保存的顏色，避免再次混色，或被深度、模板、裁切與 alpha 測試擋住。
+    // 目前使用 GLUT_SINGLE，因此寫入 front buffer。
+    // 直接覆寫像素，避免混色、測試或裁切影響還原結果。
     glDrawBuffer(GL_FRONT);
     glDisable(GL_BLEND);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_STENCIL_TEST);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_ALPHA_TEST);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);  // 允許寫入所有顏色通道。
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
-    // UNPACK 控制從主記憶體讀取像素的列對齊，需與保存時的資料排列一致。
+    // 像素資料緊密排列，並以原尺寸還原。
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glPixelZoom(1.0f, 1.0f);  // 原尺寸還原，不縮放也不翻轉。
+    glPixelZoom(1.0f, 1.0f);
 
-    // glRasterPos 會經過矩陣轉換。此處依賴 Window 的
-    // glOrtho(0, width, height, 0, -1, 1) 與單位 model-view：
-    // 畫布座標 (0, height) 對應 framebuffer 左下角，作為像素寫入起點。
-    glRasterPos2i(0, _height);
+    // 直接指定左下角的 OpenGL 視窗座標，不受投影與模型視圖矩陣影響。
+    // capture() 保存的像素由下往上排列，因此不需翻轉。
+    glWindowPos2i(x, bottom);
     glDrawPixels(_width, _height, GL_RGBA, GL_UNSIGNED_BYTE, _pixels.data());
 
-    // 恢復狀態，避免影響後續網格、圖形或草稿的繪製。
+    // 還原 OpenGL 狀態，避免影響後續繪製。
     glPixelStorei(GL_UNPACK_ALIGNMENT, oldAlignment);
     glPopAttrib();
 }

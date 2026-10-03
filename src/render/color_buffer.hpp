@@ -9,18 +9,18 @@ namespace paint {
 class ColorBuffer {
    public:
     void capture(int x, int y, int width, int height);
-    void restore() const;
+    void restore(int x = 0, int y = 0) const;
 
     void resize(int width, int height);
 
     void fill(const ColorRGBA& color);
 
+    bool isValid() const { return _valid; }
     void invalidate() { _valid = false; }
 
     int width() const { return _width; }
     int height() const { return _height; }
-
-    bool isValid() const { return _valid; }
+    const std::vector<unsigned char>& pixels() const { return _pixels; }
 
     bool matchesSize(int width, int height) const { return _valid && _width == width && _height == height; }
 

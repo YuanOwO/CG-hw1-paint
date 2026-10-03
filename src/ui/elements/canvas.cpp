@@ -12,8 +12,6 @@ CanvasElement::CanvasElement(Document& document)
     setHorizontalAlignment(Alignment::Stretch);
     setVerticalAlignment(Alignment::Stretch);
 
-    _document.setCanvasSize(bounds().width, bounds().height);
-
     _currentStyle.stroke.width = 1;
     _currentStyle.stroke.color = ColorRGBA(Color::Black);
     _currentStyle.fill.color = ColorRGBA(Color::Transparent);

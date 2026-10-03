@@ -17,9 +17,8 @@ std::unordered_map<int, Window*> windows;
 
 KeyboardState Window::_keyboardState{};  // 全局的鍵盤狀態
 
-Window::Window(app::Application& app, const std::string& title, int width, int height, bool resizable)
-    : _app(app),
-      _title(title),
+Window::Window(const std::string& title, int width, int height, bool resizable)
+    : _title(title),
       _width(width),
       _height(height),
       _resizable(resizable),

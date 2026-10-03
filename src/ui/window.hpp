@@ -30,7 +30,7 @@ class RootElement;
 
 class Window : public EventTarget {
    public:
-    Window(app::Application& app, const std::string& title, int width, int height, bool resizable = true);
+    Window(const std::string& title, int width, int height, bool resizable = true);
     virtual ~Window();
 
     Window(const Window&) = delete;
@@ -59,8 +59,6 @@ class Window : public EventTarget {
     friend class Element;
 
     // Properties
-
-    app::Application& app() { return _app; }
 
     void setTitle(const std::string& title);
 
@@ -133,8 +131,6 @@ class Window : public EventTarget {
     bool _resizable;
 
     bool _shouldClose = false;
-
-    app::Application& _app;
 
     // Geometry
 

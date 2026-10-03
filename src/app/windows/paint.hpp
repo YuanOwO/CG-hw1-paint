@@ -15,7 +15,7 @@ class Application;
 
 class PaintWindow : public ui::Window {
    public:
-    PaintWindow(Application& app, const std::string& title, int width, int height);
+    PaintWindow(const std::string& title, int width, int height);
 
     ui::CanvasElement& canvas() { return *_canvas; }
 

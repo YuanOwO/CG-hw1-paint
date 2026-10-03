@@ -34,6 +34,11 @@ class Document {
    public:
     Document() {}
     Document(const Path& filename) : _filename(filename) {}
+    Document(DocumentData data)
+        : _filename(std::move(data.filename)),
+          _scene(std::move(data.scene)),
+          _canvasWidth(data.canvasWidth),
+          _canvasHeight(data.canvasHeight) {}
 
     // 禁止拷貝與移動操作，確保元素的唯一性
     Document(const Document&) = delete;
