@@ -71,7 +71,16 @@ void Window::setTitle(const std::string& title) {
     _title = title;
 
     if (_id != 0) {
+        const int previousWindow = glutGetWindow();
+        if (previousWindow != _id) {
+            glutSetWindow(_id);
+        }
+
         glutSetWindowTitle(_title.c_str());
+
+        if (previousWindow != 0 && previousWindow != _id) {
+            glutSetWindow(previousWindow);
+        }
     }
 }
 

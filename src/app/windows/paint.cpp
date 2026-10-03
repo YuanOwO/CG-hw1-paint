@@ -25,12 +25,16 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
     updateToolStatus();
 
     _document.onModifiedChanged = [this](bool modified) {
-        auto& app = Application::current();
-        if (modified) {
-            setTitle(app.name() + " *");
+        std::string title = Application::current().name();
+        if (_document.filename().empty()) {
+            title += " - Untitled";
         } else {
-            setTitle(app.name());
+            title += " - " + _document.filename().string();
         }
+        if (modified) {
+            title += "*";
+        }
+        setTitle(title);
     };
 
     addEventListener<WindowCloseEvent>([this](WindowCloseEvent&) { requestClose(); });
@@ -141,7 +145,7 @@ void PaintWindow::exportFile() {
 
 void PaintWindow::newWindow() {
     auto& app = app::Application::current();
-    app.createWindow<PaintWindow>(app.name(), width(), height());
+    app.createWindow<PaintWindow>(app.name() + " - Untitled", width(), height());
 }
 
 void PaintWindow::setupContent() {
@@ -204,7 +208,7 @@ void PaintWindow::setupShortcuts() {
     _shortcutManager.bind({Mod::Primary, Key::N}, [this]() { requestNewFile(); });
     _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::N}, [this]() { newWindow(); });
     _shortcutManager.bind({Mod::Primary, Key::O}, [this]() { requestLoadFile(); });
-    _shortcutManager.bind({Mod::Primary, Key::S}, [this]() { _document.save(); });
+    _shortcutManager.bind({Mod::Primary, Key::S}, [this]() { saveFile(); });
     _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::S}, [this]() { saveFileAs(); });
     _shortcutManager.bind({Mod::Primary, Key::E}, [this]() { exportFile(); });
     _shortcutManager.bind({Mod::Primary, Key::C}, [this]() { requestClose(); });

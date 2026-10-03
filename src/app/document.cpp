@@ -25,6 +25,7 @@ void Document::replaceContent(Scene scene, Path filename) {
     _scene = std::move(scene);
     _filename = std::move(filename);
     _history.reset();
+    markSaved();  // 替換內容後，標記為未修改
 }
 
 // 文件操作
@@ -42,15 +43,7 @@ void Document::load(const Path& filename) {
 }
 
 void Document::save() {
-    if (_filename.empty()) {
-        // 如果當前文件名為空，則需要提示用戶輸入文件名
-        // 這裡可以彈出一個對話框讓用戶輸入文件名，或者使用默認文件名
-        // 例如：
-        Path defaultFilename = DEFAULT_FILEPATH;
-        save(defaultFilename);
-    } else {
-        save(_filename);
-    }
+    save(_filename);
 }
 
 void Document::save(const Path& filename) {

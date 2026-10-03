@@ -18,8 +18,6 @@ using Path = std::filesystem::path;
 
 namespace paint::app {
 
-const Path DEFAULT_FILEPATH = "untitled.paint";
-
 struct DocumentData {
     Path filename;
     Scene scene;
