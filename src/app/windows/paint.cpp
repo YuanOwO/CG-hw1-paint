@@ -1,14 +1,13 @@
 #include "app/windows/paint.hpp"
 
 #include <cstdlib>
-#include <iostream>
 #include <memory>
 #include <utility>
 
 #include "app/application.hpp"
 #include "common/font.hpp"
-#include "ui/elements/dockPanel.hpp"
-#include "ui/elements/stackPanel.hpp"
+#include "ui/elements/dock_panel.hpp"
+#include "ui/elements/stack_panel.hpp"
 #include "ui/layout/bounding.hpp"
 
 using paint::drawing::LineCap;
@@ -39,8 +38,6 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
 
     _canvas->addEventListener<ElementResizeEvent>([this](ElementResizeEvent& event) {
         _document.setCanvasSize(event.width(), event.height());
-
-        std::cout << "Canvas resized to: " << event.width() << "x" << event.height() << std::endl;
 
         _sizeText->setText("Size: (" + std::to_string(event.width()) + ", " + std::to_string(event.height()) +
                            ")");

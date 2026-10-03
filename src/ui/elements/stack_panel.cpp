@@ -1,4 +1,4 @@
-#include "ui/elements/stackPanel.hpp"
+#include "ui/elements/stack_panel.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -97,11 +97,11 @@ void StackPanelElement::arrangeContent(const BoundingBox& contentBounds) {
             accumulatedGrow += grow;
             // 依累積權重計算像素邊界，避免每項獨立取整數而遺失像素。
             // 最後一個有 grow 的元素取得剩下的像素，確保完整分配。
-            const int cumulativeExtra = child.get() == lastGrowingChild
-                ? remaining
-                : std::clamp(static_cast<int>(std::floor(
-                                 remaining * accumulatedGrow / totalGrow)),
-                             allocatedExtra, remaining);
+            const int cumulativeExtra =
+                child.get() == lastGrowingChild
+                    ? remaining
+                    : std::clamp(static_cast<int>(std::floor(remaining * accumulatedGrow / totalGrow)),
+                                 allocatedExtra, remaining);
             extra = cumulativeExtra - allocatedExtra;
             allocatedExtra = cumulativeExtra;
         }

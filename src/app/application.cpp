@@ -2,6 +2,8 @@
 
 #include <GL/freeglut.h>
 
+#include <algorithm>
+
 namespace paint::app {
 
 namespace {

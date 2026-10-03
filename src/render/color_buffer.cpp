@@ -76,9 +76,28 @@ void ColorBuffer::restore(int x, int y) const {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glPixelZoom(1.0f, 1.0f);
 
-    // 直接指定左下角的 OpenGL 視窗座標，不受投影與模型視圖矩陣影響。
+    // 先在 identity 矩陣下建立有效 raster position，再以像素位移到目的地。
+    // glRasterPos 本身仍會套用矩陣，不能直接傳入視窗座標。
+    // 使用 OpenGL 1.1 的 glBitmap 位移，避免依賴 glWindowPos 擴充。
+    GLint matrixMode;
+    GLint viewport[4];
+    glGetIntegerv(GL_MATRIX_MODE, &matrixMode);
+    glGetIntegerv(GL_VIEWPORT, viewport);
+    glMatrixMode(GL_PROJECTION);
+    glPushMatrix();
+    glLoadIdentity();
+    glMatrixMode(GL_MODELVIEW);
+    glPushMatrix();
+    glLoadIdentity();
+    glRasterPos2f(0.0f, 0.0f);
+    glBitmap(0, 0, 0.0f, 0.0f, x - (viewport[0] + viewport[2] * 0.5f),
+             bottom - (viewport[1] + viewport[3] * 0.5f), nullptr);
+    glPopMatrix();
+    glMatrixMode(GL_PROJECTION);
+    glPopMatrix();
+    glMatrixMode(matrixMode);
+
     // capture() 保存的像素由下往上排列，因此不需翻轉。
-    glWindowPos2i(x, bottom);
     glDrawPixels(_width, _height, GL_RGBA, GL_UNSIGNED_BYTE, _pixels.data());
 
     // 還原 OpenGL 狀態，避免影響後續繪製。

@@ -1,4 +1,4 @@
-#include "ui/elements/dockPanel.hpp"
+#include "ui/elements/dock_panel.hpp"
 
 #include <algorithm>
 #include <utility>
