@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "common/point.hpp"
@@ -39,13 +40,27 @@ class IDrawingTool {
 
     virtual ToolEventResult finish() = 0;
 
-    virtual ToolEventResult onKeyDown(const KeyboardEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onKeyUp(const KeyboardEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onClick(const MouseClickEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onDoubleClick(const MouseClickEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onMouseDown(const MouseEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onMouseUp(const MouseEvent& event) { return ToolEventResult::NONE; }
-    virtual ToolEventResult onMouseMove(const MouseMoveEvent& event) { return ToolEventResult::NONE; }
+    virtual ToolEventResult onKeyDown(const KeyboardEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
+    virtual ToolEventResult onKeyUp(const KeyboardEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
+    virtual ToolEventResult onClick(const ClickEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
+    virtual ToolEventResult onDoubleClick(const ClickEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
+    virtual ToolEventResult onMouseDown(const MouseButtonEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
+    virtual ToolEventResult onMouseUp(const MouseButtonEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
+    virtual ToolEventResult onMouseMove(const MouseMoveEvent& event, Point localPosition) {
+        return ToolEventResult::NONE;
+    }
 };
 
 template <typename TShape>
@@ -64,6 +79,8 @@ class DrawingTool : public IDrawingTool {
     ShapeStyle _style;                         // 繪圖工具的樣式資訊
     std::unique_ptr<TShape> _draft = nullptr;  // 草稿形狀，供畫布在 display 時繪製
 };
+
+const std::string getToolName(const Tool& tool);
 
 std::unique_ptr<IDrawingTool> createDrawingTool(Tool tool, ShapeStyle style);
 

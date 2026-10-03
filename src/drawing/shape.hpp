@@ -9,16 +9,16 @@ namespace paint::drawing {
 
 class Shape {
    public:
-    Shape(ShapeStyle _style) : style(_style) {}
+    Shape(ShapeStyle style) : _style(style) {}
 
     virtual ~Shape() = default;
 
-    const ShapeStyle& getStyle() const { return style; }  // 取得形狀的樣式資訊
-    virtual bool isClosed() const = 0;                    // 是否為封閉形狀
-    virtual std::vector<Point> getVertices() const = 0;   // 採樣取得形狀的頂點座標，供繪製邊框使用
+    const ShapeStyle& style() const { return _style; }   // 取得形狀的樣式資訊
+    virtual bool isClosed() const = 0;                   // 是否為封閉形狀
+    virtual std::vector<Point> getVertices() const = 0;  // 採樣取得形狀的頂點座標，供繪製邊框使用
 
    protected:
-    const ShapeStyle style;
+    const ShapeStyle _style;
 };
 
 class PointShape : public Shape {
@@ -41,14 +41,14 @@ class TwoPointShape : public Shape {
    public:
     using Shape::Shape;
 
-    void setStart(const Point& point) { start = point; }
-    const Point& getStart() const { return start; }
+    void setStart(const Point& point) { _start = point; }
+    const Point& start() const { return _start; }
 
-    void setEnd(const Point& point) { end = point; }
-    const Point& getEnd() const { return end; }
+    void setEnd(const Point& point) { _end = point; }
+    const Point& end() const { return _end; }
 
    protected:
-    Point start, end;
+    Point _start, _end;
 };
 
 class Line : public TwoPointShape {

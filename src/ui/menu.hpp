@@ -8,24 +8,26 @@
 
 #include "input/input_types.hpp"
 
-namespace paint {
+namespace paint::ui {
 
 class Menu {
    public:
-    using Action = std::function<void()>;
+    using MenuAction = std::function<void()>;
 
     Menu();
     ~Menu();
 
-    // 禁止拷貝和賦值
+    // 禁止拷貝與移動操作，確保元素的唯一性
     Menu(const Menu&) = delete;
     Menu& operator=(const Menu&) = delete;
+    Menu(Menu&&) = delete;
+    Menu& operator=(Menu&&) = delete;
 
-    int getId() const { return _menuId; }
+    int id() const { return _menuId; }
 
     bool isEnabled() const { return _attachedButton != MouseButton::Unknown; }
 
-    void addMenuEntry(const std::string& label, Action action);
+    void addMenuEntry(const std::string& label, MenuAction action);
     Menu& addSubMenu(const std::string& label);
 
     void attach(MouseButton button);
@@ -35,7 +37,7 @@ class Menu {
     struct MenuItem {
         int id;
         std::string label;
-        Action action;
+        MenuAction action;
     };
 
     int _windowId = 0;
@@ -51,4 +53,4 @@ class Menu {
     static void menuCallback(int option);
 };
 
-}  // namespace paint
+}  // namespace paint::ui

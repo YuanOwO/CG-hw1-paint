@@ -56,7 +56,24 @@ void InputState<ButtonType>::_clear() {
 template class InputState<Key>;
 template class InputState<MouseButton>;
 
-void MouseState::_setMousePosition(int x, int y) {
+bool KeyboardState::isDown(Mod mod) const {
+    switch (mod) {
+    case Mod::Shift:
+        return isShiftDown();
+    case Mod::Ctrl:
+        return isCtrlDown();
+    case Mod::Alt:
+        return isAltDown();
+    case Mod::Super:
+        return isSuperDown();
+    case Mod::Primary:
+        return isPrimaryModifierDown();
+    default:
+        return false;
+    }
+}
+
+void MouseState::_setPosition(int x, int y) {
     _mouseX = x;
     _mouseY = y;
 }

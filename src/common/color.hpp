@@ -185,6 +185,12 @@ struct ColorRGBA {
         }
     }
 
+    bool operator==(const ColorRGBA& other) const {
+        return r == other.r && g == other.g && b == other.b && a == other.a;
+    }
+
+    bool operator!=(const ColorRGBA& other) const { return !(*this == other); }
+
     float& operator[](std::size_t index) {
         switch (index) {
         case 0:

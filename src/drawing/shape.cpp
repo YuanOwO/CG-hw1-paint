@@ -11,17 +11,17 @@ std::vector<Point> PointShape::getVertices() const {
 }
 
 std::vector<Point> Line::getVertices() const {
-    std::vector<Point> vertices = {start, end};
+    std::vector<Point> vertices = {_start, _end};
     return vertices;
 }
 
 std::vector<Point> Rectangle::getVertices() const {
     std::vector<Point> vertices;
 
-    const float left = std::min(start.getX(), end.getX());
-    const float right = std::max(start.getX(), end.getX());
-    const float top = std::min(start.getY(), end.getY());
-    const float bottom = std::max(start.getY(), end.getY());
+    const float left = std::min(_start.x(), _end.x());
+    const float right = std::max(_start.x(), _end.x());
+    const float top = std::min(_start.y(), _end.y());
+    const float bottom = std::max(_start.y(), _end.y());
 
     vertices.emplace_back(left, top);
     vertices.emplace_back(left, bottom);
@@ -34,10 +34,10 @@ std::vector<Point> Rectangle::getVertices() const {
 std::vector<Point> Ellipse::getVertices() const {
     std::vector<Point> vertices;
 
-    const float cx = (start.getX() + end.getX()) / 2.0f;
-    const float cy = (start.getY() + end.getY()) / 2.0f;
-    const float rx = std::abs(end.getX() - start.getX()) / 2.0f;
-    const float ry = std::abs(end.getY() - start.getY()) / 2.0f;
+    const float cx = (_start.x() + _end.x()) / 2.0f;
+    const float cy = (_start.y() + _end.y()) / 2.0f;
+    const float rx = std::abs(_end.x() - _start.x()) / 2.0f;
+    const float ry = std::abs(_end.y() - _start.y()) / 2.0f;
 
     if (rx == 0.0f || ry == 0.0f) {
         vertices.emplace_back(cx, cy);  // 如果橢圓的半徑為零，則只繪製中心點
@@ -66,7 +66,7 @@ void Path::addPoint(const Point& p, const bool force) {
     }
 
     // 避免筆刷的點太密集，導致繪製出來的線條過於粗糙。
-    const bool isTooClose = abs(points.back() - p) < std::max(style.stroke.width * 0.2f, 1.0f);
+    const bool isTooClose = abs(points.back() - p) < std::max(_style.strokeWidth() * 0.2f, 1.0f);
 
     if (force && isTooClose && points.size() >= 2) {
         // 強制加入點時，若太接近前一個點，則將前一個點移除，避免重疊。

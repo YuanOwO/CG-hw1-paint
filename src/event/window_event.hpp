@@ -4,7 +4,11 @@
 
 namespace paint {
 
-class WindowEvent : public IEvent {};
+class WindowEvent : public Event {
+   public:
+    // 不支持冒泡，因為視窗事件不應該傳播到其他視窗或元素。
+    WindowEvent() : Event(false) {}
+};
 
 class WindowCloseEvent : public WindowEvent {};
 
@@ -12,8 +16,8 @@ class WindowResizeEvent : public WindowEvent {
    public:
     WindowResizeEvent(int width, int height) : _width(width), _height(height) {}
 
-    int getWidth() const { return _width; }
-    int getHeight() const { return _height; }
+    int width() const { return _width; }
+    int height() const { return _height; }
 
    private:
     int _width;
@@ -26,10 +30,42 @@ class WindowVisibilityEvent : public WindowEvent {
 
     WindowVisibilityEvent(WindowVisibilityState state) : _state(state) {}
 
-    WindowVisibilityState getState() const { return _state; }
+    WindowVisibilityState state() const { return _state; }
 
    private:
     WindowVisibilityState _state;
+};
+
+class WindowVisibleEvent : public WindowVisibilityEvent {
+   public:
+    WindowVisibleEvent() : WindowVisibilityEvent(WindowVisibilityState::Visible) {}
+};
+
+class WindowHiddenEvent : public WindowVisibilityEvent {
+   public:
+    WindowHiddenEvent() : WindowVisibilityEvent(WindowVisibilityState::Hidden) {}
+};
+
+enum class WindowEnterState { Entered, Exited };
+
+class WindowEntryEvent : public WindowEvent {
+   public:
+    WindowEntryEvent(WindowEnterState state) : _state(state) {}
+
+    WindowEnterState state() const { return _state; }
+
+   private:
+    WindowEnterState _state;
+};
+
+class WindowEnterEvent : public WindowEntryEvent {
+   public:
+    WindowEnterEvent() : WindowEntryEvent(WindowEnterState::Entered) {}
+};
+
+class WindowLeaveEvent : public WindowEntryEvent {
+   public:
+    WindowLeaveEvent() : WindowEntryEvent(WindowEnterState::Exited) {}
 };
 
 }  // namespace paint

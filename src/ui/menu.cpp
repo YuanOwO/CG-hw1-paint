@@ -4,10 +4,12 @@
 
 #include <utility>
 
-namespace paint {
+namespace paint::ui {
 
 namespace {
+
 std::unordered_map<int, Menu*> menus;
+
 }  // namespace
 
 Menu::Menu() {
@@ -30,7 +32,7 @@ Menu::~Menu() {
     _menuId = 0;
 }
 
-void Menu::addMenuEntry(const std::string& label, Action action) {
+void Menu::addMenuEntry(const std::string& label, MenuAction action) {
     const auto prevWindowId = glutGetWindow();
     const auto prevMenuId = glutGetMenu();
 
@@ -149,4 +151,4 @@ void Menu::menuCallback(int option) {
     }
 }
 
-}  // namespace paint
+}  // namespace paint::ui

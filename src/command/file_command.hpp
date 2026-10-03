@@ -2,10 +2,12 @@
 
 #include <string>
 
+#include "app/document.hpp"
 #include "command/command.hpp"
-#include "document/document.hpp"
 #include "io/document_storage.hpp"
 #include "io/image_exporter.hpp"
+
+using paint::app::Document;
 
 namespace paint {
 
@@ -46,7 +48,7 @@ class SaveCommand : public FileCommand {
     SaveCommand(Document& document, const Path& filename) : FileCommand(document), _filename(filename) {}
 
     void execute() override {
-        auto data = _document.getData();
+        auto data = _document.data();
         data.filename = _filename;
         DocumentStorage::write(data);
 
