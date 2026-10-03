@@ -10,7 +10,7 @@ namespace paint::app {
 
 ConfirmWindow::ConfirmWindow(const std::string& title, const std::string& message, Callback onConfirm,
                              Callback onCancel)
-    : Window(title, 400, 200, false),
+    : Window(title, 440, 220, false),
       _message(message),
       _onConfirm(std::move(onConfirm)),
       _onCancel(std::move(onCancel)) {
@@ -47,10 +47,18 @@ void ConfirmWindow::cancel() {
 void ConfirmWindow::setupContent() {
     auto root = std::make_unique<ui::StackPanelElement>(ui::StackOrientation::Vertical);
 
-    root->setPadding({20, 20, 20, 20});
+    root->setPadding({28, 28, 28, 24});
+    root->setBackgroundColor(ColorRGBA{0.97f, 0.98f, 0.99f});
+
+    auto heading = std::make_unique<ui::TextElement>(
+        this->title(), BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_18},
+        ColorRGBA{0.12f, 0.16f, 0.23f});
+    heading->setMargin({0, 0, 0, 12});
+    root->appendChild(std::move(heading));
 
     auto message =
-        std::make_unique<ui::TextElement>(_message, BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_18});
+        std::make_unique<ui::TextElement>(_message, BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12},
+                                          ColorRGBA{0.36f, 0.40f, 0.47f});
 
     message->setMargin({0, 0, 0, 24});
     root->appendChild(std::move(message), 1.0f);
@@ -59,18 +67,30 @@ void ConfirmWindow::setupContent() {
     auto buttons = std::make_unique<ui::StackPanelElement>(ui::StackOrientation::Horizontal);
 
     auto cancelButton = std::make_unique<ui::ButtonElement>([this]() { cancel(); });
-    cancelButton->setPreferredSize({100, 32});
-    cancelButton->setMargin({0, 0, 8, 0});
+    cancelButton->setPreferredSize({104, 36});
+    cancelButton->setMargin({0, 0, 12, 0});
 
     auto cancelText =
         std::make_unique<ui::TextElement>("Cancel", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+    cancelText->setColor(ColorRGBA{0.22f, 0.27f, 0.34f});
+    cancelText->setHorizontalAlignment(ui::Alignment::Center);
+    cancelText->setVerticalAlignment(ui::Alignment::Center);
     cancelButton->appendChild(std::move(cancelText));
 
     auto confirmButton = std::make_unique<ui::ButtonElement>([this]() { confirm(); });
-    confirmButton->setPreferredSize({100, 32});
+    confirmButton->setPreferredSize({104, 36});
+    confirmButton->setStyle({
+        {0.15f, 0.36f, 0.85f},
+        {0.12f, 0.31f, 0.76f},
+        {0.10f, 0.25f, 0.64f},
+        {0.15f, 0.36f, 0.85f},
+    });
 
     auto confirmText =
         std::make_unique<ui::TextElement>("Confirm", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+    confirmText->setColor(Color::White);
+    confirmText->setHorizontalAlignment(ui::Alignment::Center);
+    confirmText->setVerticalAlignment(ui::Alignment::Center);
     confirmButton->appendChild(std::move(confirmText));
 
     buttons->appendChild(std::make_unique<ui::Element>(), 1.0f);  // 左側 spacer

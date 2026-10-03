@@ -2,28 +2,42 @@
 
 #include <GL/freeglut.h>
 
+#include <algorithm>
+#include <cmath>
+
 #include "ui/elements/button.hpp"
 
 namespace paint {
+namespace {
 
-void ButtonRenderer::render(RenderContext& context, const ui::ButtonElement& button) {
-    // 設置顏色
-    if (button.isPressed()) {
-        context.fillRect(button.width(), button.height(), Color::DarkGray);
-    } else if (button.isHovered()) {
-        context.fillRect(button.width(), button.height(), Color::LightGray);
-    } else {
-        context.fillRect(button.width(), button.height(), Color::Gray);
+void roundedRect(float x, float y, float width, float height, float radius, const ColorRGBA& color) {
+    if (width <= 0 || height <= 0) return;
+    radius = std::min(radius, std::min(width, height) * 0.5f);
+    glColor4f(color.r, color.g, color.b, color.a);
+    glBegin(GL_POLYGON);
+    for (int corner = 0; corner < 4; ++corner) {
+        const float cx = x + (corner == 0 || corner == 3 ? width - radius : radius);
+        const float cy = y + (corner < 2 ? height - radius : radius);
+        for (int step = 0; step <= 12; ++step) {
+            const float angle = (corner + step / 12.0f) * 1.57079632679f;
+            glVertex2f(cx + radius * std::cos(angle), cy + radius * std::sin(angle));
+        }
     }
-
-    // 畫邊框
-    glColor3f(0.0f, 0.0f, 0.0f);  // 黑色
-    glBegin(GL_LINE_LOOP);
-    glVertex2f(0.0f, 0.0f);
-    glVertex2f(static_cast<float>(button.width()), 0.0f);
-    glVertex2f(static_cast<float>(button.width()), static_cast<float>(button.height()));
-    glVertex2f(0.0f, static_cast<float>(button.height()));
     glEnd();
+}
+
+}  // namespace
+
+void ButtonRenderer::render(RenderContext&, const ui::ButtonElement& button) {
+    const auto& style = button.style();
+    const auto& fill = button.isPressed() ? style.pressed
+                       : button.isHovered() ? style.hovered : style.background;
+
+    glPushAttrib(GL_CURRENT_BIT | GL_POLYGON_BIT);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    roundedRect(0, 0, button.width(), button.height(), 7, style.border);
+    roundedRect(1, 1, button.width() - 2, button.height() - 2, 6, fill);
+    glPopAttrib();
 }
 
 }  // namespace paint
