@@ -63,7 +63,7 @@ void PaintWindow::setupContent() {
     auto dock = std::make_unique<ui::DockPanelElement>();
 
     auto statusBar = std::make_unique<ui::StackPanelElement>(ui::StackOrientation::Horizontal);
-    statusBar->setPadding({8, 8, 4, 4});
+    statusBar->setPadding({8, 4, 8, 4});
 
     auto canvas = std::make_unique<ui::CanvasElement>(_document);
     _canvas = canvas.get();
@@ -73,17 +73,21 @@ void PaintWindow::setupContent() {
     auto toolText =
         std::make_unique<ui::TextElement>("Tool: --", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
     _toolText = toolText.get();
-    statusBar->appendChild(std::move(toolText));
+    // margin 保證最小間距；grow 讓工具欄吸收剩餘寬度，把其他欄位推向右側
+    // Thickness 的順序是 left, top, right, bottom
+    toolText->setMargin({0, 0, 16, 0});
+    statusBar->appendChild(std::move(toolText), 1.0f);
 
     auto positionText =
         std::make_unique<ui::TextElement>("Pos: (--, --)", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
     _positionText = positionText.get();
-    statusBar->appendChild(std::move(positionText));
+    positionText->setMargin({0, 0, 16, 0});
+    statusBar->appendChild(std::move(positionText), 1.0f);
 
     auto sizeText =
         std::make_unique<ui::TextElement>("Size: (--, --)", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
     _sizeText = sizeText.get();
-    statusBar->appendChild(std::move(sizeText));
+    statusBar->appendChild(std::move(sizeText), 1.0f);
 
     // 設置 DockPanel 的內容
 

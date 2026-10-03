@@ -5,11 +5,11 @@
 namespace paint {
 
 struct Thickness {
-    Thickness() : left(0), right(0), top(0), bottom(0) {}
-    Thickness(int left, int right, int top, int bottom)
-        : left(left), right(right), top(top), bottom(bottom) {}
+    Thickness() : left(0), top(0), right(0), bottom(0) {}
+    Thickness(int left, int top, int right, int bottom)
+        : left(left), top(top), right(right), bottom(bottom) {}
 
-    int left, right, top, bottom;
+    int left, top, right, bottom;
 
     int horizontal() const { return left + right; }
 
@@ -22,7 +22,7 @@ struct Margin : public Thickness {
 
 struct Padding : public Thickness {
     Padding() : Thickness() {}
-    Padding(int left, int right, int top, int bottom) : Thickness(left, right, top, bottom) {
+    Padding(int left, int top, int right, int bottom) : Thickness(left, top, right, bottom) {
         if (left < 0 || right < 0 || top < 0 || bottom < 0) {
             throw std::invalid_argument("Padding values cannot be negative");
         }
