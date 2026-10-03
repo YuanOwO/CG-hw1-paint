@@ -73,20 +73,13 @@ else()
     )
 endif()
 
-
-##############################
-# 編譯選項
-#   cmake -DCMAKE_BUILD_TYPE=Debug ..
-#   cmake -DCMAKE_BUILD_TYPE=Release ..
-##############################
-
-# # Debug 編譯選項
-# set(CMAKE_C_FLAGS_DEBUG "-g -O1 -fsanitize=undefined")
-# set(CMAKE_CXX_FLAGS_DEBUG "-g -O1 -fsanitize=undefined")
-
-# # Release 編譯選項
-# set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
-# set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
+# if(MINGW)
+#     target_link_options(main PRIVATE
+#         -static
+#         -static-libgcc
+#         -static-libstdc++
+#     )
+# endif()
 
 # -------------------------
 # Compile options
