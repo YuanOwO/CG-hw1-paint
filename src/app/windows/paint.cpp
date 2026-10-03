@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "app/application.hpp"
+#include "app/windows/confirm.hpp"
 #include "common/font.hpp"
 #include "ui/elements/dock_panel.hpp"
 #include "ui/elements/stack_panel.hpp"
@@ -23,6 +24,17 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
 
     updateToolStatus();
 
+    _document.onModifiedChanged = [this](bool modified) {
+        auto& app = Application::current();
+        if (modified) {
+            setTitle(app.name() + " *");
+        } else {
+            setTitle(app.name());
+        }
+    };
+
+    addEventListener<WindowCloseEvent>([this](WindowCloseEvent&) { requestClose(); });
+
     addEventListener<KeyDownEvent>([this](KeyDownEvent& event) {
         if (_shortcutManager.handle(event)) {
             event.stopPropagation();
@@ -32,15 +44,12 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
 
     addEventListener<MouseMoveEvent>([this](MouseMoveEvent& event) {
         Point position = _canvas->windowToLocal(event.position());
-        _positionText->setText("Pos: (" + std::to_string(position.x()) + ", " + std::to_string(position.y()) +
-                               ")");
+        _positionText->setText("Pos: " + position.toString());
     });
 
     _canvas->addEventListener<ElementResizeEvent>([this](ElementResizeEvent& event) {
         _document.setCanvasSize(event.width(), event.height());
-
-        _sizeText->setText("Size: (" + std::to_string(event.width()) + ", " + std::to_string(event.height()) +
-                           ")");
+        _sizeText->setText("Size: " + Point(event.width(), event.height()).toString());
     });
 }
 
@@ -61,6 +70,78 @@ void PaintWindow::updateToolStatus() {
                            std::to_string(_canvas->style().stroke.width) + "px" +
                            " | Fill: " + _canvas->style().fill.color.toHexString());
     }
+}
+
+void PaintWindow::requestNewFile() {
+    // 在創建新文件前，檢查是否有未保存的更改
+    if (_document.isModified()) {
+        auto& app = app::Application::current();
+        app.createWindow<ConfirmWindow>(
+            "Unsaved Changes",
+            "You have unsaved changes.\nAre you sure you want to create a new file without saving?",
+            [this]() { newFile(); });
+    } else {
+        newFile();  // 直接創建新文件，因為沒有未保存的更改
+    }
+}
+
+void PaintWindow::requestLoadFile() {
+    // 在加載文件前，檢查是否有未保存的更改
+    if (_document.isModified()) {
+        auto& app = app::Application::current();
+        app.createWindow<ConfirmWindow>(
+            "Unsaved Changes",
+            "You have unsaved changes.\nAre you sure you want to load a new file without saving?",
+            [this]() { loadFile(); });
+    } else {
+        loadFile();  // 直接加載文件，因為沒有未保存的更改
+    }
+}
+
+void PaintWindow::requestClose() {
+    // 在關閉窗口前，檢查是否有未保存的更改
+    if (_document.isModified()) {
+        auto& app = app::Application::current();
+        app.createWindow<ConfirmWindow>(
+            "Unsaved Changes", "You have unsaved changes.\nAre you sure you want to close without saving?",
+            [this]() { close(); });
+    } else {
+        close();  // 直接關閉窗口，因為沒有未保存的更改
+    }
+}
+
+void PaintWindow::newFile() {
+    _document.newFile();
+    requestRedisplay();
+}
+
+void PaintWindow::loadFile() {
+    const Path filename = "example.gpt";  // 這裡可以替換為實際的文件選擇邏輯
+    _document.load(filename);
+    requestRedisplay();
+}
+
+void PaintWindow::saveFile() {
+    if (_document.filename().empty()) {
+        saveFileAs();  // 如果沒有文件名，則調用另存為
+    } else {
+        _document.save();
+    }
+}
+
+void PaintWindow::saveFileAs() {
+    const Path filename = "example_save.gpt";  // 這裡可以替換為實際的文件選擇邏輯
+    _document.save(filename);
+}
+
+void PaintWindow::exportFile() {
+    const Path filename = "example_export.ppm";  // 這裡可以替換為實際的文件選擇邏輯
+    _document.exportImage(filename);
+}
+
+void PaintWindow::newWindow() {
+    auto& app = app::Application::current();
+    app.createWindow<PaintWindow>(app.name(), width(), height());
 }
 
 void PaintWindow::setupContent() {
@@ -108,16 +189,29 @@ void PaintWindow::setupShortcuts() {
     // 設置快捷鍵
     _shortcutManager.bind({Mod::Primary, Key::Z}, [this]() { _canvas->undo(); });
     _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::Z}, [this]() { _canvas->redo(); });
+    _shortcutManager.bind({Key::C}, [this]() { _canvas->clear(); });
+    _shortcutManager.bind({Key::G}, [this]() {
+        auto gridMode = _canvas->gridMode();
+        if (gridMode == ui::GridMode::None) {
+            _canvas->setGridMode(ui::GridMode::Lines);
+        } else if (gridMode == ui::GridMode::Lines) {
+            _canvas->setGridMode(ui::GridMode::Dots);
+        } else if (gridMode == ui::GridMode::Dots) {
+            _canvas->setGridMode(ui::GridMode::None);
+        }
+    });
 
-    _shortcutManager.bind({Mod::Primary, Key::S}, [this]() { _document.save(); });
-    _shortcutManager.bind({Mod::Primary, Key::N}, [this]() { newFile(); });
+    _shortcutManager.bind({Mod::Primary, Key::N}, [this]() { requestNewFile(); });
     _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::N}, [this]() { newWindow(); });
-    _shortcutManager.bind({Mod::Primary, Key::C}, [this]() { close(); });
+    _shortcutManager.bind({Mod::Primary, Key::O}, [this]() { requestLoadFile(); });
+    _shortcutManager.bind({Mod::Primary, Key::S}, [this]() { _document.save(); });
+    _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::S}, [this]() { saveFileAs(); });
+    _shortcutManager.bind({Mod::Primary, Key::E}, [this]() { exportFile(); });
+    _shortcutManager.bind({Mod::Primary, Key::C}, [this]() { requestClose(); });
     _shortcutManager.bind({Mod::Primary, Key::R}, [this]() {
         requestCachedRedisplay();
         resetInputState();
     });
-    _shortcutManager.bind({Key::F5}, [this]() { _canvas->clear(); });
 
     // 設置工具快捷鍵
     _shortcutManager.bind({Key::Digit1}, [this]() { selectTool(Tool::TOOL_PENCIL); });
@@ -148,29 +242,16 @@ void PaintWindow::setupShortcuts() {
     });
 }
 
-void PaintWindow::newFile() {
-    _document.newFile();
-    requestRedisplay();
-}
-
-void PaintWindow::newWindow() {
-    auto& app = app::Application::current();
-    app.createWindow<PaintWindow>(app.name(), width(), height());
-}
-
 #pragma region Main Menu
 
 void PaintWindow::setupMenu() {
     auto& fileMenu = _menu.addSubMenu("File");
-    fileMenu.addMenuEntry("New", [this]() { newFile(); });
+    fileMenu.addMenuEntry("New", [this]() { requestNewFile(); });
     fileMenu.addMenuEntry("New Window", [this]() { newWindow(); });
-    fileMenu.addMenuEntry("Load", [this]() {});
-    fileMenu.addMenuEntry("Save", [this]() { _document.save(); });
-    fileMenu.addMenuEntry("Save As", [this]() {});
-    fileMenu.addMenuEntry("Export", [this]() {
-        const Path output = std::filesystem::absolute("drawing.ppm");
-        _document.exportImage(output);
-    });
+    fileMenu.addMenuEntry("Load", [this]() { requestLoadFile(); });
+    fileMenu.addMenuEntry("Save", [this]() { saveFile(); });
+    fileMenu.addMenuEntry("Save As", [this]() { saveFileAs(); });
+    fileMenu.addMenuEntry("Export", [this]() { exportFile(); });
 
     auto& editMenu = _menu.addSubMenu("Edit");
     editMenu.addMenuEntry("Undo", [this]() { _canvas->undo(); });
@@ -187,7 +268,7 @@ void PaintWindow::setupMenu() {
     gridMenu.addMenuEntry("Dots", [this]() { _canvas->setGridMode(ui::GridMode::Dots); });
     gridMenu.addMenuEntry("None", [this]() { _canvas->setGridMode(ui::GridMode::None); });
 
-    _menu.addMenuEntry("Close", [this]() { close(); });
+    _menu.addMenuEntry("Close", [this]() { requestClose(); });
 
     _menu.attach(MouseButton::MouseRight);
 }

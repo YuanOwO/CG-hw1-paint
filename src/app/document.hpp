@@ -2,9 +2,11 @@
 
 #include <cstddef>
 #include <filesystem>
+#include <functional>
 #include <memory>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "command/command_history.hpp"
 #include "drawing/scene.hpp"
@@ -84,12 +86,21 @@ class Document {
     bool canUndo() const { return _history.canUndo(); }
     bool canRedo() const { return _history.canRedo(); }
 
+    // 事件訂閱
+    std::function<void(bool)> onModifiedChanged;
+
    private:
     Path _filename;
     int _canvasWidth = 0;
     int _canvasHeight = 0;
     CommandHistory _history;
     Scene _scene;
+
+    void onModifiedChangedInternal() {
+        if (onModifiedChanged) {
+            onModifiedChanged(isModified());
+        }
+    }
 };
 
 }  // namespace paint::app

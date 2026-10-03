@@ -32,11 +32,13 @@ void Document::replaceContent(Scene scene, Path filename) {
 void Document::newFile() {
     NewFileCommand newFileCommand(*this);
     newFileCommand.execute();
+    onModifiedChangedInternal();
 }
 
 void Document::load(const Path& filename) {
     LoadCommand loadCommand(*this, filename);
     loadCommand.execute();
+    onModifiedChangedInternal();
 }
 
 void Document::save() {
@@ -55,26 +57,31 @@ void Document::save(const Path& filename) {
     // 實現保存文件的邏輯
     SaveCommand saveCommand(*this, filename);
     saveCommand.execute();
+    onModifiedChangedInternal();
 }
 
 void Document::exportImage(const Path& filename) {
     // 實現導出圖像的邏輯
     ExportCommand exportCommand(*this, filename);
     exportCommand.execute();
+    onModifiedChangedInternal();
 }
 
 // 編輯操作
 
 void Document::addShape(std::shared_ptr<Shape> shape) {
     _history.execute(std::make_unique<AddShapeCommand>(_scene, std::move(shape)));
+    onModifiedChangedInternal();
 }
 
 void Document::insertShape(std::size_t index, std::shared_ptr<Shape> shape) {
     _history.execute(std::make_unique<InsertShapeCommand>(_scene, index, std::move(shape)));
+    onModifiedChangedInternal();
 }
 
 void Document::removeShape(std::shared_ptr<Shape> shape) {
     _history.execute(std::make_unique<RemoveShapeCommand>(_scene, std::move(shape)));
+    onModifiedChangedInternal();
 }
 
 void Document::clearScene() {
@@ -83,14 +90,17 @@ void Document::clearScene() {
     }
 
     _history.execute(std::make_unique<ClearSceneCommand>(_scene));
+    onModifiedChangedInternal();
 }
 
 void Document::undo() {
     _history.undo();
+    onModifiedChangedInternal();
 }
 
 void Document::redo() {
     _history.redo();
+    onModifiedChangedInternal();
 }
 
 }  // namespace paint::app

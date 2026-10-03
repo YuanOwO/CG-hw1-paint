@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <string>
 
 namespace paint {
 
@@ -28,6 +29,8 @@ class Point {
     Point operator-(const Point& other) const { return Point(_x - other._x, _y - other._y); }
     Point operator*(float scalar) const { return Point(_x * scalar, _y * scalar); }
     Point operator/(float scalar) const { return Point(_x / scalar, _y / scalar); }
+
+    std::string toString() const { return "(" + std::to_string(_x) + ", " + std::to_string(_y) + ")"; }
 
    protected:
     float _x, _y;

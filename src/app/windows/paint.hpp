@@ -33,11 +33,19 @@ class PaintWindow : public ui::Window {
     void setShapeStyle(const drawing::ShapeStyle& style);
     void updateToolStatus();
 
-    void setupContent();
-    void setupShortcuts();
+    void requestNewFile();
+    void requestLoadFile();
+    void requestClose();
 
     void newFile();
+    void loadFile();
+    void saveFile();
+    void saveFileAs();
+    void exportFile();
     void newWindow();
+
+    void setupContent();
+    void setupShortcuts();
 
     void setupMenu();
 
