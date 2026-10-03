@@ -1,5 +1,7 @@
 #pragma once
 
+#include "common/color.hpp"
+
 namespace paint {
 
 class RenderContext {
@@ -10,6 +12,7 @@ class RenderContext {
     void popTransform();   // 恢復上一個座標轉換狀態
 
     void translate(float x, float y);  // 平移目前座標系
+    void fillRect(int width, int height, const ColorRGBA& color);
 };
 
 }  // namespace paint

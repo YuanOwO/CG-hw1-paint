@@ -71,6 +71,7 @@ void PaintWindow::setupContent() {
     auto dock = std::make_unique<ui::DockPanelElement>();
 
     auto statusBar = std::make_unique<ui::StackPanelElement>(ui::StackOrientation::Horizontal);
+    statusBar->setBackgroundColor(Color::LightGray);
     statusBar->setPadding({8, 4, 8, 4});
 
     auto canvas = std::make_unique<ui::CanvasElement>(_document);

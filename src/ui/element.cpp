@@ -350,6 +350,14 @@ void Element::releaseMouseCapture() {
 
 #pragma region Rendering
 
+void Element::setBackgroundColor(const ColorRGBA& color) {
+    if (_backgroundColor == color) {
+        return;
+    }
+    _backgroundColor = color;
+    invalidateDisplay();
+}
+
 void Element::invalidateDisplay() {
     if (auto* w = window()) {
         w->requestRedisplay();
@@ -365,6 +373,7 @@ void Element::render(RenderContext& context) {
 
     context.translate(static_cast<float>(x()), static_cast<float>(y()));  // 將原點移動到目前元素的局部座標
 
+    context.fillRect(width(), height(), _backgroundColor);
     renderContent(context);
 
     for (const auto& child : children()) {

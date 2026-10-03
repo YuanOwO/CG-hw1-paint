@@ -74,6 +74,9 @@ class Element : public EventTarget {
     bool isFocusable() const { return _focusable; }
     void setFocusable(bool focusable);
 
+    const ColorRGBA& backgroundColor() const { return _backgroundColor; }
+    void setBackgroundColor(const ColorRGBA& color);
+
     // Tree
 
     Window* window() { return const_cast<Window*>(std::as_const(*this).window()); }
@@ -132,6 +135,7 @@ class Element : public EventTarget {
 
     // Rendering
 
+    ColorRGBA _backgroundColor = Color::Transparent;
     void render(RenderContext& context);
 
     // Tree
