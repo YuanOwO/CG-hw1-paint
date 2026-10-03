@@ -311,7 +311,11 @@ void Window::timerCallback(int windowId) {
         window->_colorBuffer.capture(0, 0, window->_width, window->_height);
         window->_needsCapture = false;
 
-        if (previousWindow != 0) {
+        // glutGetWindow() may briefly keep returning the ID of a window whose
+        // native X11 drawable has already been destroyed. Restoring that stale
+        // window makes the next pixel operation fail with X11 BadDrawable.
+        if (previousWindow != 0 && previousWindow != windowId &&
+            windows.find(previousWindow) != windows.end()) {
             glutSetWindow(previousWindow);
         }
     }
@@ -505,6 +509,32 @@ void Window::keyboardCallback(unsigned char key, int x, int y) {
     }
 
     keyDownHandler(btn, x, y);
+
+    auto* window = currentWindow();
+
+    // 找不到當前視窗，直接返回
+    if (!window) {
+        return;
+    }
+
+    if (!canReceiveInput(window->_id)) {
+        activateModalWindow();
+        return;
+    }
+
+    // 實際文字輸入事件
+    const bool printable = key >= 32 && key != 127;
+
+    const bool commandModifier = _keyboardState.isCtrlDown() || _keyboardState.isSuperDown();
+
+    if (printable && !commandModifier) {
+        TextInputEvent event(_keyboardState, window->_mouseState, std::string(1, static_cast<char>(key)));
+        if (window->_focusedElement != nullptr) {
+            window->_focusedElement->dispatchEvent(event);
+        } else {
+            window->dispatchEvent(event);
+        }
+    }
 }
 
 void Window::keyboardUpCallback(unsigned char key, int x, int y) {

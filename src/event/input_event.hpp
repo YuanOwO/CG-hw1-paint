@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 #include "event/event.hpp"
 #include "input/input_state.hpp"
 #include "input/input_types.hpp"
@@ -56,6 +58,17 @@ class KeyUpEvent : public KeyboardEvent {
    public:
     KeyUpEvent(const KeyboardState& inputState, const MouseState& mouseState, Key key)
         : KeyboardEvent(inputState, mouseState, key, ButtonAction::Up) {}
+};
+
+class TextInputEvent : public InputEvent {
+   public:
+    TextInputEvent(const KeyboardState& inputState, const MouseState& mouseState, const std::string& text)
+        : InputEvent(inputState, mouseState), _text(text) {}
+
+    const std::string& text() const { return _text; }
+
+   private:
+    std::string _text;
 };
 
 // ==========================
