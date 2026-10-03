@@ -261,6 +261,25 @@ class PolygonTool : public DrawingTool<Polygon> {
 
 }  // namespace
 
+const std::string getToolName(const Tool& tool) {
+    switch (tool) {
+    case Tool::TOOL_POINT:
+        return "Point";
+    case Tool::TOOL_PENCIL:
+        return "Pencil";
+    case Tool::TOOL_LINE:
+        return "Line";
+    case Tool::TOOL_RECTANGLE:
+        return "Rectangle";
+    case Tool::TOOL_ELLIPSE:
+        return "Ellipse";
+    case Tool::TOOL_POLYGON:
+        return "Polygon";
+    default:
+        return "Unknown";
+    }
+}
+
 std::unique_ptr<IDrawingTool> createDrawingTool(Tool tool, ShapeStyle style) {
     switch (tool) {
     case Tool::TOOL_POINT:

@@ -5,6 +5,7 @@
 #include "app/document.hpp"
 #include "input/shortcut_manager.hpp"
 #include "ui/elements/canvas.hpp"
+#include "ui/elements/text.hpp"
 #include "ui/menu.hpp"
 #include "ui/window.hpp"
 
@@ -24,6 +25,15 @@ class PaintWindow : public ui::Window {
     ui::Menu _menu;
 
     ui::CanvasElement* _canvas = nullptr;
+    ui::TextElement* _toolText = nullptr;
+    ui::TextElement* _positionText = nullptr;
+    ui::TextElement* _sizeText = nullptr;
+
+    void selectTool(drawing::Tool tool);
+    void updateToolStatus();
+
+    void setupContent();
+    void setupShortcuts();
 
     void newFile();
     void newWindow();

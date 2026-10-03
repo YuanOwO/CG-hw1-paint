@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "common/point.hpp"
@@ -78,6 +79,8 @@ class DrawingTool : public IDrawingTool {
     ShapeStyle _style;                         // 繪圖工具的樣式資訊
     std::unique_ptr<TShape> _draft = nullptr;  // 草稿形狀，供畫布在 display 時繪製
 };
+
+const std::string getToolName(const Tool& tool);
 
 std::unique_ptr<IDrawingTool> createDrawingTool(Tool tool, ShapeStyle style);
 

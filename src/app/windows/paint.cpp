@@ -8,7 +8,6 @@
 #include "common/font.hpp"
 #include "ui/elements/dockPanel.hpp"
 #include "ui/elements/stackPanel.hpp"
-#include "ui/elements/text.hpp"
 #include "ui/layout/bounding.hpp"
 
 using paint::drawing::LineCap;
@@ -19,30 +18,84 @@ namespace paint::app {
 
 PaintWindow::PaintWindow(Application& app, const std::string& title, int width, int height)
     : Window(app, title, width, height) {
+    setupContent();
     setupMenu();
+    setupShortcuts();
 
+    updateToolStatus();
+
+    addEventListener<KeyDownEvent>([this](KeyDownEvent& event) {
+        if (_shortcutManager.handle(event)) {
+            event.stopPropagation();
+            return;
+        }
+    });
+
+    addEventListener<MouseMoveEvent>([this](MouseMoveEvent& event) {
+        if (_canvas) {
+            Point position = _canvas->windowToLocal(event.position());
+            _positionText->setText("Pos: (" + std::to_string(position.x()) + ", " +
+                                   std::to_string(position.y()) + ")");
+        }
+    });
+
+    _canvas->addEventListener<ElementResizeEvent>([this](ElementResizeEvent& event) {
+        if (_canvas) {
+            Size size = _canvas->desiredSize();
+            _sizeText->setText("Size: (" + std::to_string(size.width.value()) + ", " +
+                               std::to_string(size.height.value()) + ")");
+        }
+    });
+}
+
+void PaintWindow::selectTool(drawing::Tool tool) {
+    _canvas->setTool(tool);
+    updateToolStatus();
+}
+
+void PaintWindow::updateToolStatus() {
+    if (_toolText) {
+        _toolText->setText("Tool: " + drawing::getToolName(_canvas->currentTool()));
+    }
+}
+
+void PaintWindow::setupContent() {
     auto dock = std::make_unique<ui::DockPanelElement>();
 
     auto statusBar = std::make_unique<ui::StackPanelElement>(ui::StackOrientation::Horizontal);
-
     statusBar->setPadding({8, 8, 4, 4});
 
-    auto statusText =
-        std::make_unique<ui::TextElement>("Ready", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
-
-    statusBar->appendChild(std::move(statusText));
-
-    // 先保留底部狀態列的空間。
-    dock->appendChild(std::move(statusBar), ui::Dock::Bottom);
-
-    // 設置根元素為 CanvasElement
     auto canvas = std::make_unique<ui::CanvasElement>(_document);
-    dock->appendChild(std::move(canvas));
     _canvas = canvas.get();
 
+    // 設置狀態列的文字元素
+
+    auto toolText =
+        std::make_unique<ui::TextElement>("Tool: --", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+    _toolText = toolText.get();
+    statusBar->appendChild(std::move(toolText));
+
+    auto positionText =
+        std::make_unique<ui::TextElement>("Pos: (--, --)", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+    _positionText = positionText.get();
+    statusBar->appendChild(std::move(positionText));
+
+    auto sizeText =
+        std::make_unique<ui::TextElement>("Size: (--, --)", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+    _sizeText = sizeText.get();
+    statusBar->appendChild(std::move(sizeText));
+
+    // 設置 DockPanel 的內容
+
+    dock->appendChild(std::move(statusBar), ui::Dock::Bottom);
+    dock->appendChild(std::move(canvas));
+
+    // 設置內容
     setContent(std::move(dock));
     setFocusedElement(_canvas);  // 將焦點設置為 CanvasElement
+}
 
+void PaintWindow::setupShortcuts() {
     // 設置快捷鍵
     _shortcutManager.bind({Mod::Primary, Key::Z}, [this]() { _canvas->undo(); });
     _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::Z}, [this]() { _canvas->redo(); });
@@ -58,11 +111,11 @@ PaintWindow::PaintWindow(Application& app, const std::string& title, int width, 
     _shortcutManager.bind({Key::F5}, [this]() { _canvas->clear(); });
 
     // 設置工具快捷鍵
-    _shortcutManager.bind({Key::Digit1}, [this]() { _canvas->setTool(Tool::TOOL_PENCIL); });
-    _shortcutManager.bind({Key::Digit2}, [this]() { _canvas->setTool(Tool::TOOL_LINE); });
-    _shortcutManager.bind({Key::Digit3}, [this]() { _canvas->setTool(Tool::TOOL_RECTANGLE); });
-    _shortcutManager.bind({Key::Digit4}, [this]() { _canvas->setTool(Tool::TOOL_ELLIPSE); });
-    _shortcutManager.bind({Key::Digit5}, [this]() { _canvas->setTool(Tool::TOOL_POLYGON); });
+    _shortcutManager.bind({Key::Digit1}, [this]() { selectTool(Tool::TOOL_PENCIL); });
+    _shortcutManager.bind({Key::Digit2}, [this]() { selectTool(Tool::TOOL_LINE); });
+    _shortcutManager.bind({Key::Digit3}, [this]() { selectTool(Tool::TOOL_RECTANGLE); });
+    _shortcutManager.bind({Key::Digit4}, [this]() { selectTool(Tool::TOOL_ELLIPSE); });
+    _shortcutManager.bind({Key::Digit5}, [this]() { selectTool(Tool::TOOL_POLYGON); });
 
     _shortcutManager.bind({Key::LeftBracket}, [this]() {
         auto style = _canvas->style();
@@ -78,13 +131,6 @@ PaintWindow::PaintWindow(Application& app, const std::string& title, int width, 
         auto style = _canvas->style();
         style.setStrokeColor(Color::Black);
         _canvas->setStyle(style);
-    });
-
-    addEventListener<KeyDownEvent>([this](KeyDownEvent& event) {
-        if (_shortcutManager.handle(event)) {
-            event.stopPropagation();
-            return;
-        }
     });
 }
 
@@ -133,12 +179,12 @@ void PaintWindow::setupToolMenu() {
     auto& toolMenu = _menu.addSubMenu("Tools");
 
     toolMenu.addMenuEntry("Select", [this]() {});
-    toolMenu.addMenuEntry("Point", [this]() { _canvas->setTool(Tool::TOOL_POINT); });
-    toolMenu.addMenuEntry("Pencil", [this]() { _canvas->setTool(Tool::TOOL_PENCIL); });
-    toolMenu.addMenuEntry("Line", [this]() { _canvas->setTool(Tool::TOOL_LINE); });
-    toolMenu.addMenuEntry("Rectangle", [this]() { _canvas->setTool(Tool::TOOL_RECTANGLE); });
-    toolMenu.addMenuEntry("Circle / Ellipse", [this]() { _canvas->setTool(Tool::TOOL_ELLIPSE); });
-    toolMenu.addMenuEntry("Polygon", [this]() { _canvas->setTool(Tool::TOOL_POLYGON); });
+    toolMenu.addMenuEntry("Point", [this]() { selectTool(Tool::TOOL_POINT); });
+    toolMenu.addMenuEntry("Pencil", [this]() { selectTool(Tool::TOOL_PENCIL); });
+    toolMenu.addMenuEntry("Line", [this]() { selectTool(Tool::TOOL_LINE); });
+    toolMenu.addMenuEntry("Rectangle", [this]() { selectTool(Tool::TOOL_RECTANGLE); });
+    toolMenu.addMenuEntry("Circle / Ellipse", [this]() { selectTool(Tool::TOOL_ELLIPSE); });
+    toolMenu.addMenuEntry("Polygon", [this]() { selectTool(Tool::TOOL_POLYGON); });
 }
 
 #pragma endregion  // Tool Menu

@@ -15,20 +15,32 @@ class TextElement : public Element {
 
     const std::string& text() const { return _text; }
     void setText(const std::string& text) {
+        if (_text == text) {
+            return;
+        }
+
         _text = text;
         invalidateLayout();
     }
 
     const FontStyle& fontStyle() const { return _fontStyle; }
     void setFontStyle(const FontStyle& fontStyle) {
+        if (_fontStyle == fontStyle) {
+            return;
+        }
+
         _fontStyle = fontStyle;
         invalidateLayout();
     }
 
     const ColorRGBA& color() const { return _color; }
     void setColor(const ColorRGBA& color) {
+        if (_color == color) {
+            return;
+        }
+
         _color = color;
-        invalidateLayout();
+        invalidateDisplay();  // 顏色改變只需要重新渲染，不需要重新布局
     }
 
    protected:

@@ -22,11 +22,17 @@ enum class StrokeFont {
 
 struct BitmapFontStyle {
     BitmapFont font;
+
+    bool operator==(const BitmapFontStyle& other) const { return font == other.font; }
+    bool operator!=(const BitmapFontStyle& other) const { return !(*this == other); }
 };
 
 struct StrokeFontStyle {
     StrokeFont font;
     float size = 1.0f;  // 默認大小為 1.0
+
+    bool operator==(const StrokeFontStyle& other) const { return font == other.font && size == other.size; }
+    bool operator!=(const StrokeFontStyle& other) const { return !(*this == other); }
 };
 
 using Font = std::variant<BitmapFont, StrokeFont>;
