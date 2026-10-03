@@ -15,8 +15,10 @@ void CanvasRenderer::render(RenderContext& context, const ui::CanvasElement& can
     // });
 
     // 2. 畫格線
-    if (canvas.isGridVisible()) {
-        _shapeRenderer.drawGrid(context, canvas.width(), canvas.height());
+    if (canvas.gridMode() == ui::GridMode::Lines) {
+        _shapeRenderer.drawLineGrid(context, canvas.width(), canvas.height());
+    } else if (canvas.gridMode() == ui::GridMode::Dots) {
+        _shapeRenderer.drawDotGrid(context, canvas.width(), canvas.height());
     }
 
     // 3. 畫 Scene

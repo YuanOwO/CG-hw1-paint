@@ -14,7 +14,8 @@ namespace paint {
 
 class ShapeRenderer {
    public:
-    void drawGrid(RenderContext& context, int width, int height, int spacing = 20) const;
+    void drawLineGrid(RenderContext& context, int width, int height, int spacing = 20) const;
+    void drawDotGrid(RenderContext& context, int width, int height, int spacing = 20) const;
     void draw(RenderContext& context, const drawing::Shape& shape) const;
 };
 

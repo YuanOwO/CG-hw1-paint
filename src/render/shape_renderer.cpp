@@ -434,12 +434,12 @@ void basicDraw(const std::vector<Point>& vertices, const bool isClosed, const Sh
 
 ////////////////////////////////////////////////////////////////////////
 
-// renderer.cpp
-void ShapeRenderer::drawGrid(RenderContext& context, int width, int height, int spacing) const {
+void ShapeRenderer::drawLineGrid(RenderContext& context, int width, int height, int spacing) const {
     if (width <= 0 || height <= 0 || spacing <= 0) {
         return;
     }
 
+    glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
     glColor4f(0.9f, 0.9f, 0.9f, 1.0f);  // 淺灰色
     glLineWidth(1.0f);
 
@@ -456,6 +456,27 @@ void ShapeRenderer::drawGrid(RenderContext& context, int width, int height, int 
     }
 
     glEnd();
+    glPopAttrib();
+}
+
+void ShapeRenderer::drawDotGrid(RenderContext& context, int width, int height, int spacing) const {
+    if (width <= 0 || height <= 0 || spacing <= 0) {
+        return;
+    }
+
+    glPushAttrib(GL_CURRENT_BIT | GL_POINT_BIT | GL_ENABLE_BIT);
+    glColor4f(0.9f, 0.9f, 0.9f, 1.0f);  // 淺灰色
+    glPointSize(2.0f);
+    glDisable(GL_POINT_SMOOTH);
+
+    glBegin(GL_POINTS);
+    for (int x = spacing; x < width; x += spacing) {
+        for (int y = spacing; y < height; y += spacing) {
+            glVertex2f(static_cast<float>(x), static_cast<float>(y));
+        }
+    }
+    glEnd();
+    glPopAttrib();
 }
 
 void ShapeRenderer::draw(RenderContext& context, const drawing::Shape& shape) const {

@@ -15,13 +15,15 @@ using paint::app::Document;
 
 namespace paint::ui {
 
+enum class GridMode { Lines, Dots, None };
+
 class CanvasElement : public Element {
    public:
     CanvasElement(Document& document);
 
-    bool isGridVisible() const { return _gridVisible; }
-    void setGridVisibility(bool visible) {
-        _gridVisible = visible;
+    GridMode gridMode() const { return _gridMode; }
+    void setGridMode(GridMode mode) {
+        _gridMode = mode;
         invalidateDisplay();
     }
 
@@ -42,10 +44,9 @@ class CanvasElement : public Element {
     Size measureContent(const Size& availableSize) override;
 
     void renderContent(RenderContext& context) override;
-    void renderContent(RenderContext& context, bool includeGrid);
 
    private:
-    bool _gridVisible;
+    GridMode _gridMode = GridMode::Lines;
 
     drawing::Tool _currentTool;
     drawing::ShapeStyle _currentStyle;

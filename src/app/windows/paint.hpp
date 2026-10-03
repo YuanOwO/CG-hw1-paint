@@ -30,6 +30,7 @@ class PaintWindow : public ui::Window {
     ui::TextElement* _sizeText = nullptr;
 
     void selectTool(drawing::Tool tool);
+    void setShapeStyle(const drawing::ShapeStyle& style);
     void updateToolStatus();
 
     void setupContent();

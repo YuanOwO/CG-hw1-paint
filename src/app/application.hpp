@@ -26,8 +26,8 @@ class Application {
     static std::string version() { return "0.0.1"; }
     static std::string name() {
         // 想法：
-        // Pictorium, Graphtoria, Graphium
-        return "Graphorium";
+        // Pictorium, Graphtoria, Graphium, Graphorium
+        return "Graphtoria";
     }
 
     // 運行應用程序，進入 GLUT 主循環

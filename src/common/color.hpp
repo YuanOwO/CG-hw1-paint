@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <stdexcept>
+#include <string>
 
 namespace paint {
 
@@ -204,6 +205,18 @@ struct ColorRGBA {
         default:
             throw std::out_of_range("ColorRGBA index out of range");
         }
+    }
+
+    const std::string toHexString() const {
+        if (a == 0.0f) {
+            return "Transparent";
+        }
+        int rInt = static_cast<int>(r * 255.0f);
+        int gInt = static_cast<int>(g * 255.0f);
+        int bInt = static_cast<int>(b * 255.0f);
+        char buffer[8];
+        snprintf(buffer, sizeof(buffer), "#%02X%02X%02X", rInt, gInt, bInt);
+        return std::string(buffer);
     }
 };
 

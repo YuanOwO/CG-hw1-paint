@@ -53,9 +53,17 @@ void PaintWindow::selectTool(drawing::Tool tool) {
     updateToolStatus();
 }
 
+void PaintWindow::setShapeStyle(const drawing::ShapeStyle& style) {
+    _canvas->setStyle(style);
+    updateToolStatus();
+}
+
 void PaintWindow::updateToolStatus() {
     if (_toolText) {
-        _toolText->setText("Tool: " + drawing::getToolName(_canvas->currentTool()));
+        _toolText->setText("Tool: " + drawing::getToolName(_canvas->currentTool()) +
+                           " | Stroke: " + _canvas->style().stroke.color.toHexString() + " " +
+                           std::to_string(_canvas->style().stroke.width) + "px" +
+                           " | Fill: " + _canvas->style().fill.color.toHexString());
     }
 }
 
@@ -124,17 +132,22 @@ void PaintWindow::setupShortcuts() {
     _shortcutManager.bind({Key::LeftBracket}, [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(std::max(1, static_cast<int>(style.stroke.width - 1)));
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     _shortcutManager.bind({Key::RightBracket}, [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(style.stroke.width + 1);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     _shortcutManager.bind({Mod::Shift, Key::LeftBracket}, [this]() {
         auto style = _canvas->style();
-        style.setStrokeColor(Color::Black);
-        _canvas->setStyle(style);
+        style.setStrokeWidth(std::max(1, static_cast<int>(style.stroke.width - 5)));
+        setShapeStyle(style);
+    });
+    _shortcutManager.bind({Mod::Shift, Key::RightBracket}, [this]() {
+        auto style = _canvas->style();
+        style.setStrokeWidth(style.stroke.width + 5);
+        setShapeStyle(style);
     });
 }
 
@@ -168,7 +181,10 @@ void PaintWindow::setupMenu() {
     setupFillMenu();
     setupPointMenu();
 
-    _menu.addMenuEntry("Grid", [this]() { _canvas->setGridVisibility(!_canvas->isGridVisible()); });
+    auto& gridMenu = _menu.addSubMenu("Grid");
+    gridMenu.addMenuEntry("Lines", [this]() { _canvas->setGridMode(ui::GridMode::Lines); });
+    gridMenu.addMenuEntry("Dots", [this]() { _canvas->setGridMode(ui::GridMode::Dots); });
+    gridMenu.addMenuEntry("None", [this]() { _canvas->setGridMode(ui::GridMode::None); });
 
     _menu.addMenuEntry("Close", [this]() { close(); });
 
@@ -205,42 +221,42 @@ void PaintWindow::setupStrokeMenu() {
     colorMenu.addMenuEntry("Black", [this]() {
         auto style = _canvas->style();
         style.setStrokeColor(Color::Black);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     colorMenu.addMenuEntry("White", [this]() {
         auto style = _canvas->style();
         style.setStrokeColor(Color::White);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     colorMenu.addMenuEntry("Red", [this]() {
         auto style = _canvas->style();
         style.setStrokeColor(Color::Red);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     colorMenu.addMenuEntry("Orange", [this]() {
         auto style = _canvas->style();
         style.setStrokeColor(Color::Orange);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     colorMenu.addMenuEntry("Yellow", [this]() {
         auto style = _canvas->style();
         style.setStrokeColor(Color::Yellow);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     colorMenu.addMenuEntry("Green", [this]() {
         auto style = _canvas->style();
         style.setStrokeColor(Color::Green);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     colorMenu.addMenuEntry("Blue", [this]() {
         auto style = _canvas->style();
         style.setStrokeColor(Color::Blue);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     colorMenu.addMenuEntry("Purple", [this]() {
         auto style = _canvas->style();
         style.setStrokeColor(Color::Purple);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     colorMenu.addMenuEntry("Custom...", [this]() {});
 
@@ -251,62 +267,62 @@ void PaintWindow::setupStrokeMenu() {
     widthMenu.addMenuEntry("1 px", [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(1);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     widthMenu.addMenuEntry("3 px", [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(3);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     widthMenu.addMenuEntry("5 px", [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(5);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     widthMenu.addMenuEntry("10 px", [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(10);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     widthMenu.addMenuEntry("25 px", [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(25);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     widthMenu.addMenuEntry("50 px", [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(50);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     widthMenu.addMenuEntry("Thicker", [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(_canvas->style().strokeWidth() + 1);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     widthMenu.addMenuEntry("Thicker++", [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(_canvas->style().strokeWidth() + 3);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     widthMenu.addMenuEntry("Thicker+++", [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(_canvas->style().strokeWidth() + 5);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     widthMenu.addMenuEntry("Thinner", [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(_canvas->style().strokeWidth() - 1);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     widthMenu.addMenuEntry("Thinner++", [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(_canvas->style().strokeWidth() - 3);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     widthMenu.addMenuEntry("Thinner+++", [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(_canvas->style().strokeWidth() - 5);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
 
     // Stroke Join Menu
@@ -316,17 +332,17 @@ void PaintWindow::setupStrokeMenu() {
     joinMenu.addMenuEntry("Miter", [this]() {
         auto style = _canvas->style();
         style.setStrokeJoin(LineJoin::MITER);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     joinMenu.addMenuEntry("Bevel", [this]() {
         auto style = _canvas->style();
         style.setStrokeJoin(LineJoin::BEVEL);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     joinMenu.addMenuEntry("Round", [this]() {
         auto style = _canvas->style();
         style.setStrokeJoin(LineJoin::ROUND);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
 
     // Stroke Cap Menu
@@ -336,17 +352,17 @@ void PaintWindow::setupStrokeMenu() {
     capMenu.addMenuEntry("Round", [this]() {
         auto style = _canvas->style();
         style.setStrokeCap(LineCap::ROUND);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     capMenu.addMenuEntry("Square", [this]() {
         auto style = _canvas->style();
         style.setStrokeCap(LineCap::SQUARE);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     capMenu.addMenuEntry("Butt", [this]() {
         auto style = _canvas->style();
         style.setStrokeCap(LineCap::BUTT);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
 }
 
@@ -364,17 +380,17 @@ void PaintWindow::setupFillMenu() {
     fillModeMenu.addMenuEntry("Outline", [this]() {
         auto style = _canvas->style();
         style.setFillMode(drawing::FillMode::OUTLINE);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     fillModeMenu.addMenuEntry("Filled", [this]() {
         auto style = _canvas->style();
         style.setFillMode(drawing::FillMode::FILLED);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     fillModeMenu.addMenuEntry("Advanced", [this]() {
         auto style = _canvas->style();
         style.setFillMode(drawing::FillMode::ADVANCED);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
 
     // Fill Color Menu
@@ -384,47 +400,47 @@ void PaintWindow::setupFillMenu() {
     fillColorMenu.addMenuEntry("Transparent", [this]() {
         auto style = _canvas->style();
         style.setFillColor(Color::Transparent);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     fillColorMenu.addMenuEntry("Black", [this]() {
         auto style = _canvas->style();
         style.setFillColor(Color::Black);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     fillColorMenu.addMenuEntry("White", [this]() {
         auto style = _canvas->style();
         style.setFillColor(Color::White);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     fillColorMenu.addMenuEntry("Red", [this]() {
         auto style = _canvas->style();
         style.setFillColor(Color::Red);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     fillColorMenu.addMenuEntry("Orange", [this]() {
         auto style = _canvas->style();
         style.setFillColor(Color::Orange);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     fillColorMenu.addMenuEntry("Yellow", [this]() {
         auto style = _canvas->style();
         style.setFillColor(Color::Yellow);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     fillColorMenu.addMenuEntry("Green", [this]() {
         auto style = _canvas->style();
         style.setFillColor(Color::Green);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     fillColorMenu.addMenuEntry("Blue", [this]() {
         auto style = _canvas->style();
         style.setFillColor(Color::Blue);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     fillColorMenu.addMenuEntry("Purple", [this]() {
         auto style = _canvas->style();
         style.setFillColor(Color::Purple);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     fillColorMenu.addMenuEntry("Custom...", [this]() {});
 }
@@ -439,32 +455,32 @@ void PaintWindow::setupPointMenu() {
     pointMenu.addMenuEntry("1 px", [this]() {
         auto style = _canvas->style();
         style.setPointSize(1);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     pointMenu.addMenuEntry("3 px", [this]() {
         auto style = _canvas->style();
         style.setPointSize(3);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     pointMenu.addMenuEntry("5 px", [this]() {
         auto style = _canvas->style();
         style.setPointSize(5);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     pointMenu.addMenuEntry("10 px", [this]() {
         auto style = _canvas->style();
         style.setPointSize(10);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     pointMenu.addMenuEntry("25 px", [this]() {
         auto style = _canvas->style();
         style.setPointSize(25);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
     pointMenu.addMenuEntry("50 px", [this]() {
         auto style = _canvas->style();
         style.setPointSize(50);
-        _canvas->setStyle(style);
+        setShapeStyle(style);
     });
 }
 

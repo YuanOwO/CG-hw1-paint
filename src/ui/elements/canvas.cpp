@@ -7,7 +7,7 @@
 namespace paint::ui {
 
 CanvasElement::CanvasElement(Document& document)
-    : Element(), _gridVisible(true), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
+    : Element(), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
     setFocusable(true);  // CanvasElement 可以接收鍵盤事件
     setHorizontalAlignment(Alignment::Stretch);
     setVerticalAlignment(Alignment::Stretch);
@@ -160,16 +160,7 @@ Size CanvasElement::measureContent(const Size& availableSize) {
 }
 
 void CanvasElement::renderContent(RenderContext& context) {
-    renderContent(context, _gridVisible);
-}
-
-void CanvasElement::renderContent(RenderContext& context, bool includeGrid) {
-    auto oldVisibility = isGridVisible();
-    setGridVisibility(includeGrid);
-
     _renderer.render(context, *this);
-
-    setGridVisibility(oldVisibility);
 }
 
 }  // namespace paint::ui
