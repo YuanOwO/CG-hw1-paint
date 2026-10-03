@@ -4,6 +4,8 @@
 
 #include <utility>
 
+#include "ui/window.hpp"
+
 namespace paint::ui {
 
 namespace {
@@ -142,6 +144,11 @@ void Menu::menuCallback(int option) {
     }
 
     auto* menu = it->second;
+
+    if (!Window::canReceiveInput(menu->_windowId)) {
+        Window::activateModalWindow();
+        return;
+    }
 
     auto itemIt = menu->_items.find(option);
 

@@ -51,6 +51,10 @@ class Window : public EventTarget {
 
     bool shouldClose() const { return _shouldClose; }
 
+    // Modal windows exclusively receive input until they are closed.
+    static bool canReceiveInput(int windowId);
+    static void activateModalWindow();
+
     // Content
 
     void setContent(std::unique_ptr<Element> content);
@@ -63,6 +67,7 @@ class Window : public EventTarget {
     void setTitle(const std::string& title);
 
     void close();
+    void setModal(bool modal);
 
     // Input state
 

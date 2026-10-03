@@ -12,6 +12,7 @@ namespace paint::ui {
 namespace {
 
 std::unordered_map<int, Window*> windows;
+Window* modalWindow = nullptr;
 
 }  // namespace
 
@@ -56,6 +57,10 @@ Window::Window(const std::string& title, int width, int height, bool resizable)
 }
 
 Window::~Window() {
+    if (modalWindow == this) {
+        modalWindow = nullptr;
+    }
+
     if (_id != 0) {
         windows.erase(_id);
         glutDestroyWindow(_id);
@@ -72,6 +77,39 @@ void Window::setTitle(const std::string& title) {
 
 void Window::close() {
     _shouldClose = true;
+}
+
+void Window::setModal(bool modal) {
+    if (modal) {
+        modalWindow = this;
+
+        // Clear input captured by another window before the dialog appeared.
+        _keyboardState._clear();
+        for (auto& [id, window] : windows) {
+            window->resetInputState();
+            window->_clickCandidate.clear();
+            window->_lastClicks.clear();
+            window->_mouseCapture = nullptr;
+        }
+
+        activateModalWindow();
+    } else if (modalWindow == this) {
+        modalWindow = nullptr;
+    }
+}
+
+bool Window::canReceiveInput(int windowId) {
+    return modalWindow == nullptr || modalWindow->id() == windowId;
+}
+
+void Window::activateModalWindow() {
+    if (modalWindow == nullptr || modalWindow->id() == 0) {
+        return;
+    }
+
+    glutSetWindow(modalWindow->id());
+    glutShowWindow();
+    glutPopWindow();
 }
 
 #pragma region Content
@@ -285,6 +323,10 @@ void Window::closeCallback() {
         return;
     }
 
+    if (modalWindow == window) {
+        modalWindow = nullptr;
+    }
+
     // 從管理列表中移除視窗，並將其 ID 設為 0
     windows.erase(window->_id);
     window->_id = 0;
@@ -391,12 +433,17 @@ void Window::displayCallback() {
 void Window::keyDownHandler(Key key, int x, int y) {
     auto* window = currentWindow();
 
-    bool firstPress = _keyboardState._press(key);
-
     // 找不到當前視窗，直接返回
     if (!window) {
         return;
     }
+
+    if (!canReceiveInput(window->_id)) {
+        activateModalWindow();
+        return;
+    }
+
+    bool firstPress = _keyboardState._press(key);
 
     window->_mouseState._setPosition(x, y);
 
@@ -412,12 +459,17 @@ void Window::keyDownHandler(Key key, int x, int y) {
 void Window::keyUpHandler(Key key, int x, int y) {
     auto* window = currentWindow();
 
-    _keyboardState._release(key);
-
     // 找不到當前視窗，直接返回
     if (!window) {
         return;
     }
+
+    if (!canReceiveInput(window->_id)) {
+        activateModalWindow();
+        return;
+    }
+
+    _keyboardState._release(key);
 
     window->_mouseState._setPosition(x, y);
 
@@ -485,6 +537,11 @@ void Window::mouseCallback(int button, int state, int x, int y) {
 
     // 如果找不到當前視窗或未知按鈕，直接返回
     if (!window || btn == MouseButton::Unknown) {
+        return;
+    }
+
+    if (!canReceiveInput(window->_id)) {
+        activateModalWindow();
         return;
     }
 
@@ -560,6 +617,10 @@ void Window::mouseMoveHandler(int x, int y) {
         return;
     }
 
+    if (!canReceiveInput(window->_id)) {
+        return;
+    }
+
     window->_mouseState._setPosition(x, y);
 
     // 移動距離超過閾值，則取消所有滑鼠按下狀態，避免誤判為點擊事件
@@ -607,6 +668,10 @@ void Window::entryCallback(int state) {
 
     // 如果找不到當前視窗，直接返回
     if (!window) {
+        return;
+    }
+
+    if (!canReceiveInput(window->_id)) {
         return;
     }
 

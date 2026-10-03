@@ -28,6 +28,8 @@ ConfirmWindow::ConfirmWindow(const std::string& title, const std::string& messag
             event.stopPropagation();
         }
     });
+
+    setModal(true);
 }
 
 void ConfirmWindow::confirm() {
