@@ -100,18 +100,7 @@ void InputElement::arrangeContent(const BoundingBox& contentBounds) {
 }
 
 void InputElement::renderContent(RenderContext& context) {
-    const ColorRGBA border = _focused ? ColorRGBA{0.15f, 0.36f, 0.85f} : ColorRGBA{0.68f, 0.71f, 0.77f};
-
-    context.fillRect(width(), height(), border);
-
-    if (width() <= 2 || height() <= 2) {
-        return;
-    }
-
-    context.pushTransform();
-    context.translate(1.0f, 1.0f);
-    context.fillRect(width() - 2, height() - 2, Color::White);
-    context.popTransform();
+    _renderer.render(context, *this);
 }
 
 void InputElement::handleKeyDown(KeyDownEvent& event) {

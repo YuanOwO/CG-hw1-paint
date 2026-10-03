@@ -4,12 +4,20 @@
 #include <functional>
 #include <string>
 
+#include "common/color.hpp"
 #include "event/events.hpp"
+#include "render/ui/input_renderer.hpp"
 #include "ui/element.hpp"
 
 namespace paint::ui {
 
 class TextElement;
+
+struct InputStyle {
+    ColorRGBA background = Color::White;
+    ColorRGBA border = ColorRGBA{0.68f, 0.71f, 0.77f};
+    ColorRGBA focusedBorder = ColorRGBA{0.15f, 0.36f, 0.85f};
+};
 
 class InputElement : public Element {
    public:
@@ -25,6 +33,14 @@ class InputElement : public Element {
 
     std::size_t maxLength() const { return _maxLength; }
     void setMaxLength(std::size_t maxLength);
+
+    bool isFocused() const { return _focused; }
+
+    const InputStyle& style() const { return _style; }
+    void setStyle(const InputStyle& style) {
+        _style = style;
+        invalidateDisplay();
+    }
 
     void setOnValueChanged(ValueChangedHandler handler);
 
@@ -44,6 +60,8 @@ class InputElement : public Element {
 
     bool _focused = false;
 
+    InputRenderer _renderer;
+    InputStyle _style;
     TextElement* _textElement = nullptr;
     ValueChangedHandler _onValueChanged;
 
