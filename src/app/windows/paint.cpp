@@ -5,6 +5,10 @@
 #include <utility>
 
 #include "app/application.hpp"
+#include "common/font.hpp"
+#include "ui/elements/dockPanel.hpp"
+#include "ui/elements/stackPanel.hpp"
+#include "ui/elements/text.hpp"
 #include "ui/layout/bounding.hpp"
 
 using paint::drawing::LineCap;
@@ -17,10 +21,26 @@ PaintWindow::PaintWindow(Application& app, const std::string& title, int width, 
     : Window(app, title, width, height) {
     setupMenu();
 
+    auto dock = std::make_unique<ui::DockPanelElement>();
+
+    auto statusBar = std::make_unique<ui::StackPanelElement>(ui::StackOrientation::Horizontal);
+
+    statusBar->setPadding({8, 8, 4, 4});
+
+    auto statusText =
+        std::make_unique<ui::TextElement>("Ready", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+
+    statusBar->appendChild(std::move(statusText));
+
+    // 先保留底部狀態列的空間。
+    dock->appendChild(std::move(statusBar), ui::Dock::Bottom);
+
     // 設置根元素為 CanvasElement
     auto canvas = std::make_unique<ui::CanvasElement>(_document);
+    dock->appendChild(std::move(canvas));
     _canvas = canvas.get();
-    setContent(std::move(canvas));
+
+    setContent(std::move(dock));
     setFocusedElement(_canvas);  // 將焦點設置為 CanvasElement
 
     // 設置快捷鍵
