@@ -382,7 +382,18 @@ void Element::render(render::RenderContext& context) {
         }
     }
 
+    // Caret 與 selection 這類前景效果應蓋在子元件上方。
+    renderOverlay(context);
+
     context.popTransform();  // 恢復父元素的座標系
+}
+
+void Element::updateTree(std::chrono::milliseconds delta) {
+    update(delta);
+
+    for (const auto& child : _children) {
+        child->updateTree(delta);
+    }
 }
 
 #pragma endregion  // Rendering

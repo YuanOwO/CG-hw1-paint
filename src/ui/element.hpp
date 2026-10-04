@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <memory>
 #include <stdexcept>
 #include <utility>
@@ -109,6 +110,8 @@ class Element : public EventTarget {
 
     void invalidateDisplay();
     virtual void renderContent(render::RenderContext& context) {}
+    virtual void renderOverlay(render::RenderContext& context) {}
+    virtual void update(std::chrono::milliseconds delta) {}
 
     // Tree
 
@@ -137,6 +140,7 @@ class Element : public EventTarget {
 
     ColorRGBA _backgroundColor = Color::Transparent;
     void render(render::RenderContext& context);
+    void updateTree(std::chrono::milliseconds delta);
 
     // Tree
 

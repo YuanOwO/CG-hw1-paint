@@ -301,6 +301,9 @@ void Window::timerCallback(int windowId) {
 
     auto* window = it->second;
 
+    // 只有動畫狀態真正變化的 element 才會要求重繪。
+    window->_rootElement->updateTree(std::chrono::milliseconds{CAPTURE_INTERVAL_MS});
+
     // 如果視窗需要捕捉內容到 ColorBuffer，且內容沒有被標記為 dirty，則進行捕捉
     if (window->_needsCapture && !window->_contentDirty) {
         const int previousWindow = glutGetWindow();

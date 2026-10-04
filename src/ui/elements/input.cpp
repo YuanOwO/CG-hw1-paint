@@ -46,12 +46,14 @@ InputElement::InputElement(std::string value, std::string placeholder)
 
     addEventListener<FocusEvent>([this](FocusEvent&) {
         _focused = true;
+        resetCursorBlink();
         updateDisplayedText();
-        invalidateDisplay();
     });
 
     addEventListener<BlurEvent>([this](BlurEvent&) {
         _focused = false;
+        _cursorVisible = false;
+        _cursorElapsed = std::chrono::milliseconds{0};
         _unicodeInputActive = false;
         _unicodeDigits.clear();
         updateDisplayedText();
@@ -136,6 +138,57 @@ void InputElement::arrangeContent(const BoundingBox& contentBounds) {
 
 void InputElement::renderContent(render::RenderContext& context) {
     _renderer.render(context, *this);
+}
+
+void InputElement::renderOverlay(render::RenderContext& context) {
+    _renderer.renderCursor(context, *this);
+}
+
+void InputElement::update(std::chrono::milliseconds delta) {
+    if (!_focused) {
+        return;
+    }
+
+    _cursorElapsed += delta;
+    if (_cursorElapsed < CURSOR_BLINK_INTERVAL) {
+        return;
+    }
+
+    _cursorElapsed -= CURSOR_BLINK_INTERVAL;
+    _cursorVisible = !_cursorVisible;
+    invalidateDisplay();
+}
+
+float InputElement::cursorX() const {
+    if (!_textElement) {
+        return static_cast<float>(padding().left);
+    }
+
+    std::u32string prefix;
+    prefix.reserve(_cursorIndex + _unicodeDigits.size() + 1);
+
+    for (std::size_t i = 0; i < _cursorIndex; ++i) {
+        prefix.push_back(_characters[i].codepoint);
+    }
+
+    if (_unicodeInputActive) {
+        prefix.push_back(U'`');
+        for (char digit : _unicodeDigits) {
+            prefix.push_back(static_cast<unsigned char>(digit));
+        }
+    }
+
+    return static_cast<float>(_textElement->x()) +
+           getFontWidth(_textElement->fontStyle(), utf8::fromUtf32(prefix));
+}
+
+float InputElement::cursorY() const {
+    return _textElement ? static_cast<float>(_textElement->y())
+                        : static_cast<float>(padding().top);
+}
+
+int InputElement::cursorHeight() const {
+    return _textElement ? _textElement->height() : 0;
 }
 
 void InputElement::handleKeyDown(KeyDownEvent& event) {
@@ -310,6 +363,12 @@ void InputElement::commitUnicodeInput() {
     updateDisplayedText();
 }
 
+void InputElement::resetCursorBlink() {
+    _cursorVisible = _focused;
+    _cursorElapsed = std::chrono::milliseconds{0};
+    invalidateDisplay();
+}
+
 void InputElement::rebuildValue() {
     // 只在編輯狀態改變後重建，讓 value() 仍可回傳穩定的 const reference。
     std::u32string codepoints;
@@ -325,6 +384,10 @@ void InputElement::updateDisplayedText() {
         return;
     }
 
+    if (_focused) {
+        resetCursorBlink();
+    }
+
     if (_value.empty() && !_focused) {
         _textElement->setText(_placeholder);
         _textElement->setColor(ColorRGBA{0.52f, 0.56f, 0.63f});
@@ -332,19 +395,14 @@ void InputElement::updateDisplayedText() {
     }
 
     std::u32string displayed;
-    displayed.reserve(_characters.size() + _unicodeDigits.size() + 2);
+    displayed.reserve(_characters.size() + _unicodeDigits.size() + 1);
 
-    // Cursor 目前先以 '|' 字元呈現。位置已經是獨立的 cursor index，
-    // 之後可改由 InputRenderer 畫閃爍 caret，不需要改動編輯模型。
     for (std::size_t i = 0; i <= _characters.size(); ++i) {
-        if (_focused && i == _cursorIndex) {
-            if (_unicodeInputActive) {
-                displayed.push_back(U'`');
-                for (char digit : _unicodeDigits) {
-                    displayed.push_back(static_cast<unsigned char>(digit));
-                }
+        if (_unicodeInputActive && i == _cursorIndex) {
+            displayed.push_back(U'`');
+            for (char digit : _unicodeDigits) {
+                displayed.push_back(static_cast<unsigned char>(digit));
             }
-            displayed.push_back(U'|');
         }
 
         if (i < _characters.size()) {

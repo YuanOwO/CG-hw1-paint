@@ -11,6 +11,7 @@ namespace paint::render {
 class InputRenderer {
    public:
     void render(RenderContext& context, const ui::InputElement& input);
+    void renderCursor(RenderContext& context, const ui::InputElement& input);
 };
 
 }  // namespace paint::render

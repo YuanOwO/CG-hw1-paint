@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <cstddef>
 #include <functional>
 #include <string>
@@ -24,6 +25,7 @@ struct InputStyle {
     ColorRGBA background = Color::White;
     ColorRGBA border = ColorRGBA{0.68f, 0.71f, 0.77f};
     ColorRGBA focusedBorder = ColorRGBA{0.15f, 0.36f, 0.85f};
+    ColorRGBA cursor = ColorRGBA{0.12f, 0.16f, 0.23f};
 };
 
 class InputElement : public Element {
@@ -45,6 +47,11 @@ class InputElement : public Element {
     void setMaxLength(std::size_t maxLength);
 
     bool isFocused() const { return _focused; }
+    bool isCursorVisible() const { return _cursorVisible; }
+
+    float cursorX() const;
+    float cursorY() const;
+    int cursorHeight() const;
 
     const InputStyle& style() const { return _style; }
     void setStyle(const InputStyle& style) {
@@ -60,6 +67,8 @@ class InputElement : public Element {
     void arrangeContent(const BoundingBox& contentBounds) override;
 
     void renderContent(render::RenderContext& context) override;
+    void renderOverlay(render::RenderContext& context) override;
+    void update(std::chrono::milliseconds delta) override;
 
    private:
     // _characters 是編輯狀態的真實來源；_value 是給既有 API 使用的 UTF-8 快取。
@@ -72,6 +81,10 @@ class InputElement : public Element {
     std::size_t _maxLength = 255;
 
     bool _focused = false;
+    bool _cursorVisible = false;
+    std::chrono::milliseconds _cursorElapsed{0};
+
+    static constexpr std::chrono::milliseconds CURSOR_BLINK_INTERVAL{500};
 
     // 反引號會開啟四位十六進位組字，例如 `4f60 -> 你。
     bool _unicodeInputActive = false;
@@ -85,6 +98,7 @@ class InputElement : public Element {
     void handleKeyDown(KeyDownEvent& event);
     void handleTextInput(TextInputEvent& event);
     void commitUnicodeInput();
+    void resetCursorBlink();
 
     void rebuildValue();
     void updateDisplayedText();

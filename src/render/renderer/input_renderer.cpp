@@ -20,4 +20,20 @@ void InputRenderer::render(RenderContext& context, const ui::InputElement& input
     context.popTransform();
 }
 
+void InputRenderer::renderCursor(RenderContext& context, const ui::InputElement& input) {
+    if (!input.isFocused() || !input.isCursorVisible()) {
+        return;
+    }
+
+    const int height = input.cursorHeight();
+    if (height <= 0) {
+        return;
+    }
+
+    context.pushTransform();
+    context.translate(input.cursorX(), input.cursorY());
+    context.fillRect(1, height, input.style().cursor);
+    context.popTransform();
+}
+
 }  // namespace paint::render
