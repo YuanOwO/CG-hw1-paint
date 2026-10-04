@@ -1,7 +1,7 @@
 \usepackage{amsmath, amssymb, amsthm}       % 美國數學學會
 \usepackage[CheckSingle, CJKmath]{xeCJK}    % 中文
-\usepackage{fontspec}                       % 字型配置
-\usepackage{geometry}                       % 版面配置
+\usepackage{fontspec}                       % 字型設定
+\usepackage{geometry}                       % 版面設定
 \usepackage[nocheck]{fancyhdr}              % 頁首頁尾
 \usepackage{color}                          % 顏色
 \usepackage[x11names]{xcolor}               % 更多顏色
@@ -20,6 +20,12 @@
 \usepackage{multirow}                       % 表格合併列
 \usepackage{float}                          % 浮動物件位置強制
 \usepackage{notomath}                       % Noto 數學字體
+\usepackage{booktabs}                       % 表格橫線
+\usepackage{tabularx}                       % 自動欄寬
+\usepackage{longtable}                      % 跨頁表格
+\usepackage{array}                          % 表格欄位格式
+\usepackage{microtype}                      % 英文微排版
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, calc, backgrounds}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -106,6 +112,7 @@
 
 \XeTeXlinebreaklocale "zh"          % 中文自動換行
 \XeTeXlinebreakskip = 0pt plus 1pt  % 設定段落之間的距離
+\emergencystretch=3em
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -116,6 +123,24 @@
     filecolor=green,         % 檔案連結顏色
     urlcolor=blue,           % 網址顏色
     pdfborder={0 0 1}        % 設定邊框樣式（0 0 1 表示只有底部有邊框）
+}
+
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{3}
+
+\newcommand{\statusdone}{\textbf{已完成}}
+\newcommand{\statuspartial}{\textbf{部分完成}}
+\newcommand{\statuspending}{\textbf{尚未完成}}
+
+\tikzset{
+    flow/.style={draw, rounded corners=2pt, align=center, minimum height=8mm,
+            text width=25mm, fill=blue!5},
+    layer/.style={draw, rounded corners=2pt, align=center, minimum height=9mm,
+            text width=31mm, fill=gray!8},
+    arrow/.style={-{Latex[length=2.2mm]}, thick},
+    dashedarrow/.style={-{Latex[length=2.2mm]}, thick, dashed},
+    note/.style={draw, rounded corners=2pt, align=left, fill=yellow!8,
+            inner sep=5pt},
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

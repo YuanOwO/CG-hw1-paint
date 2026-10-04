@@ -1,0 +1,10 @@
+flowchart LR
+    utf8[UTF-8 位元組] --> decode[解碼 code point]
+    decode --> lookup[以 binary search<br/>查找 Glyph]
+    lookup --> metrics[取得 Glyph metrics<br/>bearing／advance／尺寸]
+    metrics --> bitmap[取得 bitmap offset<br/>與透明度點陣圖]
+    bitmap --> pixels[組成 RGBA 像素]
+    pixels --> render[glDrawPixels]
+
+    classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
+    class utf8,decode,lookup,metrics,bitmap,pixels,render step;

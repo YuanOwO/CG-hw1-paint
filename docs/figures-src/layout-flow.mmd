@@ -1,0 +1,9 @@
+flowchart LR
+    change[影響版面的屬性改變] --> invalidate[invalidateLayout<br/>Window 標記為待更新]
+    invalidate --> ensure[繪製或 hitTest 前<br/>呼叫 ensureLayout]
+    ensure --> measure[Measure<br/>向下傳空間、向上回報尺寸]
+    measure --> arrange[Arrange<br/>向下分配位置與範圍]
+    arrange --> render[送出移動／調整大小 Event<br/>再進行繪製]
+
+    classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
+    class change,invalidate,ensure,measure,arrange,render step;

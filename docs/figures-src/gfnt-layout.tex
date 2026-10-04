@@ -1,0 +1,25 @@
+\documentclass[tikz,border=8pt]{standalone}
+\usepackage{xeCJK}
+\setCJKmainfont{NotoSansCJKtc-Regular.otf}[Path=/Users/yuan/Library/Fonts/]
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\begin{document}
+\begin{tikzpicture}[
+        font=\small,
+        node distance=0pt,
+        arrow/.style={-{Stealth[length=2.5mm]},line width=.8pt}
+    ]
+    \node[draw, minimum width=11.5cm, minimum height=1.1cm, fill=blue!7] (h)
+    {GfntHeaderV1 -- 16 位元組 -- 檔案位移 0};
+    \node[draw, minimum width=11.5cm, minimum height=1.1cm, fill=gray!8, below=of h] (g0)
+    {GfntGlyphV1[0] -- 18 位元組 -- 檔案位移 16};
+    \node[draw, minimum width=11.5cm, minimum height=1.1cm, fill=gray!8, below=of g0] (g1)
+    {GfntGlyphV1[1] -- 18 位元組 -- 檔案位移 34};
+    \node[draw, minimum width=11.5cm, minimum height=.8cm, fill=gray!4, below=of g1] (dots)
+    {$\cdots$ 共 $N$ 筆，依 code point 排序};
+    \node[draw, minimum width=11.5cm, minimum height=1.2cm, fill=green!7, below=of dots] (bits)
+    {Bitmap Data -- 檔案位移 $16+18N$ -- 每個 pixel 使用 1 位元組透明度};
+    \draw[arrow] ([xshift=-6cm]h.north west) -- ([xshift=-6cm]bits.south west)
+        node[midway, left, align=right]{檔案\\順序};
+\end{tikzpicture}
+\end{document}

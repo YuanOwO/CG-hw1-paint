@@ -1,0 +1,60 @@
+\section{文字功能}
+
+\subsection{FreeGLUT 字型}
+
+文字物件可以使用 FreeGLUT 提供的 Bitmap 與 Stroke 字型。Bitmap Renderer 逐字設定 raster position，再呼叫 \lstinline|glutBitmapCharacter()|；由於不同字型的原點位置不一樣，程式也會調整 baseline。Stroke 字型原本使用 Y 軸向上的座標，繪製前會先翻轉 Y 軸，才能和 Canvas 的座標方向一致。這些內建字型主要用來顯示 ASCII。
+
+\subsection{Text Object 與文字輸入}
+
+選擇 Text tool 並點擊 Canvas 後，程式會開啟 Modal Input Dialog。只有在使用者確認文字後，才會建立 TextObject 並加入 Scene；如果取消輸入，Scene 不會留下空的文字物件。Dialog 只負責收集字串，實際修改 Document 的工作仍由 PaintWindow 完成。
+
+輸入框內部以 Unicode code point 為編輯單位，對外仍使用 UTF-8 字串。這樣 Backspace、Delete 與左右方向鍵一次會移動或刪除一個字元，不會切斷中文字的 UTF-8 bytes。輸入框也支援 Home、End、255 個 code point 的長度上限，以及每 500 ms 切換一次的 caret。FreeGLUT 的一般 keyboard callback 只能直接提供單一 byte，因此程式另外加入反引號加四位十六進位數字的輸入方式，例如 \lstinline|`4f60| 會輸入「你」。這不是完整的輸入法，但足以測試中文字元與 Glyph rendering。
+
+圖~\ref{fig:utf8-caret} 以「A你B」為例，對照畫面上的三個字元、各自的 Unicode code point 與 UTF-8 bytes。Caret index 記錄的是字元之間的位置，因此刪除「你」時會移除一個 code point，而不是只刪除其中一個 byte。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.96\textwidth]{docs/figures/utf8-caret.png}
+    \caption{UTF-8 bytes、code point 與 caret index 的對應}
+    \label{fig:utf8-caret}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.68\textwidth]{docs/figures/gfnt-chinese-output.png}
+    \caption{GFNT 在程式輸出中繪製「電腦圖學」的實際結果}
+    \label{fig:text-result}
+\end{figure}
+
+圖~\ref{fig:text-result} 是從程式實際輸出的圖片裁切而成，可確認四個中文字都能找到對應 Glyph，字元順序與基線也符合輸入內容。輸入過程中的 caret 與 code point 關係則由圖~\ref{fig:utf8-caret} 說明。
+
+\subsection{UTF-8 與中文字元支援}
+
+我另外實作 UTF-8 decoder，支援 1--4 byte sequence，並排除 overlong encoding、超過 U+10FFFF 的值與 UTF-16 surrogate。遇到不合法的輸入時，以 U+FFFD 取代。輸入框會先把 UTF-8 轉成 code point 進行編輯，顯示時再轉回 UTF-8；TextRenderer 也使用相同的 decoder 逐字取得 code point。
+
+\subsection{自訂中文字型支援}
+
+為了顯示 FreeGLUT 內建字型沒有涵蓋的中文字，我設計了 GFNT bitmap font 格式。程式啟動時會載入 GFNT binary resource，文字繪製時先從 UTF-8 取出 code point，再查找 Glyph 的尺寸、bearing、advance 與 bitmap 位置。Renderer 依目前文字顏色組成 RGBA pixels，最後交給 OpenGL 繪製。圖~\ref{fig:gfnt-runtime} 顯示文字從 UTF-8 到畫面的步驟，格式與載入檢查則放在附錄~\ref{app:gfnt}。
+
+Glyph Table 依 code point 排序，所以實際查找使用 \lstinline|std::lower_bound|，如程式碼~\ref{lst:glyph-lookup}。找不到原字元時，程式再嘗試 U+FFFD 與問號；完整 fallback 流程與檔案格式放在附錄~\ref{app:gfnt}。
+
+\begin{lstlisting}[caption={依 code point 查找 GFNT Glyph},label={lst:glyph-lookup}]
+const gfnt::GfntGlyphV1* GfntFont::findGlyph(char32_t codepoint) const {
+    const auto value = static_cast<std::uint32_t>(codepoint);
+    const auto it = std::lower_bound(
+        _glyphs.begin(), _glyphs.end(), value,
+        [](const gfnt::GfntGlyphV1& glyph, std::uint32_t searched) {
+            return glyph.codepoint < searched;
+        });
+
+    if (it == _glyphs.end() || it->codepoint != value) return nullptr;
+    return &*it;
+}
+\end{lstlisting}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.98\textwidth]{docs/figures/gfnt-runtime.png}
+    \caption{GFNT 執行期文字渲染流程}
+    \label{fig:gfnt-runtime}
+\end{figure}

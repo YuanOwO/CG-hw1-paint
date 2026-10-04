@@ -1,0 +1,91 @@
+\section{特殊貢獻摘要}
+
+除了題目要求的基本 drawing panel，我另外完成了幾項和程式結構或繪圖效果有關的功能。前面章節已經說明過實作細節，因此這裡只整理各項功能的目的與對應章節。
+
+\begin{table}[H]
+    \centering
+    \caption{特殊功能摘要}
+    \label{tab:contribution-summary}
+    \begin{tabularx}{\textwidth}{>{\bfseries}l X l}
+        \toprule
+        特殊功能            & 簡要說明                                                      & 詳細章節                           \\
+        \midrule
+        Undo / Redo     & 以 Command History 保留操作，並用 state ID 判斷 Document 是否回到已儲存狀態。 & 第~\ref{sec:command-history} 節  \\
+        Multi-window    & 以 Window ID 找回 C++ instance，並讓 Modal Dialog 暫停背景視窗輸入。     & 附錄~\ref{app:gui}               \\
+        Advanced Stroke & 自行計算 Join、Cap 與 Miter Limit 所需的 triangle geometry。        & 第~\ref{sec:stroke-rendering} 節 \\
+        自製 GUI          & 實作 Element tree、Layout、Event bubbling 與 mouse capture。    & 附錄~\ref{app:gui}               \\
+        GFNT            & 自行處理 UTF-8、Glyph lookup 與 bitmap font rendering。          & 附錄~\ref{app:gfnt}              \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+這些功能都直接服務於繪圖程式：Command History 讓操作可以復原，GUI framework 支撐多視窗與 Dialog，Stroke geometry 改善粗線外觀，GFNT 則補上中文顯示。它們沒有改變作業的核心目標，但讓我可以實際處理較完整的互動與 rendering 問題。
+
+\section{成果展示與作業需求驗證}
+
+\subsection{繪圖成果}
+
+圖~\ref{fig:drawing-result} 集中呈現 Point、Pencil、Line、Rectangle、Ellipse、Polygon 與 Text 的操作結果，並比較不同 Fill、Stroke、Join、Cap 與 Grid 設定。
+
+\begin{figure}[H]
+    \centering
+    % 基本與進階繪圖成果的實際畫面放置位置
+    \fbox{\parbox[c][7cm][c]{0.88\textwidth}{
+            \centering 綜合繪圖成果\\
+            點／鉛筆／直線／矩形／橢圓／多邊形／文字\\
+            不同筆畫、填滿、接合方式、端點樣式與格線
+        }}
+    \caption{基本工具與進階筆畫樣式的繪圖成果}
+    \label{fig:drawing-result}
+\end{figure}
+
+\subsection{進階功能成果}
+
+圖~\ref{fig:text-result} 顯示文字輸入，圖~\ref{fig:ppm-result} 對照 Canvas 與 PPM 輸出。圖~\ref{fig:multiwindow-result} 則呈現兩個 PaintWindow 和 Confirm Dialog，用來觀察不同視窗的 Document 是否彼此獨立，以及 Dialog 開啟時背景視窗的輸入狀態。
+
+\begin{figure}[H]
+    \centering
+    % 多視窗與對話框的實際畫面放置位置
+    \fbox{\parbox[c][5cm][c]{0.82\textwidth}{
+            \centering 兩個 PaintWindow 與確認對話框
+        }}
+    \caption{多視窗與確認對話框}
+    \label{fig:multiwindow-result}
+\end{figure}
+
+\subsection{Requirement Checklist}
+
+表~\ref{tab:requirements} 依 README 與實際程式碼標示完成狀態。介面中存在但 callback 為空，或 file command 存在但內容未序列化者，都不列為完成。
+
+\begin{longtable}{>{\raggedright\arraybackslash}p{.24\textwidth} >{\raggedright\arraybackslash}p{.14\textwidth} >{\raggedright\arraybackslash}p{.50\textwidth}}
+    \caption{作業要求與實作狀態}\label{tab:requirements}                                                                                              \\
+    \toprule
+    Requirement                            & Status & Implementation                                                                         \\
+    \midrule
+    \endfirsthead
+    \toprule
+    Requirement                            & Status & Implementation                                                                         \\
+    \midrule
+    \endhead
+    Interactive 2D drawing panel           & 已完成    & CanvasElement、tool draft、Scene 與 Renderer。                                             \\
+    Hierarchical menus                     & 已完成    & FreeGLUT Menu 封裝與 File/Edit/Tools/Stroke/Fill/Point/Text/Grid 子選單。                     \\
+    Keyboard events                        & 已完成    & KeyDown/KeyUp/TextInput、InputState 與 ShortcutManager。                                  \\
+    Mouse / motion events                  & 已完成    & MouseDown/Up/Move、Click/DoubleClick、hit test 與 mouse capture。                          \\
+    Window events                          & 已完成    & Close、Reshape、Visibility、Entry callback 轉為 Window Event。                               \\
+    Color                                  & 部分完成   & Stroke/Fill/Text 預設色可選；Custom color callback 尚未完成。                                     \\
+    Line width / point size                & 已完成    & 選單與中括號快捷鍵可調整。                                                                          \\
+    Fill mode                              & 已完成    & OUTLINE、FILLED、ADVANCED；Advanced 分開處理 Fill 與 Stroke。                                   \\
+    Mouse / motion drawing                 & 已完成    & DragTool、PencilTool 與 PolygonTool。                                                     \\
+    Color buffer save / restore            & 已完成    & ColorBuffer 使用 glReadPixels / glDrawPixels 做視窗 cache。                                  \\
+    Save color buffer                      & 已完成    & PPM P6 export 輸出重新 render 後的 Canvas framebuffer。                                       \\
+    Text input                             & 已完成    & Modal InputDialog、InputElement、TextObject 與三種字型 renderer。                              \\
+    Grid                                   & 已完成    & 25 px line grid、dot grid 與 none。                                                       \\
+    Grid-line / scales / positions / sizes & 部分完成   & 已有 line/dot Grid，Status Bar 會顯示游標位置與 Canvas 尺寸；程式中沒有獨立的 scale/ruler。                   \\
+    Undo / Redo                            & 已完成    & CommandHistory 與 Add/Insert/Remove/Clear commands。                                     \\
+    Multi-window                           & 已完成    & Application 管理視窗，Window registry 負責 callback routing；Modal Dialog 開啟時背景視窗停止接收輸入。       \\
+    Save / Load document                   & 部分完成   & \lstinline|.gpt| 可寫 header/END 並有 UI/Command；Scene serialization/deserialization 尚未完成。 \\
+    Selection tool                         & 尚未完成   & Tools/Select 選單 callback 為空。                                                           \\
+    PNG / JPEG export                      & 尚未完成   & 僅支援 binary PPM。                                                                        \\
+    Fancy ideas                            & 已完成    & 自製 GUI、advanced stroke、GFNT、UTF-8、多視窗與 framebuffer cache。                              \\
+    \bottomrule
+\end{longtable}

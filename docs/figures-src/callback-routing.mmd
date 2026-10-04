@@ -1,0 +1,12 @@
+flowchart LR
+    callback[FreeGLUT 回呼<br/>滑鼠／鍵盤／畫面顯示]
+    static[Window 靜態回呼]
+    lookup[取得目前 GLUT 視窗 ID<br/>查找 Window]
+    event[建立視窗或輸入 Event]
+    routing[命中測試／焦點／滑鼠捕捉]
+    dispatch[分派給 Element<br/>並沿父節點向上傳遞]
+
+    callback --> static --> lookup --> event --> routing --> dispatch
+
+    classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
+    class callback,static,lookup,event,routing,dispatch step;

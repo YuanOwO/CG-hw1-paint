@@ -1,0 +1,18 @@
+{
+    "theme": "base",
+    "themeVariables": {
+        "fontFamily": "Noto Sans CJK TC, Arial, sans-serif",
+        "fontSize": "15px",
+        "primaryColor": "#f4f6fb",
+        "primaryBorderColor": "#49566b",
+        "primaryTextColor": "#111111",
+        "lineColor": "#333333",
+        "tertiaryColor": "#fff9df"
+    },
+    "flowchart": {
+        "curve": "linear",
+        "htmlLabels": true,
+        "nodeSpacing": 30,
+        "rankSpacing": 35
+    }
+}

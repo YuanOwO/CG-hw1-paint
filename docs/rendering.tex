@@ -1,0 +1,112 @@
+\section{繪圖與渲染實作}
+
+\subsection{基本圖形}
+
+每種幾何圖形都能提供 Renderer 所需的頂點。Line 回傳兩端點，Rectangle 回傳四個角，Ellipse 以固定 64 個 segment 取樣，Path 與 Polygon 則使用工具收集的點。Point 是較簡單的特例，直接以 \lstinline|GL_POINTS| 和目前的 point size 繪製。Renderer 因此只需要處理完成後的 geometry，不用知道前面是單擊、拖曳還是多次點擊。
+
+\subsection{Interactive Drawing 與 Draft}
+
+繪圖工具不會在 Mouse Down 時立刻修改 Document，而是先建立一個 draft。接下來的 Motion 只改變 draft 的座標並要求重畫，所以使用者可以立即看到預覽。直到 Mouse Up、DoubleClick 或 Enter 表示操作完成，Canvas 才把新物件交給 Document 與 Command History。圖~\ref{fig:drawing-lifecycle} 是 DragTool 和 PolygonTool 共用的主要流程。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.98\textwidth]{docs/figures/drawing-lifecycle.png}
+    \caption{繪圖工具與草稿的生命週期}
+    \label{fig:drawing-lifecycle}
+\end{figure}
+
+切換工具時，目前工具會先處理尚未完成的 draft。若使用者在互動過程中按下 Undo，程式先取消 draft，而不是立刻復原 Scene 中上一個物件。這讓「取消這次尚未完成的動作」和「復原前一次已完成的動作」不會混在一起。
+
+\subsection{Stroke Rendering}
+\label{sec:stroke-rendering}
+
+Advanced mode 不直接依賴 OpenGL 的內建粗線，而是自行產生 triangle geometry。假設相鄰三點為 $A$、$B$、$C$，先計算兩段的單位方向向量
+
+\[
+    \vec{u}=\frac{B-A}{\lVert B-A\rVert}, \qquad
+    \vec{v}=\frac{C-B}{\lVert C-B\rVert}.
+\]
+
+接著將方向向量旋轉 $90^\circ$ 得到法向量 $\vec{n}_0$、$\vec{n}_1$，並以半寬 $h=w/2$ 建立左右兩側的 offset line，例如第一段的邊界會通過 $A\pm h\vec{n}_0$ 與 $B\pm h\vec{n}_0$。程式求出兩組 offset line 的交點，再用二維 cross product 判斷轉向：
+
+\[
+    \vec{u}\times\vec{v}=u_xv_y-u_yv_x.
+\]
+
+Canvas 的 Y 軸向下，因此程式中的結果大於 0 表示向右轉，小於 0 表示向左轉；這個符號接著用來選擇哪一側是外側。MITER 使用外側交點，BEVEL 用一個 triangle 截去尖角，ROUND 則補上一段 triangle fan arc。圖~\ref{fig:stroke-joins} 比較三種結果。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.82\textwidth]{docs/figures/stroke-join.png}
+    \caption{MITER、BEVEL 與 ROUND 接合方式比較；細線為中心線}
+    \label{fig:stroke-joins}
+\end{figure}
+
+開放路徑的端點只有一個方向。BUTT 直接停在原端點；SQUARE 沿線段方向再延伸 $h$；ROUND 則以端點為圓心補上半圓。三種結果如圖~\ref{fig:stroke-caps}。這些端點不是交給 \lstinline|glLineWidth()| 決定，而是由同一套 geometry 計算產生。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.76\textwidth]{docs/figures/stroke-cap.png}
+    \caption{BUTT、SQUARE 與 ROUND 端點樣式比較；虛線為原始端點}
+    \label{fig:stroke-caps}
+\end{figure}
+
+當兩段線形成很尖的角度時，外側 offset line 的交點可能離 $B$ 很遠。程式將這段距離記為 miter length $m$，並與 $hL$ 比較，其中 $L$ 是 miter limit，目前預設為 4：
+
+\[
+    \text{使用 MITER 的條件：}\qquad m \leq hL.
+\]
+
+若 $m>hL$，即使使用者選擇 MITER，程式仍改用 BEVEL，避免出現過長的尖刺。圖~\ref{fig:miter-limit} 顯示這項判斷。
+
+程式碼~\ref{lst:miter-condition} 是 Renderer 中的實際判斷。只有選擇 MITER 且外側交點距離沒有超過限制時，才會保留兩側交點；其餘情況再依設定改畫 BEVEL 或 ROUND。
+
+\begin{lstlisting}[caption={Stroke Join 的 miter limit 判斷},label={lst:miter-condition}]
+const auto turn = cross(u, v);
+const bool turnRight = turn > 0.0f;
+
+Point outerInter = turnRight ? leftInter : rightInter;
+const GLfloat outerDistance = abs(outerInter - curr);
+const bool validMiter = style.join == LineJoin::MITER &&
+                        outerDistance <= h * style.miterLimit;
+
+if (validMiter) {
+    result.joinType = LineJoin::MITER;
+    result.inLeft = result.outLeft = leftInter;
+    result.inRight = result.outRight = rightInter;
+}
+\end{lstlisting}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.92\textwidth]{docs/figures/miter-limit.png}
+    \caption{Miter limit 的實際轉角案例；灰底表示筆畫寬度，藍線為中心線}
+    \label{fig:miter-limit}
+\end{figure}
+
+程式也處理平行、近 180 度折返與過遠 inner intersection。若 offset line 無法穩定求交，Join 退回 BEVEL 或 ROUND；inner intersection 超過附近 segment 長度與半寬推導出的限制時，改用原 vertex，避免短筆畫出現異常 triangle。
+
+\subsection{Fill Rendering}
+
+OUTLINE 與 FILLED 模式直接使用 OpenGL primitive 和 \lstinline|glPolygonMode()|。ADVANCED 模式則把填色與描邊分開：封閉圖形先填入 Fill color，再畫出自行計算的 Stroke geometry。若 Fill color 完全透明或頂點少於三個，就跳過填色。目前填色仍使用 \lstinline|GL_POLYGON|，因此凹多邊形可能無法得到正確結果，這部分尚未加入 triangulation。
+
+\subsection{座標系統}
+
+Window 收到 reshape callback 後，會將 viewport 設成新的視窗大小，再以 \lstinline|glOrtho(0, width, height, 0, -1, 1)| 建立 orthographic projection。這樣視窗左上角就是 $(0,0)$，X 向右增加、Y 向下增加，方向與 GLUT 傳入的滑鼠座標相同。工具不需要在每次滑鼠事件中翻轉 Y 軸，也比較容易直接用 pixel 理解線寬、點大小與游標位置。
+
+事件剛進入 Window 時使用的是視窗座標。Canvas 收到事件後，\lstinline|windowToLocal()| 會沿著 parent chain 逐層扣除每個 Element 的 bounds 左上角，得到以 Canvas 左上角為原點的局部座標；繪圖工具、SceneObject 與 Grid 都使用這套 Canvas 座標。反方向的 \lstinline|localToWindow()| 則逐層加回位移。由於目前 Element 沒有旋轉或縮放，這兩個轉換只需要處理平移。
+
+狀態列顯示的游標位置就是轉換後的 Canvas 座標，Canvas 尺寸也使用相同單位。這讓畫面上看到的位置、工具收到的座標與 SceneObject 儲存的頂點一致；只有讀寫 framebuffer 時需要另外處理 OpenGL 的左下角原點，相關內容放在第~\ref{sec:framebuffer} 節。
+
+\subsection{Grid}
+
+Grid 的用途是提供位置與距離的視覺參考，本身不會加入 Scene，也不會改變物件頂點，更沒有吸附功能。Lines 模式每隔 25 px 畫一條水平線和垂直線；Dots 模式改在相同交點畫 2 px 的點；None 則不畫格線。使用者可以從右鍵選單選擇模式，也可以按 G 依序切換。
+
+CanvasRenderer 先畫 Grid，再畫已提交的 SceneObject，最後才畫工具的 draft。因此格線只留在背景，不會蓋住已完成的物件或拖曳中的預覽。圖~\ref{fig:grid-coordinate} 左側用一組座標示範 \lstinline|windowToLocal()| 的結果，右側比較三種 Grid 模式與實際繪製順序。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.98\textwidth]{docs/figures/grid-coordinate.png}
+    \caption{Canvas local 座標、Grid 模式與繪製順序}
+    \label{fig:grid-coordinate}
+\end{figure}

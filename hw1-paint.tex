@@ -1,23 +1,48 @@
-% !TEX root = report.tex
+% !TEX root = hw1-paint.tex
 \documentclass[a4paper, 12pt, oneside, fleqn]{article}
 
 \input{docs/preamble.tex}
 
-\title{\textbf{CG HW-1}\\ A Drawing Panel}
+\title{\textbf{電腦圖學 Homework \#1}\\ A Drawing Panel}
 \author{黃俊源 01257128}
+\date{\today}
 
 \begin{document}
 \pagestyle{fancy}
 
 % 頁首、頁尾
 \renewcommand{\headrulewidth}{0.5pt}
-\fancyhead[L]{\textbf{CG HW-1}: A Drawing Panel}
+\fancyhead[L]{\textbf{CG HW \#1}: A Drawing Panel}
 \fancyhead[R]{\leftmark}
 \fancyfoot[C]{\thepage}
 
 % 正文
 \maketitle
 
-\input{docs/ch1.tex}
+\begingroup
+\setlength{\columnsep}{2em}
+\setlength{\columnseprule}{0.2pt}
+\begin{multicols}{3}
+    \scriptsize
+    \tableofcontents
+\end{multicols}
+\endgroup
+\clearpage
+
+\input{docs/introduction.tex}
+\input{docs/manual.tex}
+\input{docs/architecture.tex}
+\input{docs/rendering.tex}
+\input{docs/text-font.tex}
+\input{docs/framebuffer.tex}
+\input{docs/contributions.tex}
+\input{docs/challenges.tex}
+\input{docs/conclusion.tex}
+
+\appendix
+
+\input{docs/appendix-gui.tex}
+\input{docs/appendix-gfnt.tex}
+
 
 \end{document}

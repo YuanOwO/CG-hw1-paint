@@ -1,0 +1,14 @@
+flowchart LR
+    cp[解碼後的 code point] --> exact{findGlyph<br/>是否完全相符？}
+    exact -- 是 --> glyph[使用找到的 Glyph]
+    exact -- 否 --> replacement{是否找到 U+FFFD？}
+    replacement -- 是 --> glyph
+    replacement -- 否 --> question{是否找到問號？}
+    question -- 是 --> glyph
+    question -- 否 --> advance[不繪製內容<br/>依 pixelSize 推進]
+    glyph --> metrics[使用 bearing、尺寸、<br/>bitmapOffset 與 advanceX]
+
+    classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
+    classDef decision fill:#fff7df,stroke:#8a6d1f,color:#111,stroke-width:1px;
+    class cp,glyph,advance,metrics step;
+    class exact,replacement,question decision;

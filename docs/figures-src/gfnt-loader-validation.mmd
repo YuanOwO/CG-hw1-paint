@@ -1,0 +1,16 @@
+flowchart LR
+    open[開啟 GFNT<br/>取得檔案大小] --> header{Header 放得下且<br/>欄位合法？}
+    header -- 是 --> table{16 + 18N<br/>未超出檔案？}
+    table -- 是 --> data[讀取 Glyph Table<br/>與 Bitmap Data]
+    data --> glyphs{Glyph 順序、Unicode 與<br/>bitmap 範圍皆合法？}
+    glyphs -- 是 --> ready[回傳 GfntFont]
+    header -- 否 --> reject[拒絕載入檔案]
+    table -- 否 --> reject
+    glyphs -- 否 --> reject
+
+    classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
+    classDef decision fill:#fff7df,stroke:#8a6d1f,color:#111,stroke-width:1px;
+    classDef bad fill:#fbe9e9,stroke:#9b3b3b,color:#111,stroke-width:1px;
+    class open,data,ready step;
+    class header,table,glyphs decision;
+    class reject bad;

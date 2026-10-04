@@ -1,0 +1,14 @@
+flowchart LR
+    down[按下滑鼠／單擊] --> draft[建立草稿 Draft]
+    draft --> motion[滑鼠移動]
+    motion --> update[更新草稿]
+    update -->|下一次移動| motion
+    update --> finish[放開滑鼠／完成]
+    finish --> command[建立新增物件 Command]
+    command --> scene[Scene]
+    draft -. Esc／Undo .-> cancel[取消草稿]
+
+    classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
+    classDef cancel fill:#fff1f1,stroke:#995050,color:#111,stroke-width:1px;
+    class down,draft,motion,update,finish,command,scene step;
+    class cancel cancel;

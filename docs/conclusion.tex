@@ -1,0 +1,14 @@
+\section{已知限制與未來改進}
+\label{sec:limitations}
+
+目前最直接的限制是 \lstinline|.gpt| 檔案只會寫出檔頭與結尾標記，讀取時也還沒有解析 Scene，因此 Save/Load 不能真正儲存繪圖內容。下一步需要先定義各種 SceneObject 與 Style 的序列化格式，再測試存檔後重新開啟是否能還原相同內容。現階段若要保留畫面，應使用 PPM export。
+
+Select 與 Custom color 已經出現在 menu 中，但 callback 仍是空的。若繼續擴充，我會先完成 selection model 與物件 hit testing，再讓 Move 和 Delete 也透過 Command 執行。Renderer 方面，\lstinline|GL_POLYGON| 對凹多邊形不可靠，之後可加入 triangulation；Ellipse 固定使用 64 個 segments，也可以依半徑調整。圖片輸出目前只有 PPM，尚未支援 PNG 或 JPEG。Grid、游標位置與 Canvas 尺寸已經能顯示，但程式沒有額外的 scale/ruler。
+
+\section{心得}
+
+一開始我把這個作業理解成在 GLUT callback 裡切換工具，再直接呼叫 OpenGL 畫圖。這樣做前幾個功能很快，但加入多邊形、文字、Undo/Redo、對話框與多視窗後，callback 會同時負責輸入狀態、Document 修改和 rendering，變得很難判斷一個事件到底改了什麼。因此我逐步拆出 Window、Event、Document、Tool、Command 與 Renderer，讓每一層只處理自己掌握的狀態。
+
+這次最花時間的部分不是基本圖形，而是功能交界處。例如拖曳離開 Canvas 後 MouseUp 還要送回原工具；粗線轉角要處理接近平行與折返；中文字不能用 byte index 移動 caret；多視窗 timer 也不能假設目前 OpenGL context 永遠正確。把這些情況做完後，我比較能理解 GUI framework 為什麼需要 focus、capture、layout 與 event routing，而不是只有幾個 callback。
+
+專案範圍後來確實比 drawing panel 大。如果重做一次，我會先固定最小需求：Scene、幾種基本工具、Command 與一條 Rendering Pipeline，等檔案格式真的能存檔和還原後，再加入自製 GUI 與 GFNT。這也讓我發現，UI 上已經出現功能入口，不代表功能本身就完成了。之後如果再做類似專案，我會更早把資料層、操作流程與 UI 一起完成，而不是先把選單項目做出來。
