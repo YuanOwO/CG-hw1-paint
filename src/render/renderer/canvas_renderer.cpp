@@ -1,8 +1,8 @@
-#include "render/ui/canvas_renderer.hpp"
+#include "render/renderer/canvas_renderer.hpp"
 
 #include "ui/elements/canvas.hpp"
 
-namespace paint {
+namespace paint::render {
 
 void CanvasRenderer::render(RenderContext& context, const ui::CanvasElement& canvas) {
     // 1. 畫背景
@@ -32,4 +32,4 @@ void CanvasRenderer::render(RenderContext& context, const ui::CanvasElement& can
     }
 }
 
-}  // namespace paint
+}  // namespace paint::render

@@ -3,7 +3,7 @@
 
 #include "common/color.hpp"
 #include "common/font.hpp"
-#include "render/ui/text_renderer.hpp"
+#include "render/renderer/text_renderer.hpp"
 #include "ui/element.hpp"
 
 namespace paint::ui {
@@ -46,13 +46,13 @@ class TextElement : public Element {
    protected:
     Size measureContent(const Size& availableSize) override;
 
-    void renderContent(RenderContext& context) override;
+    void renderContent(render::RenderContext& context) override;
 
    private:
     std::string _text;
     FontStyle _fontStyle;
     ColorRGBA _color;
-    TextRenderer _renderer;
+    render::TextRenderer _renderer;
 };
 
 }  // namespace paint::ui

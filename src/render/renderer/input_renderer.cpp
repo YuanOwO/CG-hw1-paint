@@ -1,8 +1,8 @@
-#include "render/ui/input_renderer.hpp"
+#include "render/renderer/input_renderer.hpp"
 
 #include "ui/elements/input.hpp"
 
-namespace paint {
+namespace paint::render {
 
 void InputRenderer::render(RenderContext& context, const ui::InputElement& input) {
     const auto& style = input.style();
@@ -20,4 +20,4 @@ void InputRenderer::render(RenderContext& context, const ui::InputElement& input
     context.popTransform();
 }
 
-}  // namespace paint
+}  // namespace paint::render

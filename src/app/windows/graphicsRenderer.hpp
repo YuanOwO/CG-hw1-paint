@@ -20,7 +20,7 @@ class GraphicsRenderWindow : public ui::Window {
         setContent(std::move(canvas));
     }
 
-    ColorBuffer capture();
+    render::ColorBuffer capture();
 
    private:
     ui::CanvasElement* _canvas = nullptr;

@@ -1,4 +1,4 @@
-#include "render/ui/text_renderer.hpp"
+#include "render/renderer/text_renderer.hpp"
 
 #include <GL/freeglut.h>
 
@@ -9,7 +9,7 @@
 #include "common/font.hpp"
 #include "ui/elements/text.hpp"
 
-namespace paint {
+namespace paint::render {
 
 namespace {
 
@@ -130,4 +130,4 @@ void TextRenderer::render(RenderContext& context, const ui::TextElement& element
     glPopAttrib();
 }
 
-}  // namespace paint
+}  // namespace paint::render

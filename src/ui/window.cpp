@@ -187,7 +187,7 @@ void Window::ensureLayout() {
 void Window::render() {
     ensureLayout();  // 確保佈局是最新的
 
-    RenderContext context;
+    render::RenderContext context;
 
     _rootElement->render(context);
 }

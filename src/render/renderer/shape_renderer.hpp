@@ -10,7 +10,7 @@ namespace paint::drawing {
 class Shape;
 }
 
-namespace paint {
+namespace paint::render {
 
 class ShapeRenderer {
    public:
@@ -19,4 +19,4 @@ class ShapeRenderer {
     void draw(RenderContext& context, const drawing::Shape& shape) const;
 };
 
-}  // namespace paint
+}  // namespace paint::render

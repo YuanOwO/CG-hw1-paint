@@ -1,4 +1,4 @@
-#include "render/shape_renderer.hpp"
+#include "render/renderer/shape_renderer.hpp"
 
 #include <GL/freeglut.h>
 
@@ -7,13 +7,13 @@
 
 #include "drawing/shape.hpp"
 
+namespace paint::render {
+
 using paint::drawing::FillStyle;
 using paint::drawing::LineCap;
 using paint::drawing::LineJoin;
 using paint::drawing::ShapeStyle;
 using paint::drawing::StrokeStyle;
-
-namespace paint {
 
 namespace {
 
@@ -506,4 +506,4 @@ void ShapeRenderer::draw(RenderContext& context, const drawing::Shape& shape) co
     }
 }
 
-}  // namespace paint
+}  // namespace paint::render

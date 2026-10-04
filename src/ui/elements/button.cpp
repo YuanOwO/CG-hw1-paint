@@ -89,7 +89,7 @@ void ButtonElement::arrangeContent(const BoundingBox& contentBounds) {
     child->arrange(contentBounds);
 }
 
-void ButtonElement::renderContent(RenderContext& context) {
+void ButtonElement::renderContent(render::RenderContext& context) {
     _renderer.render(context, *this);
 }
 

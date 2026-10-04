@@ -2,7 +2,7 @@
 
 #include "common/color.hpp"
 
-namespace paint {
+namespace paint::render {
 
 class RenderContext {
    public:
@@ -15,4 +15,4 @@ class RenderContext {
     void fillRect(int width, int height, const ColorRGBA& color);
 };
 
-}  // namespace paint
+}  // namespace paint::render

@@ -4,7 +4,7 @@
 #include <string>
 
 #include "common/font.hpp"
-#include "render/ui/button_renderer.hpp"
+#include "render/renderer/button_renderer.hpp"
 #include "ui/element.hpp"
 
 namespace paint::ui {
@@ -33,10 +33,10 @@ class ButtonElement : public Element {
    protected:
     Size measureContent(const Size& availableSize) override;
     void arrangeContent(const BoundingBox& contentBounds) override;
-    void renderContent(RenderContext& context) override;
+    void renderContent(render::RenderContext& context) override;
 
    private:
-    ButtonRenderer _renderer;
+    render::ButtonRenderer _renderer;
     ClickHandler _onClick;
     ButtonStyle _style;
 

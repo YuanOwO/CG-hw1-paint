@@ -157,7 +157,7 @@ Size CanvasElement::measureContent(const Size& availableSize) {
     return {availableSize.width.value_or(0), availableSize.height.value_or(0)};
 }
 
-void CanvasElement::renderContent(RenderContext& context) {
+void CanvasElement::renderContent(render::RenderContext& context) {
     _renderer.render(context, *this);
 }
 

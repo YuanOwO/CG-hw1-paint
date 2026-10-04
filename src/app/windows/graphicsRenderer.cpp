@@ -4,7 +4,7 @@
 
 namespace paint::app {
 
-ColorBuffer GraphicsRenderWindow::capture() {
+render::ColorBuffer GraphicsRenderWindow::capture() {
     const int previousWindow = glutGetWindow();
 
     try {
@@ -32,7 +32,7 @@ ColorBuffer GraphicsRenderWindow::capture() {
         // 確保所有繪圖命令完成後再讀取 framebuffer。
         glFinish();
 
-        ColorBuffer buffer;
+        render::ColorBuffer buffer;
         buffer.capture(0, 0, width(), height());
 
         if (previousWindow != 0 && previousWindow != id()) {

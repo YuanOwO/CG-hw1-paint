@@ -7,7 +7,7 @@
 #include "app/document.hpp"
 #include "drawing/shape_style.hpp"
 #include "drawing/tool.hpp"
-#include "render/ui/canvas_renderer.hpp"
+#include "render/renderer/canvas_renderer.hpp"
 #include "ui/element.hpp"
 #include "ui/layout/bounding.hpp"
 
@@ -43,14 +43,14 @@ class CanvasElement : public Element {
    protected:
     Size measureContent(const Size& availableSize) override;
 
-    void renderContent(RenderContext& context) override;
+    void renderContent(render::RenderContext& context) override;
 
    private:
     GridMode _gridMode = GridMode::Lines;
 
     drawing::Tool _currentTool;
     drawing::ShapeStyle _currentStyle;
-    CanvasRenderer _renderer;  // 用於渲染 CanvasElement 的內容
+    render::CanvasRenderer _renderer;  // 用於渲染 CanvasElement 的內容
 
     Document& _document;  // 參考外部的 Document，CanvasElement 不擁有 Document 的所有權
 

@@ -2,7 +2,7 @@
 
 #include <GL/freeglut.h>
 
-namespace paint {
+namespace paint::render {
 
 void RenderContext::pushTransform() {
     glPushMatrix();
@@ -30,4 +30,4 @@ void RenderContext::fillRect(int width, int height, const ColorRGBA& color) {
     glPopAttrib();
 }
 
-}  // namespace paint
+}  // namespace paint::render

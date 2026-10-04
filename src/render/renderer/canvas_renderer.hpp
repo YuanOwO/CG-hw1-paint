@@ -1,15 +1,13 @@
 #pragma once
 
 #include "render/render_context.hpp"
-#include "render/shape_renderer.hpp"
+#include "render/renderer/shape_renderer.hpp"
 
 namespace paint::ui {
-
 class CanvasElement;
+}
 
-}  // namespace paint::ui
-
-namespace paint {
+namespace paint::render {
 
 class CanvasRenderer {
    public:
@@ -19,4 +17,4 @@ class CanvasRenderer {
     ShapeRenderer _shapeRenderer;
 };
 
-}  // namespace paint
+}  // namespace paint::render

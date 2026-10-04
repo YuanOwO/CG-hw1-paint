@@ -4,7 +4,7 @@
 
 #include "common/color.hpp"
 
-namespace paint {
+namespace paint::render {
 
 class ColorBuffer {
    public:
@@ -32,4 +32,4 @@ class ColorBuffer {
     std::vector<unsigned char> _pixels;
 };
 
-}  // namespace paint
+}  // namespace paint::render

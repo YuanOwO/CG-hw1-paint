@@ -2,7 +2,7 @@
 
 #include <GL/freeglut.h>
 
-namespace paint {
+namespace paint::render {
 
 void ColorBuffer::capture(int x, int y, int width, int height) {
     // 擷取目前 GLUT 視窗的指定區域；呼叫前需先選定視窗並完成繪製。
@@ -139,4 +139,4 @@ void ColorBuffer::fill(const ColorRGBA& color) {
     _valid = true;
 }
 
-}  // namespace paint
+}  // namespace paint::render

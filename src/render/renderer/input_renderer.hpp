@@ -3,16 +3,14 @@
 #include "render/render_context.hpp"
 
 namespace paint::ui {
-
 class InputElement;
-
 }
 
-namespace paint {
+namespace paint::render {
 
 class InputRenderer {
    public:
     void render(RenderContext& context, const ui::InputElement& input);
 };
 
-}  // namespace paint
+}  // namespace paint::render

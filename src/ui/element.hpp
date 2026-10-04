@@ -108,7 +108,7 @@ class Element : public EventTarget {
     // Rendering
 
     void invalidateDisplay();
-    virtual void renderContent(RenderContext& context) {}
+    virtual void renderContent(render::RenderContext& context) {}
 
     // Tree
 
@@ -136,7 +136,7 @@ class Element : public EventTarget {
     // Rendering
 
     ColorRGBA _backgroundColor = Color::Transparent;
-    void render(RenderContext& context);
+    void render(render::RenderContext& context);
 
     // Tree
 

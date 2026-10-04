@@ -6,7 +6,7 @@
 
 #include "common/color.hpp"
 #include "event/events.hpp"
-#include "render/ui/input_renderer.hpp"
+#include "render/renderer/input_renderer.hpp"
 #include "ui/element.hpp"
 
 namespace paint::ui {
@@ -49,7 +49,7 @@ class InputElement : public Element {
 
     void arrangeContent(const BoundingBox& contentBounds) override;
 
-    void renderContent(RenderContext& context) override;
+    void renderContent(render::RenderContext& context) override;
 
    private:
     std::string _value;
@@ -60,7 +60,7 @@ class InputElement : public Element {
 
     bool _focused = false;
 
-    InputRenderer _renderer;
+    render::InputRenderer _renderer;
     InputStyle _style;
     TextElement* _textElement = nullptr;
     ValueChangedHandler _onValueChanged;

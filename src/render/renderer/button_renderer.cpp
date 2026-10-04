@@ -1,4 +1,4 @@
-#include "render/ui/button_renderer.hpp"
+#include "render/renderer/button_renderer.hpp"
 
 #include <GL/freeglut.h>
 
@@ -7,7 +7,7 @@
 
 #include "ui/elements/button.hpp"
 
-namespace paint {
+namespace paint::render {
 namespace {
 
 void roundedRect(float x, float y, float width, float height, float radius, const ColorRGBA& color) {
@@ -30,8 +30,9 @@ void roundedRect(float x, float y, float width, float height, float radius, cons
 
 void ButtonRenderer::render(RenderContext&, const ui::ButtonElement& button) {
     const auto& style = button.style();
-    const auto& fill = button.isPressed() ? style.pressed
-                       : button.isHovered() ? style.hovered : style.background;
+    const auto& fill = button.isPressed()   ? style.pressed
+                       : button.isHovered() ? style.hovered
+                                            : style.background;
 
     glPushAttrib(GL_CURRENT_BIT | GL_POLYGON_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -40,4 +41,4 @@ void ButtonRenderer::render(RenderContext&, const ui::ButtonElement& button) {
     glPopAttrib();
 }
 
-}  // namespace paint
+}  // namespace paint::render

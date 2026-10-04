@@ -12,7 +12,7 @@ Size TextElement::measureContent(const Size& availableSize) {
     return Size(static_cast<int>(std::ceil(width)), static_cast<int>(std::ceil(height)));
 }
 
-void TextElement::renderContent(RenderContext& context) {
+void TextElement::renderContent(render::RenderContext& context) {
     // 使用 TextRenderer 來渲染文字
     _renderer.render(context, *this);
 }

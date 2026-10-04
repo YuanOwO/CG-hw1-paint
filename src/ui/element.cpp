@@ -364,7 +364,7 @@ void Element::invalidateDisplay() {
     }
 }
 
-void Element::render(RenderContext& context) {
+void Element::render(render::RenderContext& context) {
     if (!isVisible()) {
         return;
     }

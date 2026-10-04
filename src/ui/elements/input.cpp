@@ -99,7 +99,7 @@ void InputElement::arrangeContent(const BoundingBox& contentBounds) {
     _textElement->arrange(contentBounds);
 }
 
-void InputElement::renderContent(RenderContext& context) {
+void InputElement::renderContent(render::RenderContext& context) {
     _renderer.render(context, *this);
 }
 

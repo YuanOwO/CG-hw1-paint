@@ -148,7 +148,7 @@ class Window : public EventTarget {
     bool _contentDirty = true;
     bool _needsCapture = false;
 
-    ColorBuffer _colorBuffer;
+    render::ColorBuffer _colorBuffer;
 
     // Element tree
 
