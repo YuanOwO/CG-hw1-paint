@@ -290,6 +290,8 @@ void PaintWindow::newWindow() {
     app.createWindow<PaintWindow>(app.name() + " - Untitled", width(), height());
 }
 
+#pragma region Content Setup
+
 void PaintWindow::setupContent() {
     auto dock = std::make_unique<ui::DockPanelElement>();
 
@@ -328,6 +330,10 @@ void PaintWindow::setupContent() {
     setContent(std::move(dock));
     setFocusedElement(_canvas);  // 將焦點設置為 CanvasElement
 }
+
+#pragma endregion  // Content Setup
+
+#pragma region Shortcuts
 
 void PaintWindow::setupShortcuts() {
     // 設置快捷鍵
@@ -368,24 +374,30 @@ void PaintWindow::setupShortcuts() {
     _shortcutManager.bind({Key::LeftBracket}, [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(std::max(1, static_cast<int>(style.stroke.width - 1)));
+        style.setPointSize(std::max(1.0f, style.pointSize - 1.0f));
         setShapeStyle(style);
     });
     _shortcutManager.bind({Key::RightBracket}, [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(style.stroke.width + 1);
+        style.setPointSize(style.pointSize + 1.0f);
         setShapeStyle(style);
     });
     _shortcutManager.bind({Mod::Shift, Key::LeftBracket}, [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(std::max(1, static_cast<int>(style.stroke.width - 5)));
+        style.setPointSize(std::max(1.0f, style.pointSize - 5.0f));
         setShapeStyle(style);
     });
     _shortcutManager.bind({Mod::Shift, Key::RightBracket}, [this]() {
         auto style = _canvas->style();
         style.setStrokeWidth(style.stroke.width + 5);
+        style.setPointSize(style.pointSize + 5.0f);
         setShapeStyle(style);
     });
 }
+
+#pragma endregion  // Shortcuts
 
 #pragma region Main Menu
 
