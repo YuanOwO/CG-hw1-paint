@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "command/edit_command.hpp"
+#include "drawing/text_object.hpp"
 
 namespace paint::ui {
 
@@ -17,6 +18,7 @@ CanvasElement::CanvasElement(Document& document)
     _currentStyle.fill.color = ColorRGBA(Color::Transparent);
     _currentStyle.stroke.join = drawing::LineJoin::MITER;
     _currentStyle.stroke.cap = drawing::LineCap::ROUND;
+    _currentTextStyle.color = _currentStyle.stroke.color;
 
     addEventListener<KeyDownEvent>([this](KeyDownEvent& event) {
         // 忽略重複按鍵事件
@@ -105,6 +107,15 @@ void CanvasElement::setTool(drawing::ToolKind tool) {
 
 void CanvasElement::setStyle(const drawing::ShapeStyle& style) {
     _currentStyle = style;
+    _currentTextStyle.color = style.stroke.color;
+
+    if (!isInteracting()) {
+        resetTool();
+    }
+}
+
+void CanvasElement::setTextStyle(const drawing::TextStyle& style) {
+    _currentTextStyle = style;
 
     if (!isInteracting()) {
         resetTool();
@@ -137,8 +148,17 @@ void CanvasElement::clear() {
     invalidateDisplay();
 }
 
+void CanvasElement::insertText(Point anchor, std::string text, drawing::TextStyle style) {
+    if (text.empty()) {
+        return;
+    }
+
+    _document.addObject(std::make_unique<drawing::TextObject>(anchor, std::move(text), std::move(style)));
+    invalidateDisplay();
+}
+
 void CanvasElement::resetTool() {
-    _activeTool = drawing::createCanvasTool(_currentTool, _currentStyle);
+    _activeTool = drawing::createCanvasTool(_currentTool, _currentStyle, _currentTextStyle);
 }
 
 bool CanvasElement::handleToolResult(drawing::ToolResult result) {
@@ -147,6 +167,12 @@ bool CanvasElement::handleToolResult(drawing::ToolResult result) {
     if (auto* addObject = std::get_if<drawing::AddObjectAction>(&result.action)) {
         if (addObject->object) {
             _document.addObject(std::move(addObject->object));
+        }
+    }
+
+    if (auto* request = std::get_if<drawing::RequestTextInputAction>(&result.action)) {
+        if (_textInputRequestHandler) {
+            _textInputRequestHandler(request->anchor, request->style);
         }
     }
 

@@ -15,8 +15,8 @@ namespace paint::app {
 namespace {
 
 std::unique_ptr<ui::ButtonElement> createButton(const std::string& text,
-                                                 ui::ButtonElement::ClickHandler onClick,
-                                                 bool primary = false) {
+                                                ui::ButtonElement::ClickHandler onClick,
+                                                bool primary = false) {
     auto button = std::make_unique<ui::ButtonElement>(std::move(onClick));
     button->setPreferredSize({104, 36});
 
@@ -32,8 +32,7 @@ std::unique_ptr<ui::ButtonElement> createButton(const std::string& text,
         });
     }
 
-    auto label =
-        std::make_unique<ui::TextElement>(text, BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+    auto label = std::make_unique<ui::TextElement>(text, BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
     label->setColor(primary ? ColorRGBA{Color::White} : ColorRGBA{0.22f, 0.27f, 0.34f});
     label->setHorizontalAlignment(ui::Alignment::Center);
     label->setVerticalAlignment(ui::Alignment::Center);
@@ -123,14 +122,12 @@ void InputDialogWindow::setupContent(const std::string& initialValue) {
     root->setBackgroundColor(ColorRGBA{0.97f, 0.98f, 0.99f});
 
     auto heading = std::make_unique<ui::TextElement>(
-        title(), BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_18},
-        ColorRGBA{0.12f, 0.16f, 0.23f});
+        title(), BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_18}, ColorRGBA{0.12f, 0.16f, 0.23f});
     heading->setMargin({0, 0, 0, 12});
     root->appendChild(std::move(heading));
 
     auto message = std::make_unique<ui::TextElement>(
-        _message, BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12},
-        ColorRGBA{0.36f, 0.40f, 0.47f});
+        _message, BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12}, ColorRGBA{0.36f, 0.40f, 0.47f});
     message->setMargin({0, 0, 0, 12});
     root->appendChild(std::move(message));
 
@@ -140,9 +137,8 @@ void InputDialogWindow::setupContent(const std::string& initialValue) {
     input->setMargin({0, 0, 0, 6});
     root->appendChild(std::move(input));
 
-    auto errorText = std::make_unique<ui::TextElement>(
-        "", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12},
-        ColorRGBA{0.78f, 0.16f, 0.16f});
+    auto errorText = std::make_unique<ui::TextElement>("", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12},
+                                                       ColorRGBA{0.78f, 0.16f, 0.16f});
     _errorText = errorText.get();
     errorText->setMargin({0, 0, 0, 12});
     root->appendChild(std::move(errorText));

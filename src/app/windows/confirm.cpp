@@ -53,14 +53,12 @@ void ConfirmWindow::setupContent() {
     root->setBackgroundColor(ColorRGBA{0.97f, 0.98f, 0.99f});
 
     auto heading = std::make_unique<ui::TextElement>(
-        this->title(), BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_18},
-        ColorRGBA{0.12f, 0.16f, 0.23f});
+        this->title(), BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_18}, ColorRGBA{0.12f, 0.16f, 0.23f});
     heading->setMargin({0, 0, 0, 12});
     root->appendChild(std::move(heading));
 
-    auto message =
-        std::make_unique<ui::TextElement>(_message, BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12},
-                                          ColorRGBA{0.36f, 0.40f, 0.47f});
+    auto message = std::make_unique<ui::TextElement>(
+        _message, BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12}, ColorRGBA{0.36f, 0.40f, 0.47f});
 
     message->setMargin({0, 0, 0, 24});
     root->appendChild(std::move(message), 1.0f);

@@ -17,6 +17,45 @@ using paint::drawing::LineJoin;
 using paint::drawing::ToolKind;
 
 namespace paint::app {
+namespace {
+
+std::string getFontStyleName(const FontStyle& style) {
+    if (const auto* bitmap = std::get_if<BitmapFontStyle>(&style)) {
+        switch (bitmap->font) {
+        case BitmapFont::BITMAP_8_BY_13:
+            return "8 x 13";
+        case BitmapFont::BITMAP_9_BY_15:
+            return "9 x 15";
+        case BitmapFont::BITMAP_HELVETICA_10:
+            return "Helvetica 10";
+        case BitmapFont::BITMAP_HELVETICA_12:
+            return "Helvetica 12";
+        case BitmapFont::BITMAP_HELVETICA_18:
+            return "Helvetica 18";
+        case BitmapFont::BITMAP_TIMES_ROMAN_10:
+            return "Times Roman 10";
+        case BitmapFont::BITMAP_TIMES_ROMAN_24:
+            return "Times Roman 24";
+        default:
+            return "Unknown";
+        }
+    }
+
+    if (const auto* stroke = std::get_if<StrokeFontStyle>(&style)) {
+        switch (stroke->font) {
+        case StrokeFont::STROKE_ROMAN:
+            return "Stroke Roman";
+        case StrokeFont::STROKE_MONO_ROMAN:
+            return "Stroke Mono Roman";
+        default:
+            return "Unknown";
+        }
+    }
+
+    return "Unknown";
+}
+
+}  // namespace
 
 PaintWindow::PaintWindow(const std::string& title, int width, int height) : Window(title, width, height) {
     setupContent();
@@ -56,6 +95,9 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
         _document.setCanvasSize(event.width(), event.height());
         _sizeText->setText("Size: " + Point(event.width(), event.height()).toString());
     });
+
+    _canvas->setTextInputRequestHandler(
+        [this](Point anchor, drawing::TextStyle style) { requestTextInput(anchor, std::move(style)); });
 }
 
 void PaintWindow::selectTool(drawing::ToolKind tool) {
@@ -68,13 +110,33 @@ void PaintWindow::setShapeStyle(const drawing::ShapeStyle& style) {
     updateToolStatus();
 }
 
+void PaintWindow::setTextStyle(const drawing::TextStyle& style) {
+    _canvas->setTextStyle(style);
+    updateToolStatus();
+}
+
 void PaintWindow::updateToolStatus() {
     if (_toolText) {
+        if (_canvas->currentTool() == ToolKind::TEXT) {
+            _toolText->setText("Tool: Text | Color: " + _canvas->textStyle().color.toHexString() +
+                               " | Font: " + getFontStyleName(_canvas->textStyle().font));
+            return;
+        }
+
         _toolText->setText("Tool: " + drawing::getToolName(_canvas->currentTool()) +
                            " | Stroke: " + _canvas->style().stroke.color.toHexString() + " " +
                            std::to_string(_canvas->style().stroke.width) + "px" +
                            " | Fill: " + _canvas->style().fill.color.toHexString());
     }
+}
+
+void PaintWindow::requestTextInput(Point anchor, drawing::TextStyle style) {
+    auto& app = Application::current();
+    app.createWindow<InputDialogWindow>(
+        "Insert Text", "Please enter text:", "",
+        [this, anchor, style = std::move(style)](const std::string& text) mutable {
+            _canvas->insertText(anchor, text, std::move(style));
+        });
 }
 
 void PaintWindow::requestNewFile() {
@@ -121,8 +183,7 @@ void PaintWindow::newFile() {
 }
 
 void PaintWindow::loadFile() {
-    const std::string initialFilename =
-        _document.filename().empty() ? "" : _document.filename().string();
+    const std::string initialFilename = _document.filename().empty() ? "" : _document.filename().string();
 
     auto& app = app::Application::current();
     app.createWindow<InputDialogWindow>(
@@ -200,8 +261,7 @@ void PaintWindow::exportFile() {
 
     auto& app = app::Application::current();
     app.createWindow<InputDialogWindow>(
-        "Export", "Please enter an image filename:", initialFilename,
-        [this](const std::string& value) {
+        "Export", "Please enter an image filename:", initialFilename, [this](const std::string& value) {
             Path filename(value);
 
             if (!filename.has_extension()) {
@@ -301,6 +361,7 @@ void PaintWindow::setupShortcuts() {
     _shortcutManager.bind({Key::Digit3}, [this]() { selectTool(ToolKind::RECTANGLE); });
     _shortcutManager.bind({Key::Digit4}, [this]() { selectTool(ToolKind::ELLIPSE); });
     _shortcutManager.bind({Key::Digit5}, [this]() { selectTool(ToolKind::POLYGON); });
+    _shortcutManager.bind({Key::Digit6}, [this]() { selectTool(ToolKind::TEXT); });
 
     _shortcutManager.bind({Key::LeftBracket}, [this]() {
         auto style = _canvas->style();
@@ -344,6 +405,7 @@ void PaintWindow::setupMenu() {
     setupStrokeMenu();
     setupFillMenu();
     setupPointMenu();
+    setupTextMenu();
 
     auto& gridMenu = _menu.addSubMenu("Grid");
     gridMenu.addMenuEntry("Lines", [this]() { _canvas->setGridMode(ui::GridMode::Lines); });
@@ -369,6 +431,7 @@ void PaintWindow::setupToolMenu() {
     toolMenu.addMenuEntry("Rectangle", [this]() { selectTool(ToolKind::RECTANGLE); });
     toolMenu.addMenuEntry("Circle / Ellipse", [this]() { selectTool(ToolKind::ELLIPSE); });
     toolMenu.addMenuEntry("Polygon", [this]() { selectTool(ToolKind::POLYGON); });
+    toolMenu.addMenuEntry("Text", [this]() { selectTool(ToolKind::TEXT); });
 }
 
 #pragma endregion  // Tool Menu
@@ -649,5 +712,60 @@ void PaintWindow::setupPointMenu() {
 }
 
 #pragma endregion  // Point Menu
+
+#pragma region Text Menu
+
+void PaintWindow::setupTextMenu() {
+    auto& textMenu = _menu.addSubMenu("Text");
+    auto& fontMenu = textMenu.addSubMenu("Font");
+
+    fontMenu.addMenuEntry("8 x 13", [this]() {
+        auto style = _canvas->textStyle();
+        style.font = BitmapFontStyle{BitmapFont::BITMAP_8_BY_13};
+        setTextStyle(style);
+    });
+    fontMenu.addMenuEntry("9 x 15", [this]() {
+        auto style = _canvas->textStyle();
+        style.font = BitmapFontStyle{BitmapFont::BITMAP_9_BY_15};
+        setTextStyle(style);
+    });
+    fontMenu.addMenuEntry("Helvetica 10", [this]() {
+        auto style = _canvas->textStyle();
+        style.font = BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_10};
+        setTextStyle(style);
+    });
+    fontMenu.addMenuEntry("Helvetica 12", [this]() {
+        auto style = _canvas->textStyle();
+        style.font = BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12};
+        setTextStyle(style);
+    });
+    fontMenu.addMenuEntry("Helvetica 18", [this]() {
+        auto style = _canvas->textStyle();
+        style.font = BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_18};
+        setTextStyle(style);
+    });
+    fontMenu.addMenuEntry("Times Roman 10", [this]() {
+        auto style = _canvas->textStyle();
+        style.font = BitmapFontStyle{BitmapFont::BITMAP_TIMES_ROMAN_10};
+        setTextStyle(style);
+    });
+    fontMenu.addMenuEntry("Times Roman 24", [this]() {
+        auto style = _canvas->textStyle();
+        style.font = BitmapFontStyle{BitmapFont::BITMAP_TIMES_ROMAN_24};
+        setTextStyle(style);
+    });
+    fontMenu.addMenuEntry("Stroke Roman", [this]() {
+        auto style = _canvas->textStyle();
+        style.font = StrokeFontStyle{StrokeFont::STROKE_ROMAN, 0.15f};
+        setTextStyle(style);
+    });
+    fontMenu.addMenuEntry("Stroke Mono Roman", [this]() {
+        auto style = _canvas->textStyle();
+        style.font = StrokeFontStyle{StrokeFont::STROKE_MONO_ROMAN, 0.15f};
+        setTextStyle(style);
+    });
+}
+
+#pragma endregion  // Text Menu
 
 }  // namespace paint::app

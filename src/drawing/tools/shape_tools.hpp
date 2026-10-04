@@ -1,15 +1,12 @@
+#pragma once
+
 #include <algorithm>
 #include <cmath>
 
-#include "app/application.hpp"
-#include "app/windows/input_dialog.hpp"
 #include "drawing/shape_object.hpp"
-#include "drawing/text_object.hpp"
 #include "drawing/tools/creation_tool.hpp"
-#include "drawing/tools/tool_factory.hpp"
 
 namespace paint::drawing {
-namespace {
 
 // 直線、矩形、圓形等需要拖曳兩個點的工具可以共用這個基底類別。
 template <typename TShape>
@@ -144,8 +141,8 @@ class PointTool : public ShapeCreationTool<PointShape> {
 
     ToolResult onClick(const ClickEvent& event, Point localPosition) override {
         beginShapeDraft();
-        _draft->setPosition(localPosition);
-        return commitDraft();
+        this->_draft->setPosition(localPosition);
+        return this->commitDraft();
     }
 };
 
@@ -155,7 +152,7 @@ class PencilTool : public ShapeCreationTool<PathShape> {
 
     ToolResult onMouseDown(const MouseButtonEvent& event, Point localPosition) override {
         this->beginShapeDraft();
-        _draft->addPoint(localPosition, true);
+        this->_draft->addPoint(localPosition, true);
         return ToolResult::redraw();
     }
 
@@ -164,8 +161,8 @@ class PencilTool : public ShapeCreationTool<PathShape> {
             return {};
         }
 
-        _draft->addPoint(localPosition, true);
-        return commitDraft();
+        this->_draft->addPoint(localPosition, true);
+        return this->commitDraft();
     }
 
     ToolResult onMouseMove(const MouseMoveEvent& event, Point localPosition) override {
@@ -173,7 +170,7 @@ class PencilTool : public ShapeCreationTool<PathShape> {
             return {};
         }
 
-        _draft->addPoint(localPosition);
+        this->_draft->addPoint(localPosition);
         return ToolResult::redraw();
     }
 };
@@ -183,16 +180,16 @@ class PolygonTool : public ShapeCreationTool<PolygonShape> {
     using ShapeCreationTool<PolygonShape>::ShapeCreationTool;
 
     ToolResult onClick(const ClickEvent& event, Point localPosition) override {
-        if (!_draft) {
-            beginShapeDraft();
+        if (!this->_draft) {
+            this->beginShapeDraft();
         }
 
-        if (_draft->pointCount() == 0) {
-            _draft->addPoint(localPosition);
+        if (this->_draft->pointCount() == 0) {
+            this->_draft->addPoint(localPosition);
         } else {
-            _draft->setLastPoint(localPosition);
+            this->_draft->setLastPoint(localPosition);
         }
-        _draft->addPoint(localPosition);
+        this->_draft->addPoint(localPosition);
 
         return ToolResult::redraw();
     }
@@ -202,8 +199,8 @@ class PolygonTool : public ShapeCreationTool<PolygonShape> {
             return {};
         }
 
-        _draft->setLastPoint(localPosition);
-        return commitDraft();
+        this->_draft->setLastPoint(localPosition);
+        return this->commitDraft();
     }
 
     ToolResult onMouseMove(const MouseMoveEvent& event, Point localPosition) override {
@@ -211,11 +208,11 @@ class PolygonTool : public ShapeCreationTool<PolygonShape> {
             return {};
         }
 
-        if (event.mouseState().isUp(MouseButton::MouseLeft) && _draft->pointCount() == 0) {
-            return cancelDraft();
+        if (event.mouseState().isUp(MouseButton::MouseLeft) && this->_draft->pointCount() == 0) {
+            return this->cancelDraft();
         }
 
-        _draft->setLastPoint(localPosition);
+        this->_draft->setLastPoint(localPosition);
         return ToolResult::redraw();
     }
 
@@ -225,65 +222,23 @@ class PolygonTool : public ShapeCreationTool<PolygonShape> {
         }
 
         if (event.key() == Key::Enter) {
-            return commitDraft(true);
+            return this->commitDraft(true);
         }
 
         if (event.key() == Key::Escape) {
-            return cancelDraft(true);
+            return this->cancelDraft(true);
         }
 
         if (event.key() == Key::Backspace) {
-            if (_draft->pointCount() == 0) {
-                return cancelDraft(true);
+            if (this->_draft->pointCount() == 0) {
+                return this->cancelDraft(true);
             }
-            _draft->removeLastPoint();
+            this->_draft->removeLastPoint();
             return ToolResult::redraw(true);
         }
 
         return {};
     }
 };
-
-}  // namespace
-
-const std::string getToolName(ToolKind tool) {
-    switch (tool) {
-    case ToolKind::POINT:
-        return "Point";
-    case ToolKind::PENCIL:
-        return "Pencil";
-    case ToolKind::LINE:
-        return "Line";
-    case ToolKind::RECTANGLE:
-        return "Rectangle";
-    case ToolKind::ELLIPSE:
-        return "Ellipse";
-    case ToolKind::POLYGON:
-        return "Polygon";
-    case ToolKind::TEXT:
-        return "Text";
-    default:
-        return "Unknown";
-    }
-}
-
-std::unique_ptr<ICanvasTool> createCanvasTool(ToolKind tool, ShapeStyle style) {
-    switch (tool) {
-    case ToolKind::POINT:
-        return std::make_unique<PointTool>(style);
-    case ToolKind::PENCIL:
-        return std::make_unique<PencilTool>(style);
-    case ToolKind::LINE:
-        return std::make_unique<LineTool>(style);
-    case ToolKind::RECTANGLE:
-        return std::make_unique<RectangleTool>(style);
-    case ToolKind::ELLIPSE:
-        return std::make_unique<EllipseTool>(style);
-    case ToolKind::POLYGON:
-        return std::make_unique<PolygonTool>(style);
-    default:
-        return nullptr;
-    }
-}
 
 }  // namespace paint::drawing

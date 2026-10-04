@@ -11,7 +11,7 @@ namespace paint::ui {
 class InputElement;
 class TextElement;
 
-}
+}  // namespace paint::ui
 
 namespace paint::app {
 
@@ -21,9 +21,9 @@ class InputDialogWindow : public ui::Window {
     using CancelCallback = std::function<void()>;
     using Validator = std::function<std::optional<std::string>(const std::string&)>;
 
-    InputDialogWindow(const std::string& title, const std::string& message,
-                      const std::string& initialValue, SubmitCallback onSubmit,
-                      CancelCallback onCancel = nullptr, Validator validator = nullptr);
+    InputDialogWindow(const std::string& title, const std::string& message, const std::string& initialValue,
+                      SubmitCallback onSubmit, CancelCallback onCancel = nullptr,
+                      Validator validator = nullptr);
 
    private:
     std::string _message;

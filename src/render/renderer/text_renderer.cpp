@@ -104,47 +104,32 @@ void renderStroke(RenderContext& context, const std::string& text, const StrokeF
 }  // namespace
 
 void TextRenderer::render(RenderContext& context, const ui::TextElement& element) {
-    const auto& text = element.text();
+    const auto& padding = element.padding();
+    const Point origin{static_cast<float>(padding.left), static_cast<float>(padding.top)};
 
+    drawText(context, element.text(), element.fontStyle(), element.color(), origin);
+}
+
+void TextRenderer::draw(RenderContext& context, const drawing::TextObject& object) {
+    drawText(context, object.text(), object.style().font, object.style().color, object.position());
+}
+
+void TextRenderer::drawText(RenderContext& context, const std::string& text,
+                            const FontStyle& fontStyle, const ColorRGBA& color,
+                            const Point& origin) {
     if (text.empty()) {
         return;
     }
 
-    const auto& fontStyle = element.fontStyle();
-    const auto& color = element.color();
-    const auto& padding = element.padding();
-
-    const float left = static_cast<float>(padding.left);
-    const float top = static_cast<float>(padding.top);
-
     // 避免影響其他元素的顏色、raster position 與線寬。
     glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
     glColor4f(color.r, color.g, color.b, color.a);
 
     if (const auto* bitmap = std::get_if<BitmapFontStyle>(&fontStyle)) {
-        renderBitmap(text, *bitmap, left, top);
+        renderBitmap(text, *bitmap, origin.x(), origin.y());
     } else if (const auto* stroke = std::get_if<StrokeFontStyle>(&fontStyle)) {
         glLineWidth(1.0f);
-        renderStroke(context, text, *stroke, left, top);
-    }
-
-    glPopAttrib();
-}
-
-void TextRenderer::draw(RenderContext& context, const drawing::TextObject& text) {
-    const auto& fontStyle = text.style().font;
-    const auto& color = text.style().color;
-    const auto& position = text.position();
-
-    // 避免影響其他元素的顏色、raster position 與線寬。
-    glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
-    glColor4f(color.r, color.g, color.b, color.a);
-
-    if (const auto* bitmap = std::get_if<BitmapFontStyle>(&fontStyle)) {
-        renderBitmap(text.text(), *bitmap, position.x(), position.y());
-    } else if (const auto* stroke = std::get_if<StrokeFontStyle>(&fontStyle)) {
-        glLineWidth(1.0f);
-        renderStroke(context, text.text(), *stroke, position.x(), position.y());
+        renderStroke(context, text, *stroke, origin.x(), origin.y());
     }
 
     glPopAttrib();

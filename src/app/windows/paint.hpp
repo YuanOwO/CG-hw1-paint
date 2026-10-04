@@ -3,6 +3,7 @@
 #include <string>
 
 #include "app/document.hpp"
+#include "drawing/text_style.hpp"
 #include "input/shortcut_manager.hpp"
 #include "ui/elements/canvas.hpp"
 #include "ui/elements/text.hpp"
@@ -31,7 +32,9 @@ class PaintWindow : public ui::Window {
 
     void selectTool(drawing::ToolKind tool);
     void setShapeStyle(const drawing::ShapeStyle& style);
+    void setTextStyle(const drawing::TextStyle& style);
     void updateToolStatus();
+    void requestTextInput(Point anchor, drawing::TextStyle style);
 
     void requestNewFile();
     void requestLoadFile();
@@ -53,6 +56,7 @@ class PaintWindow : public ui::Window {
     void setupStrokeMenu();
     void setupFillMenu();
     void setupPointMenu();
+    void setupTextMenu();
 };
 
 }  // namespace paint::app

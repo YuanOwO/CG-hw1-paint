@@ -7,6 +7,7 @@
 
 #include "common/point.hpp"
 #include "drawing/scene_object.hpp"
+#include "drawing/text_style.hpp"
 #include "event/events.hpp"
 
 namespace paint::drawing {
@@ -23,7 +24,12 @@ struct AddObjectAction {
     std::unique_ptr<SceneObject> object;
 };
 
-using ToolAction = std::variant<NoAction, AddObjectAction>;
+struct RequestTextInputAction {
+    Point anchor;
+    TextStyle style;
+};
+
+using ToolAction = std::variant<NoAction, AddObjectAction, RequestTextInputAction>;
 
 // 工具事件的結果。action 描述要交給編輯器執行的動作，工具本身不直接修改 Document。
 struct ToolResult {
@@ -35,6 +41,12 @@ struct ToolResult {
 
     static ToolResult addObject(std::unique_ptr<SceneObject> object, bool handled = false) {
         return {handled, true, AddObjectAction{std::move(object)}};
+    }
+
+    static ToolResult requestTextInput(Point anchor, TextStyle style) {
+        return {
+            true, false, RequestTextInputAction{anchor, std::move(style)}
+        };
     }
 };
 
