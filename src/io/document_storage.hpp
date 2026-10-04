@@ -4,17 +4,15 @@
 
 #include "app/document.hpp"
 
-using paint::app::Document;
-using paint::app::DocumentData;
-namespace paint {
+namespace paint::io {
 
 class DocumentStorage {
    public:
     // 寫入失敗拋出例外。
-    static void write(const DocumentData& document);
+    static void write(const app::DocumentData& document);
 
     // 讀取、解析、驗證成功後才回傳；失敗拋出例外。
-    static DocumentData read(const Path& filename);
+    static app::DocumentData read(const Path& filename);
 };
 
-}  // namespace paint
+}  // namespace paint::io

@@ -6,10 +6,8 @@
 #include "input/input_types.hpp"
 
 namespace paint::ui {
-
 class Window;
-
-}  // namespace paint::ui
+}
 
 namespace paint {
 

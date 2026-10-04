@@ -3,12 +3,12 @@
 #include <filesystem>
 #include <fstream>
 
-#include "app/windows/graphicsRenderer.hpp"
+#include "app/windows/graphics_exporter.hpp"
 #include "io/utils.hpp"
 
-namespace paint {
+namespace paint::io {
 
-void PpmExporter::write(const DocumentData& document) {
+void PpmExporter::write(const app::DocumentData& document) {
     if (document.canvasWidth <= 0 || document.canvasHeight <= 0) {
         throw std::runtime_error("Cannot export: canvas size is empty");
     }
@@ -46,4 +46,4 @@ void PpmExporter::write(const DocumentData& document) {
     }
 }
 
-}  // namespace paint
+}  // namespace paint::io

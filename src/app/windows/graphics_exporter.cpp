@@ -1,4 +1,4 @@
-#include "app/windows/graphicsRenderer.hpp"
+#include "app/windows/graphics_exporter.hpp"
 
 #include <GL/freeglut.h>
 

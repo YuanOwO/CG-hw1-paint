@@ -33,7 +33,7 @@ class LoadCommand : public FileCommand {
     LoadCommand(Document& document, const Path& filename) : FileCommand(document), _filename(filename) {}
 
     void execute() override {
-        auto data = DocumentStorage::read(_filename);
+        auto data = io::DocumentStorage::read(_filename);
 
         // read 完全成功後才替換原文件。
         _document.replaceContent(std::move(data.scene), _filename);
@@ -50,7 +50,7 @@ class SaveCommand : public FileCommand {
     void execute() override {
         auto data = _document.data();
         data.filename = _filename;
-        DocumentStorage::write(data);
+        io::DocumentStorage::write(data);
 
         // 必須等 write 成功後才更新。
         _document.setFilename(_filename);
@@ -69,7 +69,7 @@ class ExportCommand : public FileCommand {
         // 實現導出圖像的邏輯
         auto data = _document.data();
         data.filename = _filename;
-        PpmExporter::write(data);
+        io::PpmExporter::write(data);
     }
 
    private:

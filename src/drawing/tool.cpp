@@ -4,7 +4,6 @@
 #include <cmath>
 
 namespace paint::drawing {
-
 namespace {
 
 // 直線、矩形、圓形等需要拖曳兩個點的工具可以共用這個基底類別。

@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace paint::utils {
+namespace paint::io::utils {
 
 void validateWritePath(const fs::path& path) {
     if (path.empty()) {
@@ -38,4 +38,4 @@ void validateReadPath(const fs::path& path) {
     }
 }
 
-}  // namespace paint::utils
+}  // namespace paint::io::utils
