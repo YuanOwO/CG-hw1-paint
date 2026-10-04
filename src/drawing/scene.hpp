@@ -4,25 +4,25 @@
 #include <memory>
 #include <vector>
 
-#include "drawing/shape.hpp"
+#include "drawing/scene_object.hpp"
 
 namespace paint::drawing {
 
 class Scene {
    public:
-    void add(std::shared_ptr<Shape> shape);
-    void insert(std::size_t index, std::shared_ptr<Shape> shape);
-    void remove(const std::shared_ptr<Shape>& shape);
+    void add(std::shared_ptr<SceneObject> object);
+    void insert(std::size_t index, std::shared_ptr<SceneObject> object);
+    void remove(const std::shared_ptr<SceneObject>& object);
     void clear();
 
-    std::size_t indexOf(const std::shared_ptr<Shape>& shape) const;
-    std::size_t size() const { return _shapes.size(); }
+    std::size_t indexOf(const std::shared_ptr<SceneObject>& object) const;
+    std::size_t size() const { return _objects.size(); }
 
-    const std::vector<std::shared_ptr<Shape>>& shapes() const { return _shapes; }
-    void setShapes(const std::vector<std::shared_ptr<Shape>>& shapes);
+    const std::vector<std::shared_ptr<SceneObject>>& objects() const { return _objects; }
+    void setObjects(const std::vector<std::shared_ptr<SceneObject>>& objects);
 
    private:
-    std::vector<std::shared_ptr<Shape>> _shapes;
+    std::vector<std::shared_ptr<SceneObject>> _objects;
 };
 
 }  // namespace paint::drawing

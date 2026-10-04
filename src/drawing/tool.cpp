@@ -97,9 +97,9 @@ class DragTool : public DrawingTool<TShape> {
     }
 };
 
-class LineTool : public DragTool<Line> {
+class LineTool : public DragTool<LineShape> {
    public:
-    using DragTool<Line>::DragTool;
+    using DragTool<LineShape>::DragTool;
 
    protected:
     // Shift 鍵被按下時，會畫出水平、垂直或 45° 斜線。
@@ -133,14 +133,14 @@ class LineTool : public DragTool<Line> {
     }
 };
 
-class RectangleTool : public DragTool<Rectangle> {
+class RectangleTool : public DragTool<RectangleShape> {
    public:
-    using DragTool<Rectangle>::DragTool;
+    using DragTool<RectangleShape>::DragTool;
 };
 
-class EllipseTool : public DragTool<Ellipse> {
+class EllipseTool : public DragTool<EllipseShape> {
    public:
-    using DragTool<Ellipse>::DragTool;
+    using DragTool<EllipseShape>::DragTool;
 };
 
 class PointTool : public DrawingTool<PointShape> {
@@ -154,9 +154,9 @@ class PointTool : public DrawingTool<PointShape> {
     }
 };
 
-class PencilTool : public DrawingTool<Path> {
+class PencilTool : public DrawingTool<PathShape> {
    public:
-    using DrawingTool<Path>::DrawingTool;
+    using DrawingTool<PathShape>::DrawingTool;
 
     ToolEventResult onMouseDown(const MouseButtonEvent& event, Point localPosition) override {
         this->beginDraft();
@@ -190,9 +190,9 @@ class PencilTool : public DrawingTool<Path> {
     }
 };
 
-class PolygonTool : public DrawingTool<Polygon> {
+class PolygonTool : public DrawingTool<PolygonShape> {
    public:
-    using DrawingTool<Polygon>::DrawingTool;
+    using DrawingTool<PolygonShape>::DrawingTool;
 
     ToolEventResult onClick(const ClickEvent& event, Point localPosition) override {
         if (!_draft) {

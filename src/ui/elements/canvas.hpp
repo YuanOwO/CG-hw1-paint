@@ -34,7 +34,7 @@ class CanvasElement : public Element {
     void setStyle(const drawing::ShapeStyle& style);
 
     const Document& document() const { return _document; }
-    const drawing::Shape* draft() const { return _activeTool ? _activeTool->preview() : nullptr; }
+    const drawing::SceneObject* draft() const { return _activeTool ? _activeTool->preview() : nullptr; }
 
     void undo();
     void redo();

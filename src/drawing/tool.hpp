@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "common/point.hpp"
-#include "drawing/shape.hpp"
+#include "drawing/shape_object.hpp"
 #include "event/events.hpp"
 #include "input/input_state.hpp"
 
@@ -33,10 +33,10 @@ class IDrawingTool {
     virtual ~IDrawingTool() = default;
 
     // 返回草稿的參考，供畫布在 display 時繪製。
-    virtual const Shape* preview() const = 0;
+    virtual const ShapeObject* preview() const = 0;
 
     // 僅在 COMMIT 後呼叫一次；取出後由呼叫端銷毀工具。
-    virtual std::unique_ptr<Shape> takeShape() = 0;
+    virtual std::unique_ptr<ShapeObject> takeShape() = 0;
 
     virtual ToolEventResult finish() = 0;
 
@@ -68,8 +68,8 @@ class DrawingTool : public IDrawingTool {
    public:
     DrawingTool(ShapeStyle style) : _style(style) {}
 
-    const Shape* preview() const override { return _draft.get(); }
-    std::unique_ptr<Shape> takeShape() override { return std::move(_draft); }
+    const ShapeObject* preview() const override { return _draft.get(); }
+    std::unique_ptr<ShapeObject> takeShape() override { return std::move(_draft); }
 
     ToolEventResult finish() override { return _draft ? ToolEventResult::COMMIT : ToolEventResult::NONE; }
 

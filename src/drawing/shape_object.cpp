@@ -1,4 +1,4 @@
-#include "drawing/shape.hpp"
+#include "drawing/shape_object.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -10,12 +10,12 @@ std::vector<Point> PointShape::getVertices() const {
     return vertices;
 }
 
-std::vector<Point> Line::getVertices() const {
+std::vector<Point> LineShape::getVertices() const {
     std::vector<Point> vertices = {_start, _end};
     return vertices;
 }
 
-std::vector<Point> Rectangle::getVertices() const {
+std::vector<Point> RectangleShape::getVertices() const {
     std::vector<Point> vertices;
 
     const float left = std::min(_start.x(), _end.x());
@@ -31,7 +31,7 @@ std::vector<Point> Rectangle::getVertices() const {
     return vertices;
 }
 
-std::vector<Point> Ellipse::getVertices() const {
+std::vector<Point> EllipseShape::getVertices() const {
     std::vector<Point> vertices;
 
     const float cx = (_start.x() + _end.x()) / 2.0f;
@@ -54,12 +54,12 @@ std::vector<Point> Ellipse::getVertices() const {
     return vertices;
 }
 
-std::vector<Point> Path::getVertices() const {
+std::vector<Point> PathShape::getVertices() const {
     std::vector<Point> vertices = points;  // 直接使用點的集合作為頂點
     return vertices;
 }
 
-void Path::addPoint(const Point& p, const bool force) {
+void PathShape::addPoint(const Point& p, const bool force) {
     if (points.empty()) {
         points.push_back(p);
         return;
@@ -78,22 +78,22 @@ void Path::addPoint(const Point& p, const bool force) {
     }
 }
 
-std::vector<Point> Polygon::getVertices() const {
+std::vector<Point> PolygonShape::getVertices() const {
     std::vector<Point> vertices = points;  // 直接使用點的集合作為頂點
     return vertices;
 }
 
-void Polygon::addPoint(const Point& point) {
+void PolygonShape::addPoint(const Point& point) {
     points.push_back(point);
 }
 
-void Polygon::setLastPoint(const Point& point) {
+void PolygonShape::setLastPoint(const Point& point) {
     if (!points.empty()) {
         points.back() = point;
     }
 }
 
-void Polygon::removeLastPoint() {
+void PolygonShape::removeLastPoint() {
     if (!points.empty()) {
         points.pop_back();
     }

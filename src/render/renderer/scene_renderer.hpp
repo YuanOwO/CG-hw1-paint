@@ -7,14 +7,14 @@
 #include "render/render_context.hpp"
 
 namespace paint::drawing {
-class ShapeObject;
+class SceneObject;
 }
 
 namespace paint::render {
 
-class ShapeRenderer {
+class SceneRenderer {
    public:
-    void draw(RenderContext& context, const drawing::ShapeObject& shape) const;
+    void draw(RenderContext& context, const drawing::SceneObject& scene) const;
 };
 
 }  // namespace paint::render

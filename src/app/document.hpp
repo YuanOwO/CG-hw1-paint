@@ -10,10 +10,10 @@
 
 #include "command/command_history.hpp"
 #include "drawing/scene.hpp"
-#include "drawing/shape.hpp"
+#include "drawing/scene_object.hpp"
 
 using paint::drawing::Scene;
-using paint::drawing::Shape;
+using paint::drawing::SceneObject;
 using Path = std::filesystem::path;
 
 namespace paint::app {
@@ -73,9 +73,9 @@ class Document {
 
     // 編輯操作
 
-    void addShape(std::shared_ptr<Shape> shape);
-    void insertShape(std::size_t index, std::shared_ptr<Shape> shape);
-    void removeShape(std::shared_ptr<Shape> shape);
+    void addObject(std::shared_ptr<SceneObject> object);
+    void insertObject(std::size_t index, std::shared_ptr<SceneObject> object);
+    void removeObject(std::shared_ptr<SceneObject> object);
     void clearScene();
 
     void undo();

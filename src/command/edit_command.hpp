@@ -4,7 +4,7 @@
 #include "drawing/scene.hpp"
 
 using paint::drawing::Scene;
-using paint::drawing::Shape;
+using paint::drawing::SceneObject;
 
 namespace paint {
 
@@ -16,60 +16,60 @@ class EditCommand : public IUndoableCommand {
     Scene& _scene;
 };
 
-class AddShapeCommand : public EditCommand {
+class AddObjectCommand : public EditCommand {
    public:
-    AddShapeCommand(Scene& scene, std::shared_ptr<Shape> shape)
-        : EditCommand(scene), _shape(std::move(shape)) {}
+    AddObjectCommand(Scene& scene, std::shared_ptr<SceneObject> object)
+        : EditCommand(scene), _object(std::move(object)) {}
 
-    void execute() override { _scene.add(_shape); }
+    void execute() override { _scene.add(_object); }
 
-    void undo() override { _scene.remove(_shape); }
+    void undo() override { _scene.remove(_object); }
 
    private:
-    std::shared_ptr<Shape> _shape;
+    std::shared_ptr<SceneObject> _object;
 };
 
-class InsertShapeCommand : public EditCommand {
+class InsertObjectCommand : public EditCommand {
    public:
-    InsertShapeCommand(Scene& scene, std::size_t index, std::shared_ptr<Shape> shape)
-        : EditCommand(scene), _index(index), _shape(std::move(shape)) {}
+    InsertObjectCommand(Scene& scene, std::size_t index, std::shared_ptr<SceneObject> object)
+        : EditCommand(scene), _index(index), _object(std::move(object)) {}
 
-    void execute() override { _scene.insert(_index, _shape); }
+    void execute() override { _scene.insert(_index, _object); }
 
-    void undo() override { _scene.remove(_shape); }
+    void undo() override { _scene.remove(_object); }
 
    private:
     std::size_t _index;
-    std::shared_ptr<Shape> _shape;
+    std::shared_ptr<SceneObject> _object;
 };
 
-class RemoveShapeCommand : public EditCommand {
+class RemoveObjectCommand : public EditCommand {
    public:
-    RemoveShapeCommand(Scene& scene, std::shared_ptr<Shape> shape)
-        : EditCommand(scene), _shape(std::move(shape)) {}
+    RemoveObjectCommand(Scene& scene, std::shared_ptr<SceneObject> object)
+        : EditCommand(scene), _object(std::move(object)) {}
 
     void execute() override {
-        _index = _scene.indexOf(_shape);
-        _scene.remove(_shape);
+        _index = _scene.indexOf(_object);
+        _scene.remove(_object);
     }
 
-    void undo() override { _scene.insert(_index, _shape); }
+    void undo() override { _scene.insert(_index, _object); }
 
    private:
     std::size_t _index = 0;
-    std::shared_ptr<Shape> _shape;
+    std::shared_ptr<SceneObject> _object;
 };
 
 class ClearSceneCommand : public EditCommand {
    public:
-    ClearSceneCommand(Scene& scene) : EditCommand(scene), _backupShapes(scene.shapes()) {}
+    ClearSceneCommand(Scene& scene) : EditCommand(scene), _backupShapes(scene.objects()) {}
 
     void execute() override { _scene.clear(); }
 
-    void undo() override { _scene.setShapes(_backupShapes); }
+    void undo() override { _scene.setObjects(_backupShapes); }
 
    private:
-    std::vector<std::shared_ptr<Shape>> _backupShapes;
+    std::vector<std::shared_ptr<SceneObject>> _backupShapes;
 };
 
 }  // namespace paint

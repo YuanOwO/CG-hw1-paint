@@ -3,15 +3,16 @@
 #include <vector>
 
 #include "common/point.hpp"
+#include "drawing/scene_object.hpp"
 #include "drawing/shape_style.hpp"
 
 namespace paint::drawing {
 
-class Shape {
+class ShapeObject : public SceneObject {
    public:
-    Shape(ShapeStyle style) : _style(style) {}
+    ShapeObject(ShapeStyle style) : _style(style) {}
 
-    virtual ~Shape() = default;
+    virtual ~ShapeObject() = default;
 
     const ShapeStyle& style() const { return _style; }   // 取得形狀的樣式資訊
     virtual bool isClosed() const = 0;                   // 是否為封閉形狀
@@ -21,9 +22,9 @@ class Shape {
     const ShapeStyle _style;
 };
 
-class PointShape : public Shape {
+class PointShape : public ShapeObject {
    public:
-    PointShape(const ShapeStyle& style) : Shape(style) {}
+    PointShape(const ShapeStyle& style) : ShapeObject(style) {}
 
     bool isClosed() const override { return false; }
 
@@ -37,9 +38,9 @@ class PointShape : public Shape {
 };
 
 // 可以由兩點（起點與終點）定義的形狀，例如直線、矩形、橢圓等。
-class TwoPointShape : public Shape {
+class TwoPointShape : public ShapeObject {
    public:
-    using Shape::Shape;
+    using ShapeObject::ShapeObject;
 
     void setStart(const Point& point) { _start = point; }
     const Point& start() const { return _start; }
@@ -51,7 +52,7 @@ class TwoPointShape : public Shape {
     Point _start, _end;
 };
 
-class Line : public TwoPointShape {
+class LineShape : public TwoPointShape {
    public:
     using TwoPointShape::TwoPointShape;
 
@@ -60,7 +61,7 @@ class Line : public TwoPointShape {
     std::vector<Point> getVertices() const override;
 };
 
-class Rectangle : public TwoPointShape {
+class RectangleShape : public TwoPointShape {
    public:
     using TwoPointShape::TwoPointShape;
 
@@ -69,7 +70,7 @@ class Rectangle : public TwoPointShape {
     std::vector<Point> getVertices() const override;
 };
 
-class Ellipse : public TwoPointShape {
+class EllipseShape : public TwoPointShape {
    public:
     using TwoPointShape::TwoPointShape;
 
@@ -78,9 +79,9 @@ class Ellipse : public TwoPointShape {
     std::vector<Point> getVertices() const override;
 };
 
-class Path : public Shape {
+class PathShape : public ShapeObject {
    public:
-    using Shape::Shape;
+    using ShapeObject::ShapeObject;
 
     bool isClosed() const override { return false; }
 
@@ -92,9 +93,9 @@ class Path : public Shape {
     std::vector<Point> points;
 };
 
-class Polygon : public Shape {
+class PolygonShape : public ShapeObject {
    public:
-    using Shape::Shape;
+    using ShapeObject::ShapeObject;
 
     bool isClosed() const override { return points.size() >= 3; }
 

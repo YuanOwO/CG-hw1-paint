@@ -62,18 +62,18 @@ void Document::exportImage(const Path& filename) {
 
 // 編輯操作
 
-void Document::addShape(std::shared_ptr<Shape> shape) {
-    _history.execute(std::make_unique<AddShapeCommand>(_scene, std::move(shape)));
+void Document::addObject(std::shared_ptr<SceneObject> object) {
+    _history.execute(std::make_unique<AddObjectCommand>(_scene, std::move(object)));
     onModifiedChangedInternal();
 }
 
-void Document::insertShape(std::size_t index, std::shared_ptr<Shape> shape) {
-    _history.execute(std::make_unique<InsertShapeCommand>(_scene, index, std::move(shape)));
+void Document::insertObject(std::size_t index, std::shared_ptr<SceneObject> object) {
+    _history.execute(std::make_unique<InsertObjectCommand>(_scene, index, std::move(object)));
     onModifiedChangedInternal();
 }
 
-void Document::removeShape(std::shared_ptr<Shape> shape) {
-    _history.execute(std::make_unique<RemoveShapeCommand>(_scene, std::move(shape)));
+void Document::removeObject(std::shared_ptr<SceneObject> object) {
+    _history.execute(std::make_unique<RemoveObjectCommand>(_scene, std::move(object)));
     onModifiedChangedInternal();
 }
 

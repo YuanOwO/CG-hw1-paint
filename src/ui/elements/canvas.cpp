@@ -136,7 +136,7 @@ void CanvasElement::resetTool() {
 void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
     switch (result) {
     case drawing::ToolEventResult::COMMIT:
-        _document.addShape(_activeTool->takeShape());
+        _document.addObject(_activeTool->takeShape());
         [[fallthrough]];
     case drawing::ToolEventResult::CANCEL:  // 注意：這裡故意不 break，因為 COMMIT 也需要清除草稿
         resetTool();

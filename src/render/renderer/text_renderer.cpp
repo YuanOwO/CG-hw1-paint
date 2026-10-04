@@ -7,6 +7,7 @@
 #include <variant>
 
 #include "common/font.hpp"
+#include "drawing/text_object.hpp"
 #include "ui/elements/text.hpp"
 
 namespace paint::render {
@@ -125,6 +126,25 @@ void TextRenderer::render(RenderContext& context, const ui::TextElement& element
     } else if (const auto* stroke = std::get_if<StrokeFontStyle>(&fontStyle)) {
         glLineWidth(1.0f);
         renderStroke(context, text, *stroke, left, top);
+    }
+
+    glPopAttrib();
+}
+
+void TextRenderer::draw(RenderContext& context, const drawing::TextObject& text) {
+    const auto& fontStyle = text.style().font;
+    const auto& color = text.style().color;
+    const auto& position = text.position();
+
+    // 避免影響其他元素的顏色、raster position 與線寬。
+    glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT);
+    glColor4f(color.r, color.g, color.b, color.a);
+
+    if (const auto* bitmap = std::get_if<BitmapFontStyle>(&fontStyle)) {
+        renderBitmap(text.text(), *bitmap, position.x(), position.y());
+    } else if (const auto* stroke = std::get_if<StrokeFontStyle>(&fontStyle)) {
+        glLineWidth(1.0f);
+        renderStroke(context, text.text(), *stroke, position.x(), position.y());
     }
 
     glPopAttrib();
