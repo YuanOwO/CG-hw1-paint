@@ -6,16 +6,33 @@
 
 #include "common/color.hpp"
 #include "common/font.hpp"
+#include "common/utf8.hpp"
 #include "ui/elements/text.hpp"
 
 namespace paint::ui {
 
-InputElement::InputElement(std::string value, std::string placeholder)
-    : _value(std::move(value)), _placeholder(std::move(placeholder)), _cursorPosition(_value.size()) {
-    if (_value.size() > _maxLength) {
-        _value.resize(_maxLength);
-        _cursorPosition = _value.size();
+namespace {
+
+bool isHexDigit(char character) {
+    return (character >= '0' && character <= '9') || (character >= 'a' && character <= 'f') ||
+           (character >= 'A' && character <= 'F');
+}
+
+unsigned int hexDigitValue(char character) {
+    if (character >= '0' && character <= '9') {
+        return static_cast<unsigned int>(character - '0');
     }
+    if (character >= 'a' && character <= 'f') {
+        return static_cast<unsigned int>(character - 'a' + 10);
+    }
+    return static_cast<unsigned int>(character - 'A' + 10);
+}
+
+}  // namespace
+
+InputElement::InputElement(std::string value, std::string placeholder)
+    : _placeholder(std::move(placeholder)) {
+    setValue(std::move(value));
 
     setFocusable(true);
     setPadding({8, 4, 8, 4});
@@ -35,6 +52,8 @@ InputElement::InputElement(std::string value, std::string placeholder)
 
     addEventListener<BlurEvent>([this](BlurEvent&) {
         _focused = false;
+        _unicodeInputActive = false;
+        _unicodeDigits.clear();
         updateDisplayedText();
         invalidateDisplay();
     });
@@ -47,16 +66,31 @@ InputElement::InputElement(std::string value, std::string placeholder)
 }
 
 void InputElement::setValue(std::string value) {
-    if (value.size() > _maxLength) {
-        value.resize(_maxLength);
+    // 對外仍接受 UTF-8，進入編輯模型後則統一以 code point 儲存。
+    // decode 時也會把不合法的 sequence 正規化成 U+FFFD。
+    std::vector<InputCharacter> characters;
+    const std::u32string codepoints = utf8::toUtf32(value);
+    const std::size_t count = std::min(codepoints.size(), _maxLength);
+    characters.reserve(count);
+
+    for (std::size_t i = 0; i < count; ++i) {
+        characters.push_back({codepoints[i]});
     }
 
-    if (_value == value) {
+    std::u32string normalized;
+    normalized.reserve(characters.size());
+    for (const auto& character : characters) {
+        normalized.push_back(character.codepoint);
+    }
+
+    const std::string encoded = utf8::fromUtf32(normalized);
+    if (_value == encoded) {
         return;
     }
 
-    _value = std::move(value);
-    _cursorPosition = _value.size();
+    _characters = std::move(characters);
+    _value = encoded;
+    _cursorIndex = _characters.size();
     updateDisplayedText();
     notifyValueChanged();
 }
@@ -77,12 +111,13 @@ void InputElement::setPlaceholder(std::string placeholder) {
 void InputElement::setMaxLength(std::size_t maxLength) {
     _maxLength = maxLength;
 
-    if (_value.size() <= _maxLength) {
+    if (_characters.size() <= _maxLength) {
         return;
     }
 
-    _value.resize(_maxLength);
-    _cursorPosition = std::min(_cursorPosition, _value.size());
+    _characters.resize(_maxLength);
+    _cursorIndex = std::min(_cursorIndex, _characters.size());
+    rebuildValue();
     updateDisplayedText();
     notifyValueChanged();
 }
@@ -108,43 +143,71 @@ void InputElement::handleKeyDown(KeyDownEvent& event) {
         return;
     }
 
+    if (_unicodeInputActive) {
+        // 組字期間先處理控制鍵，避免 Backspace 誤刪已確定的文字，
+        // 或 Enter 在四碼完成前就提交整個對話框。
+        if (event.key() == Key::Escape) {
+            _unicodeInputActive = false;
+            _unicodeDigits.clear();
+            updateDisplayedText();
+            event.stopPropagation();
+            return;
+        }
+
+        if (event.key() == Key::Backspace) {
+            if (_unicodeDigits.empty()) {
+                _unicodeInputActive = false;
+            } else {
+                _unicodeDigits.pop_back();
+            }
+            updateDisplayedText();
+            event.stopPropagation();
+            return;
+        }
+
+        if (event.key() == Key::Enter) {
+            event.stopPropagation();
+            return;
+        }
+    }
+
     bool handled = true;
     bool valueChanged = false;
 
     switch (event.key()) {
     case Key::Backspace:
-        if (_cursorPosition > 0) {
-            _value.erase(_cursorPosition - 1, 1);
-            --_cursorPosition;
+        if (_cursorIndex > 0) {
+            _characters.erase(_characters.begin() + _cursorIndex - 1);
+            --_cursorIndex;
             valueChanged = true;
         }
         break;
 
     case Key::Delete:
-        if (_cursorPosition < _value.size()) {
-            _value.erase(_cursorPosition, 1);
+        if (_cursorIndex < _characters.size()) {
+            _characters.erase(_characters.begin() + _cursorIndex);
             valueChanged = true;
         }
         break;
 
     case Key::Left:
-        if (_cursorPosition > 0) {
-            --_cursorPosition;
+        if (_cursorIndex > 0) {
+            --_cursorIndex;
         }
         break;
 
     case Key::Right:
-        if (_cursorPosition < _value.size()) {
-            ++_cursorPosition;
+        if (_cursorIndex < _characters.size()) {
+            ++_cursorIndex;
         }
         break;
 
     case Key::Home:
-        _cursorPosition = 0;
+        _cursorIndex = 0;
         break;
 
     case Key::End:
-        _cursorPosition = _value.size();
+        _cursorIndex = _characters.size();
         break;
 
     default:
@@ -158,6 +221,7 @@ void InputElement::handleKeyDown(KeyDownEvent& event) {
 
     updateDisplayedText();
     if (valueChanged) {
+        rebuildValue();
         notifyValueChanged();
     }
     event.stopPropagation();
@@ -168,25 +232,92 @@ void InputElement::handleTextInput(TextInputEvent& event) {
         return;
     }
 
-    // 文字事件只應由目前有焦點的文字輸入元件消費。
+    // 文字事件在這裡完成後就不再往父元件傳遞。
     event.stopPropagation();
 
-    if (event.text().empty() || _value.size() >= _maxLength) {
+    if (event.text().empty()) {
         return;
     }
 
-    const std::size_t available = _maxLength - _value.size();
-    const std::string text = event.text().substr(0, available);
-
-    if (text.empty()) {
+    if (!_unicodeInputActive && event.text() == "`") {
+        // 反引號本身不放入文字，只用來開始 Unicode 組字。
+        _unicodeInputActive = true;
+        _unicodeDigits.clear();
+        updateDisplayedText();
         return;
     }
 
-    _value.insert(_cursorPosition, text);
-    _cursorPosition += text.size();
+    if (_unicodeInputActive) {
+        const char character = event.text()[0];
+        if (!isHexDigit(character)) {
+            return;
+        }
 
+        _unicodeDigits.push_back(character);
+        if (_unicodeDigits.size() == 4) {
+            commitUnicodeInput();
+        } else {
+            updateDisplayedText();
+        }
+        return;
+    }
+
+    if (_characters.size() >= _maxLength) {
+        return;
+    }
+
+    std::u32string codepoints = utf8::toUtf32(event.text());
+    const std::size_t available = _maxLength - _characters.size();
+    if (codepoints.size() > available) {
+        codepoints.resize(available);
+    }
+
+    if (codepoints.empty()) {
+        return;
+    }
+
+    std::vector<InputCharacter> inserted;
+    inserted.reserve(codepoints.size());
+    for (char32_t codepoint : codepoints) {
+        inserted.push_back({codepoint});
+    }
+
+    _characters.insert(_characters.begin() + _cursorIndex, inserted.begin(), inserted.end());
+    _cursorIndex += inserted.size();
+
+    rebuildValue();
     updateDisplayedText();
     notifyValueChanged();
+}
+
+void InputElement::commitUnicodeInput() {
+    char32_t codepoint = 0;
+    for (char digit : _unicodeDigits) {
+        codepoint = (codepoint << 4) | hexDigitValue(digit);
+    }
+
+    // 透過 UTF-8 codec 正規化一次，surrogate 等無效值會變成 U+FFFD。
+    const std::u32string normalized = utf8::toUtf32(utf8::encodeOne(codepoint));
+    if (_characters.size() < _maxLength && !normalized.empty()) {
+        _characters.insert(_characters.begin() + _cursorIndex, InputCharacter{normalized.front()});
+        ++_cursorIndex;
+        rebuildValue();
+        notifyValueChanged();
+    }
+
+    _unicodeInputActive = false;
+    _unicodeDigits.clear();
+    updateDisplayedText();
+}
+
+void InputElement::rebuildValue() {
+    // 只在編輯狀態改變後重建，讓 value() 仍可回傳穩定的 const reference。
+    std::u32string codepoints;
+    codepoints.reserve(_characters.size());
+    for (const auto& character : _characters) {
+        codepoints.push_back(character.codepoint);
+    }
+    _value = utf8::fromUtf32(codepoints);
 }
 
 void InputElement::updateDisplayedText() {
@@ -200,12 +331,29 @@ void InputElement::updateDisplayedText() {
         return;
     }
 
-    std::string displayed = _value;
-    if (_focused) {
-        displayed.insert(_cursorPosition, "|");
+    std::u32string displayed;
+    displayed.reserve(_characters.size() + _unicodeDigits.size() + 2);
+
+    // Cursor 目前先以 '|' 字元呈現。位置已經是獨立的 cursor index，
+    // 之後可改由 InputRenderer 畫閃爍 caret，不需要改動編輯模型。
+    for (std::size_t i = 0; i <= _characters.size(); ++i) {
+        if (_focused && i == _cursorIndex) {
+            if (_unicodeInputActive) {
+                displayed.push_back(U'`');
+                for (char digit : _unicodeDigits) {
+                    displayed.push_back(static_cast<unsigned char>(digit));
+                }
+            }
+            displayed.push_back(U'|');
+        }
+
+        if (i < _characters.size()) {
+            displayed.push_back(_characters[i].codepoint);
+        }
     }
 
-    _textElement->setText(displayed);
+    const std::string encoded = utf8::fromUtf32(displayed);
+    _textElement->setText(encoded);
     _textElement->setColor(ColorRGBA{0.12f, 0.16f, 0.23f});
 }
 

@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <functional>
 #include <string>
+#include <vector>
 
 #include "common/color.hpp"
 #include "event/events.hpp"
@@ -12,6 +13,12 @@
 namespace paint::ui {
 
 class TextElement;
+
+// 輸入框的最小編輯單位。之後若要快取 glyph advance 或排版位置，
+// 可以直接擴充這個 struct，不需要改變文字編輯介面。
+struct InputCharacter {
+    char32_t codepoint;
+};
 
 struct InputStyle {
     ColorRGBA background = Color::White;
@@ -27,6 +34,9 @@ class InputElement : public Element {
 
     const std::string& value() const { return _value; }
     void setValue(std::string value);
+
+    const std::vector<InputCharacter>& characters() const { return _characters; }
+    std::size_t cursorIndex() const { return _cursorIndex; }
 
     const std::string& placeholder() const;
     void setPlaceholder(std::string placeholder);
@@ -52,13 +62,20 @@ class InputElement : public Element {
     void renderContent(render::RenderContext& context) override;
 
    private:
+    // _characters 是編輯狀態的真實來源；_value 是給既有 API 使用的 UTF-8 快取。
+    std::vector<InputCharacter> _characters;
     std::string _value;
     std::string _placeholder;
 
-    std::size_t _cursorPosition = 0;
+    // Cursor 指向字元之間的插入位置，範圍為 [0, _characters.size()]。
+    std::size_t _cursorIndex = 0;
     std::size_t _maxLength = 255;
 
     bool _focused = false;
+
+    // 反引號會開啟四位十六進位組字，例如 `4f60 -> 你。
+    bool _unicodeInputActive = false;
+    std::string _unicodeDigits;
 
     render::InputRenderer _renderer;
     InputStyle _style;
@@ -67,7 +84,9 @@ class InputElement : public Element {
 
     void handleKeyDown(KeyDownEvent& event);
     void handleTextInput(TextInputEvent& event);
+    void commitUnicodeInput();
 
+    void rebuildValue();
     void updateDisplayedText();
     void notifyValueChanged();
 };
