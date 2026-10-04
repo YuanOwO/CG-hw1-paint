@@ -46,12 +46,10 @@ add_executable(graphtoria
 )
 
 add_custom_command(TARGET graphtoria POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory
-        "$<TARGET_FILE_DIR:graphtoria>/assets/fonts"
-
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-        "${CMAKE_SOURCE_DIR}/assets/fonts/Cubic11.gfnt"
-        "$<TARGET_FILE_DIR:graphtoria>/assets/fonts/Cubic11.gfnt"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        "${CMAKE_SOURCE_DIR}/assets"
+        "$<TARGET_FILE_DIR:graphtoria>/assets"
+    COMMENT "Copying assets"
 )
 
 # -------------------------

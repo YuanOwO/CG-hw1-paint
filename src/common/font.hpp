@@ -25,6 +25,7 @@ enum class StrokeFont {
 
 enum class GfntFontId {
     CUBIC_11,
+    UNIFONT_16,
 };
 
 struct BitmapFontStyle {

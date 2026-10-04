@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <memory>
 #include <stdexcept>
+#include <unordered_map>
 
 #include "common/utf8.hpp"
 
@@ -12,12 +13,16 @@ namespace paint {
 
 namespace {
 
-std::unique_ptr<GfntFont> cubic11;
+std::unordered_map<GfntFontId, std::unique_ptr<GfntFont>> g_fonts;
 
 }  // namespace
 
 void initializeFonts(const std::filesystem::path& fontDirectory) {
-    cubic11 = std::make_unique<GfntFont>(GfntFont::load(fontDirectory / "Cubic11.gfnt"));
+    g_fonts.clear();
+    g_fonts[GfntFontId::CUBIC_11] =
+        std::make_unique<GfntFont>(GfntFont::load(fontDirectory / "Cubic-11" / "Cubic_11.gfnt"));
+    g_fonts[GfntFontId::UNIFONT_16] =
+        std::make_unique<GfntFont>(GfntFont::load(fontDirectory / "unifont" / "Unifont_16.gfnt"));
 }
 
 void* mapFont(const BitmapFont& font) {
@@ -57,10 +62,15 @@ void* mapFont(const StrokeFont& font) {
 const GfntFont& mapFont(const GfntFontId& font) {
     switch (font) {
     case GfntFontId::CUBIC_11:
-        if (!cubic11) {
+        if (!g_fonts.count(GfntFontId::CUBIC_11)) {
             throw std::logic_error("Fonts have not been initialized");
         }
-        return *cubic11;
+        return *g_fonts[GfntFontId::CUBIC_11];
+    case GfntFontId::UNIFONT_16:
+        if (!g_fonts.count(GfntFontId::UNIFONT_16)) {
+            throw std::logic_error("Fonts have not been initialized");
+        }
+        return *g_fonts[GfntFontId::UNIFONT_16];
 
     default:
         throw std::invalid_argument("Unknown GFNT font");

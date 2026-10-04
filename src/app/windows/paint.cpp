@@ -773,6 +773,11 @@ void PaintWindow::setupTextMenu() {
         style.font = GfntFontStyle{GfntFontId::CUBIC_11};
         setTextStyle(style);
     });
+    fontMenu.addMenuEntry("Unifont 16", [this]() {
+        auto style = _canvas->textStyle();
+        style.font = GfntFontStyle{GfntFontId::UNIFONT_16};
+        setTextStyle(style);
+    });
     fontMenu.addMenuEntry("Stroke Roman", [this]() {
         auto style = _canvas->textStyle();
         style.font = StrokeFontStyle{StrokeFont::STROKE_ROMAN, 0.15f};
