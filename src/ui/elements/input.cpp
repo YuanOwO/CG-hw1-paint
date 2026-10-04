@@ -21,7 +21,7 @@ InputElement::InputElement(std::string value, std::string placeholder)
     setPadding({8, 4, 8, 4});
     setPreferredSize({180, 34});
 
-    auto text = std::make_unique<TextElement>("", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+    auto text = std::make_unique<TextElement>("", GfntFontStyle{GfntFontId::CUBIC_11});
     _textElement = text.get();
 
     _textElement->setVerticalAlignment(Alignment::Center);

@@ -32,7 +32,7 @@ std::unique_ptr<ui::ButtonElement> createButton(const std::string& text,
         });
     }
 
-    auto label = std::make_unique<ui::TextElement>(text, BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+    auto label = std::make_unique<ui::TextElement>(text, GfntFontStyle{GfntFontId::CUBIC_11});
     label->setColor(primary ? ColorRGBA{Color::White} : ColorRGBA{0.22f, 0.27f, 0.34f});
     label->setHorizontalAlignment(ui::Alignment::Center);
     label->setVerticalAlignment(ui::Alignment::Center);
@@ -76,7 +76,7 @@ void InputDialogWindow::submit() {
 
     // 沒有輸入內容時保持對話框開啟，讓使用者繼續輸入。
     if (_input->value().empty()) {
-        _errorText->setText("Input cannot be empty.");
+        _errorText->setText("輸入內容不能為空。");
         setFocusedElement(_input);
         return;
     }
@@ -126,8 +126,8 @@ void InputDialogWindow::setupContent(const std::string& initialValue) {
     heading->setMargin({0, 0, 0, 12});
     root->appendChild(std::move(heading));
 
-    auto message = std::make_unique<ui::TextElement>(
-        _message, BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12}, ColorRGBA{0.36f, 0.40f, 0.47f});
+    auto message = std::make_unique<ui::TextElement>(_message, GfntFontStyle{GfntFontId::CUBIC_11},
+                                                     ColorRGBA{0.36f, 0.40f, 0.47f});
     message->setMargin({0, 0, 0, 12});
     root->appendChild(std::move(message));
 
@@ -137,7 +137,7 @@ void InputDialogWindow::setupContent(const std::string& initialValue) {
     input->setMargin({0, 0, 0, 6});
     root->appendChild(std::move(input));
 
-    auto errorText = std::make_unique<ui::TextElement>("", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12},
+    auto errorText = std::make_unique<ui::TextElement>("", GfntFontStyle{GfntFontId::CUBIC_11},
                                                        ColorRGBA{0.78f, 0.16f, 0.16f});
     _errorText = errorText.get();
     errorText->setMargin({0, 0, 0, 12});
@@ -147,10 +147,10 @@ void InputDialogWindow::setupContent(const std::string& initialValue) {
 
     auto buttons = std::make_unique<ui::StackPanelElement>(ui::StackOrientation::Horizontal);
 
-    auto cancelButton = createButton("Cancel", [this]() { cancel(); });
+    auto cancelButton = createButton("取消", [this]() { cancel(); });
     cancelButton->setMargin({0, 0, 12, 0});
 
-    auto confirmButton = createButton("Confirm", [this]() { submit(); }, true);
+    auto confirmButton = createButton("確認", [this]() { submit(); }, true);
 
     buttons->appendChild(std::make_unique<ui::Element>(), 1.0f);  // 左側留白
     buttons->appendChild(std::move(cancelButton));

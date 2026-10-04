@@ -57,8 +57,8 @@ void ConfirmWindow::setupContent() {
     heading->setMargin({0, 0, 0, 12});
     root->appendChild(std::move(heading));
 
-    auto message = std::make_unique<ui::TextElement>(
-        _message, GfntFontStyle{GfntFontId::CUBIC_11}, ColorRGBA{0.36f, 0.40f, 0.47f});
+    auto message = std::make_unique<ui::TextElement>(_message, GfntFontStyle{GfntFontId::CUBIC_11},
+                                                     ColorRGBA{0.36f, 0.40f, 0.47f});
 
     message->setMargin({0, 0, 0, 24});
     root->appendChild(std::move(message), 1.0f);
@@ -70,8 +70,7 @@ void ConfirmWindow::setupContent() {
     cancelButton->setPreferredSize({104, 36});
     cancelButton->setMargin({0, 0, 12, 0});
 
-    auto cancelText =
-        std::make_unique<ui::TextElement>("Cancel", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+    auto cancelText = std::make_unique<ui::TextElement>("取消", GfntFontStyle{GfntFontId::CUBIC_11});
     cancelText->setColor(ColorRGBA{0.22f, 0.27f, 0.34f});
     cancelText->setHorizontalAlignment(ui::Alignment::Center);
     cancelText->setVerticalAlignment(ui::Alignment::Center);
@@ -86,8 +85,7 @@ void ConfirmWindow::setupContent() {
         {0.15f, 0.36f, 0.85f},
     });
 
-    auto confirmText =
-        std::make_unique<ui::TextElement>("Confirm", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+    auto confirmText = std::make_unique<ui::TextElement>("確認", GfntFontStyle{GfntFontId::CUBIC_11});
     confirmText->setColor(Color::White);
     confirmText->setHorizontalAlignment(ui::Alignment::Center);
     confirmText->setVerticalAlignment(ui::Alignment::Center);

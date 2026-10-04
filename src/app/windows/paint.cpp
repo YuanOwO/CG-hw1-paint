@@ -55,7 +55,7 @@ std::string getFontStyleName(const FontStyle& style) {
     if (const auto* gfnt = std::get_if<GfntFontStyle>(&style)) {
         switch (gfnt->font) {
         case GfntFontId::CUBIC_11:
-            return "Cubic 11";
+            return "俐方體11號";
         default:
             return "Unknown";
         }
@@ -142,7 +142,7 @@ void PaintWindow::updateToolStatus() {
 void PaintWindow::requestTextInput(Point anchor, drawing::TextStyle style) {
     auto& app = Application::current();
     app.createWindow<InputDialogWindow>(
-        "Insert Text", "Please enter text:", "",
+        "Insert Text", "請輸入文字：", "",
         [this, anchor, style = std::move(style)](const std::string& text) mutable {
             _canvas->insertText(anchor, text, std::move(style));
         });
@@ -152,10 +152,9 @@ void PaintWindow::requestNewFile() {
     // 在創建新文件前，檢查是否有未保存的更改
     if (_document.isModified()) {
         auto& app = app::Application::current();
-        app.createWindow<ConfirmWindow>(
-            "Unsaved Changes",
-            "You have unsaved changes.\nAre you sure you want to create a new file without saving?",
-            [this]() { newFile(); });
+        app.createWindow<ConfirmWindow>("Unsaved Changes",
+                                        "你有未保存的更改。\n你確定要創建一個新的檔案而不保存嗎？",
+                                        [this]() { newFile(); });
     } else {
         newFile();  // 直接創建新文件，因為沒有未保存的更改
     }
@@ -165,10 +164,9 @@ void PaintWindow::requestLoadFile() {
     // 在加載文件前，檢查是否有未保存的更改
     if (_document.isModified()) {
         auto& app = app::Application::current();
-        app.createWindow<ConfirmWindow>(
-            "Unsaved Changes",
-            "You have unsaved changes.\nAre you sure you want to load a new file without saving?",
-            [this]() { loadFile(); });
+        app.createWindow<ConfirmWindow>("Unsaved Changes",
+                                        "你有未保存的更改。\n你確定要開啟一個新的檔案而不保存嗎？",
+                                        [this]() { loadFile(); });
     } else {
         loadFile();  // 直接加載文件，因為沒有未保存的更改
     }
@@ -178,9 +176,8 @@ void PaintWindow::requestClose() {
     // 在關閉窗口前，檢查是否有未保存的更改
     if (_document.isModified()) {
         auto& app = app::Application::current();
-        app.createWindow<ConfirmWindow>(
-            "Unsaved Changes", "You have unsaved changes.\nAre you sure you want to close without saving?",
-            [this]() { close(); });
+        app.createWindow<ConfirmWindow>("Unsaved Changes", "你有未保存的更改。\n你確定要關閉而不保存嗎？",
+                                        [this]() { close(); });
     } else {
         close();  // 直接關閉窗口，因為沒有未保存的更改
     }
@@ -196,7 +193,7 @@ void PaintWindow::loadFile() {
 
     auto& app = app::Application::current();
     app.createWindow<InputDialogWindow>(
-        "Open", "Please enter a filename:", initialFilename,
+        "Open", "請輸入文件名：", initialFilename,
         [this](const std::string& value) {
             Path filename(value);
             if (!filename.has_extension()) {
@@ -216,13 +213,13 @@ void PaintWindow::loadFile() {
             std::error_code error;
             const bool exists = std::filesystem::exists(filename, error);
             if (error) {
-                return "Unable to access the file.";
+                return "無法訪問該檔案。";
             }
             if (!exists || !std::filesystem::is_regular_file(filename, error)) {
-                return "File does not exist.";
+                return "檔案 \"" + filename.string() + "\" 不存在。";
             }
             if (error) {
-                return "Unable to access the file.";
+                return "無法訪問該檔案。";
             }
 
             return std::nullopt;
@@ -243,7 +240,7 @@ void PaintWindow::saveFileAs() {
 
     auto& app = app::Application::current();
     app.createWindow<InputDialogWindow>(
-        "Save As", "Please enter a filename:", initialFilename, [this](const std::string& value) {
+        "Save As", "請輸入文件名：", initialFilename, [this](const std::string& value) {
             Path filename(value);
 
             if (!filename.has_extension()) {
@@ -258,8 +255,7 @@ void PaintWindow::saveFileAs() {
             auto& app = Application::current();
 
             app.createWindow<ConfirmWindow>(
-                "File Already Exists",
-                "The file \"" + filename.string() + "\" already exists.\nDo you want to replace it?",
+                "File Already Exists", "檔案 \"" + filename.string() + "\" 已經存在。\n你確定要覆蓋它嗎？",
                 [this, filename]() { _document.save(filename); });
         });
 }
@@ -270,7 +266,7 @@ void PaintWindow::exportFile() {
 
     auto& app = app::Application::current();
     app.createWindow<InputDialogWindow>(
-        "Export", "Please enter an image filename:", initialFilename, [this](const std::string& value) {
+        "Export", "請輸入圖像檔案名稱：", initialFilename, [this](const std::string& value) {
             Path filename(value);
 
             if (!filename.has_extension()) {
@@ -284,8 +280,7 @@ void PaintWindow::exportFile() {
 
             auto& app = Application::current();
             app.createWindow<ConfirmWindow>(
-                "File Already Exists",
-                "The file \"" + filename.string() + "\" already exists.\nDo you want to replace it?",
+                "File Already Exists", "檔案 \"" + filename.string() + "\" 已經存在。\n你確定要覆蓋它嗎？",
                 [this, filename]() { _document.exportImage(filename); });
         });
 }
@@ -307,8 +302,7 @@ void PaintWindow::setupContent() {
 
     // 設置狀態列的文字元素
 
-    auto toolText =
-        std::make_unique<ui::TextElement>("Tool: --", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+    auto toolText = std::make_unique<ui::TextElement>("Tool: --", GfntFontStyle{GfntFontId::CUBIC_11});
     _toolText = toolText.get();
     // margin 保證最小間距；grow 讓工具欄吸收剩餘寬度，把其他欄位推向右側
     // Thickness 的順序是 left, top, right, bottom
@@ -316,13 +310,12 @@ void PaintWindow::setupContent() {
     statusBar->appendChild(std::move(toolText), 1.0f);
 
     auto positionText =
-        std::make_unique<ui::TextElement>("Pos: (--, --)", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+        std::make_unique<ui::TextElement>("Pos: (--, --)", GfntFontStyle{GfntFontId::CUBIC_11});
     _positionText = positionText.get();
     positionText->setMargin({0, 0, 16, 0});
     statusBar->appendChild(std::move(positionText), 1.0f);
 
-    auto sizeText =
-        std::make_unique<ui::TextElement>("Size: (--, --)", BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12});
+    auto sizeText = std::make_unique<ui::TextElement>("Size: (--, --)", GfntFontStyle{GfntFontId::CUBIC_11});
     _sizeText = sizeText.get();
     statusBar->appendChild(std::move(sizeText), 1.0f);
 
@@ -778,6 +771,50 @@ void PaintWindow::setupTextMenu() {
         style.font = StrokeFontStyle{StrokeFont::STROKE_MONO_ROMAN, 0.15f};
         setTextStyle(style);
     });
+
+    auto& colorMenu = textMenu.addSubMenu("Color");
+
+    colorMenu.addMenuEntry("Black", [this]() {
+        auto style = _canvas->textStyle();
+        style.color = Color::Black;
+        setTextStyle(style);
+    });
+    colorMenu.addMenuEntry("White", [this]() {
+        auto style = _canvas->textStyle();
+        style.color = Color::White;
+        setTextStyle(style);
+    });
+    colorMenu.addMenuEntry("Red", [this]() {
+        auto style = _canvas->textStyle();
+        style.color = Color::Red;
+        setTextStyle(style);
+    });
+    colorMenu.addMenuEntry("Orange", [this]() {
+        auto style = _canvas->textStyle();
+        style.color = Color::Orange;
+        setTextStyle(style);
+    });
+    colorMenu.addMenuEntry("Yellow", [this]() {
+        auto style = _canvas->textStyle();
+        style.color = Color::Yellow;
+        setTextStyle(style);
+    });
+    colorMenu.addMenuEntry("Green", [this]() {
+        auto style = _canvas->textStyle();
+        style.color = Color::Green;
+        setTextStyle(style);
+    });
+    colorMenu.addMenuEntry("Blue", [this]() {
+        auto style = _canvas->textStyle();
+        style.color = Color::Blue;
+        setTextStyle(style);
+    });
+    colorMenu.addMenuEntry("Purple", [this]() {
+        auto style = _canvas->textStyle();
+        style.color = Color::Purple;
+        setTextStyle(style);
+    });
+    colorMenu.addMenuEntry("Custom...", [this]() {});
 }
 
 #pragma endregion  // Text Menu
