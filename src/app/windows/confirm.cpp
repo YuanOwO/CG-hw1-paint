@@ -58,7 +58,7 @@ void ConfirmWindow::setupContent() {
     root->appendChild(std::move(heading));
 
     auto message = std::make_unique<ui::TextElement>(
-        _message, BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12}, ColorRGBA{0.36f, 0.40f, 0.47f});
+        _message, GfntFontStyle{GfntFontId::CUBIC_11}, ColorRGBA{0.36f, 0.40f, 0.47f});
 
     message->setMargin({0, 0, 0, 24});
     root->appendChild(std::move(message), 1.0f);

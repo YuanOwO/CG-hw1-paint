@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 
@@ -228,5 +229,6 @@ struct ColorHSV {
 
 ColorRGBA hsv2rgb(const ColorHSV& hsv);
 ColorHSV rgb2hsv(const ColorRGBA& rgb);
+std::uint8_t colorToByte(float value);
 
 }  // namespace paint

@@ -1,13 +1,20 @@
 #include <GL/freeglut.h>
 
+#include <filesystem>
 #include <iostream>
 
 #include "app/application.hpp"
 #include "app/windows/paint.hpp"
+#include "common/font.hpp"
 
+using namespace paint;
 using namespace paint::app;
 
 int main(int argc, char** argv) {
+    const auto executablePath =
+        std::filesystem::weakly_canonical(std::filesystem::absolute(argv[0]));
+    initializeFonts(executablePath.parent_path() / "assets" / "fonts");
+
     Application app(argc, argv);
 
     // 在這裡創建視窗

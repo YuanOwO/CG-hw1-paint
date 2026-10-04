@@ -88,4 +88,8 @@ ColorHSV rgb2hsv(const ColorRGBA& rgb) {
     return ColorHSV(h, s, v);
 }
 
+std::uint8_t colorToByte(float value) {
+    return static_cast<std::uint8_t>(std::clamp(value, 0.0f, 1.0f) * 255.0f + 0.5f);
+}
+
 }  // namespace paint

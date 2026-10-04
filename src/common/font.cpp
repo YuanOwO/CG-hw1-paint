@@ -3,9 +3,22 @@
 #include <GL/freeglut.h>
 
 #include <algorithm>
+#include <memory>
 #include <stdexcept>
 
+#include "common/utf8.hpp"
+
 namespace paint {
+
+namespace {
+
+std::unique_ptr<GfntFont> cubic11;
+
+}  // namespace
+
+void initializeFonts(const std::filesystem::path& fontDirectory) {
+    cubic11 = std::make_unique<GfntFont>(GfntFont::load(fontDirectory / "Cubic11.gfnt"));
+}
 
 void* mapFont(const BitmapFont& font) {
     switch (font) {
@@ -38,6 +51,19 @@ void* mapFont(const StrokeFont& font) {
 
     default:
         throw std::invalid_argument("Unknown stroke font");
+    }
+}
+
+const GfntFont& mapFont(const GfntFontId& font) {
+    switch (font) {
+    case GfntFontId::CUBIC_11:
+        if (!cubic11) {
+            throw std::logic_error("Fonts have not been initialized");
+        }
+        return *cubic11;
+
+    default:
+        throw std::invalid_argument("Unknown GFNT font");
     }
 }
 
@@ -76,6 +102,41 @@ float getFontWidth(const StrokeFontStyle& font, const std::string& text) {
     return std::max(maxWidth, width) * font.size;  // 返回最大寬度
 }
 
+float getFontWidth(const GfntFontStyle& style, const std::string& text) {
+    const GfntFont& font = mapFont(style.font);
+
+    int width = 0, maxWidth = 0;
+    std::size_t offset = 0;
+
+    while (offset < text.size()) {
+        const auto decoded = utf8::decodeOne(text, offset);
+
+        if (decoded.bytesConsumed == 0) {
+            break;
+        }
+
+        offset += decoded.bytesConsumed;
+
+        if (decoded.codepoint == U'\n') {
+            maxWidth = std::max(maxWidth, width);
+            width = 0;
+            continue;
+        }
+
+        const gfnt::GfntGlyphV1* glyph = font.findGlyphOrFallback(decoded.codepoint);
+
+        if (glyph != nullptr) {
+            width += glyph->advanceX;
+        } else {
+            // 字型連 fallback glyph 都沒有時，仍保留一個
+            // nominal pixel size，避免後面的字往前重疊。
+            width += font.header().pixelSize;
+        }
+    }
+
+    return std::max(maxWidth, width);
+}
+
 float getFontHeight(const BitmapFontStyle& font, const std::string& text) {
     void* glutFont = mapFont(font.font);
 
@@ -109,6 +170,28 @@ float getFontHeight(const StrokeFontStyle& font, const std::string& text) {
     }
 
     return lines * glutStrokeHeight(glutFont) * font.size;
+}
+
+float getFontHeight(const GfntFontStyle& style, const std::string& text) {
+    if (text.empty()) {
+        return 0.0f;
+    }
+
+    const GfntFont& font = mapFont(style.font);
+
+    std::size_t lines = static_cast<std::size_t>(std::count(text.begin(), text.end(), '\n')) + 1;
+
+    // 配合現有 FreeGLUT 字型的行為：
+    // 結尾換行不產生額外的空白行高度。
+    if (text.back() == '\n') {
+        --lines;
+    }
+
+    const auto& header = font.header();
+
+    const int lineHeight = header.ascender + header.descender;
+
+    return static_cast<float>(lines) * lineHeight;
 }
 
 }  // namespace paint

@@ -52,6 +52,15 @@ std::string getFontStyleName(const FontStyle& style) {
         }
     }
 
+    if (const auto* gfnt = std::get_if<GfntFontStyle>(&style)) {
+        switch (gfnt->font) {
+        case GfntFontId::CUBIC_11:
+            return "Cubic 11";
+        default:
+            return "Unknown";
+        }
+    }
+
     return "Unknown";
 }
 
@@ -752,6 +761,11 @@ void PaintWindow::setupTextMenu() {
     fontMenu.addMenuEntry("Times Roman 24", [this]() {
         auto style = _canvas->textStyle();
         style.font = BitmapFontStyle{BitmapFont::BITMAP_TIMES_ROMAN_24};
+        setTextStyle(style);
+    });
+    fontMenu.addMenuEntry("Cubic 11", [this]() {
+        auto style = _canvas->textStyle();
+        style.font = GfntFontStyle{GfntFontId::CUBIC_11};
         setTextStyle(style);
     });
     fontMenu.addMenuEntry("Stroke Roman", [this]() {

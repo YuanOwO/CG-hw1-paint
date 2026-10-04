@@ -2,11 +2,14 @@
 
 #include <GL/freeglut.h>
 
+#include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <variant>
+#include <vector>
 
 #include "common/font.hpp"
+#include "common/utf8.hpp"
 #include "drawing/text_object.hpp"
 #include "ui/elements/text.hpp"
 
@@ -101,6 +104,89 @@ void renderStroke(RenderContext& context, const std::string& text, const StrokeF
     }
 }
 
+void renderGfnt(RenderContext& context, const std::string& text, const GfntFontStyle& style, float left,
+                float top) {
+    // GFNT glyph 直接使用 raster position 繪製，不需要改變 model-view matrix。
+    (void)context;
+
+    const GfntFont& font = mapFont(style.font);
+    const auto& header = font.header();
+    const float lineHeight = static_cast<float>(header.ascender + header.descender);
+
+    float penX = left;
+    float baselineY = top + static_cast<float>(header.ascender);
+
+    // glDrawPixels 不會用 glColor 替 alpha bitmap 上色，所以取出目前文字顏色，
+    // 再為每個 glyph 產生著色後的 RGBA pixels。
+    GLfloat currentColor[4];
+    glGetFloatv(GL_CURRENT_COLOR, currentColor);
+
+    const std::uint8_t red = colorToByte(currentColor[0]);
+    const std::uint8_t green = colorToByte(currentColor[1]);
+    const std::uint8_t blue = colorToByte(currentColor[2]);
+    const std::uint8_t colorAlpha = colorToByte(currentColor[3]);
+
+    std::vector<std::uint8_t> rgbaPixels;
+
+    GLint previousUnpackAlignment;
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &previousUnpackAlignment);
+
+    glPushAttrib(GL_COLOR_BUFFER_BIT | GL_PIXEL_MODE_BIT);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    // GFNT 的第一列是 bitmap 頂端；負的 Y zoom 讓 OpenGL 由上往下畫。
+    glPixelZoom(1.0f, -1.0f);
+
+    std::size_t offset = 0;
+    while (offset < text.size()) {
+        const auto decoded = utf8::decodeOne(text, offset);
+        if (decoded.bytesConsumed == 0) {
+            break;
+        }
+        offset += decoded.bytesConsumed;
+
+        if (decoded.codepoint == U'\n') {
+            penX = left;
+            baselineY += lineHeight;
+            continue;
+        }
+
+        const gfnt::GfntGlyphV1* glyph = font.findGlyphOrFallback(decoded.codepoint);
+        if (glyph == nullptr) {
+            penX += static_cast<float>(header.pixelSize);
+            continue;
+        }
+
+        const float glyphLeft = penX + static_cast<float>(glyph->bearingX);
+        const float glyphTop = baselineY - static_cast<float>(glyph->bearingY);
+        const std::size_t pixelCount =
+            static_cast<std::size_t>(glyph->width) * static_cast<std::size_t>(glyph->height);
+
+        if (pixelCount != 0) {
+            const std::uint8_t* alphaPixels = font.bitmap(*glyph);
+            rgbaPixels.resize(pixelCount * 4);
+
+            for (std::size_t i = 0; i < pixelCount; ++i) {
+                rgbaPixels[i * 4] = red;
+                rgbaPixels[i * 4 + 1] = green;
+                rgbaPixels[i * 4 + 2] = blue;
+                rgbaPixels[i * 4 + 3] = static_cast<std::uint8_t>(
+                    (static_cast<unsigned int>(alphaPixels[i]) * colorAlpha + 127) / 255);
+            }
+
+            glRasterPos2f(glyphLeft, glyphTop);
+            glDrawPixels(glyph->width, glyph->height, GL_RGBA, GL_UNSIGNED_BYTE, rgbaPixels.data());
+        }
+
+        penX += static_cast<float>(glyph->advanceX);
+    }
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, previousUnpackAlignment);
+    glPopAttrib();
+}
+
 }  // namespace
 
 void TextRenderer::render(RenderContext& context, const ui::TextElement& element) {
@@ -114,9 +200,8 @@ void TextRenderer::draw(RenderContext& context, const drawing::TextObject& objec
     drawText(context, object.text(), object.style().font, object.style().color, object.position());
 }
 
-void TextRenderer::drawText(RenderContext& context, const std::string& text,
-                            const FontStyle& fontStyle, const ColorRGBA& color,
-                            const Point& origin) {
+void TextRenderer::drawText(RenderContext& context, const std::string& text, const FontStyle& fontStyle,
+                            const ColorRGBA& color, const Point& origin) {
     if (text.empty()) {
         return;
     }
@@ -130,6 +215,8 @@ void TextRenderer::drawText(RenderContext& context, const std::string& text,
     } else if (const auto* stroke = std::get_if<StrokeFontStyle>(&fontStyle)) {
         glLineWidth(1.0f);
         renderStroke(context, text, *stroke, origin.x(), origin.y());
+    } else if (const auto* gfnt = std::get_if<GfntFontStyle>(&fontStyle)) {
+        renderGfnt(context, text, *gfnt, origin.x(), origin.y());
     }
 
     glPopAttrib();

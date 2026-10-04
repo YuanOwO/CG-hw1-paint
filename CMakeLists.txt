@@ -45,6 +45,15 @@ add_executable(graphtoria
     ${CXX_SOURCES}
 )
 
+add_custom_command(TARGET graphtoria POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+        "$<TARGET_FILE_DIR:graphtoria>/assets/fonts"
+
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${CMAKE_SOURCE_DIR}/assets/fonts/Cubic11.gfnt"
+        "$<TARGET_FILE_DIR:graphtoria>/assets/fonts/Cubic11.gfnt"
+)
+
 # -------------------------
 # Include directories
 # -------------------------
