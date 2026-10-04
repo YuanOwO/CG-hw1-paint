@@ -40,7 +40,7 @@ file(GLOB_RECURSE CXX_SOURCES CONFIGURE_DEPENDS
 # Executable
 # -------------------------
 
-add_executable(main
+add_executable(graphtoria
     ${C_SOURCES}
     ${CXX_SOURCES}
 )
@@ -49,7 +49,7 @@ add_executable(main
 # Include directories
 # -------------------------
 
-target_include_directories(main PRIVATE
+target_include_directories(graphtoria PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}/src
 )
@@ -59,37 +59,37 @@ target_include_directories(main PRIVATE
 # -------------------------
 
 if(APPLE)
-    target_link_libraries(main PRIVATE
+    target_link_libraries(graphtoria PRIVATE
         PkgConfig::MESA_GL
         PkgConfig::MESA_GLU
         PkgConfig::GLUT
         "-framework CoreGraphics"
     )
 else()
-    target_link_libraries(main PRIVATE
+    target_link_libraries(graphtoria PRIVATE
         OpenGL::GL
         OpenGL::GLU
         GLUT::GLUT
     )
 endif()
 
-# if(MINGW)
-#     target_link_options(main PRIVATE
-#         -static
-#         -static-libgcc
-#         -static-libstdc++
-#     )
-# endif()
+if(MINGW)
+    target_link_options(graphtoria PRIVATE
+        -static
+        -static-libgcc
+        -static-libstdc++
+    )
+endif()
 
 # -------------------------
 # Compile options
 # -------------------------
 
-target_compile_options(main PRIVATE
+target_compile_options(graphtoria PRIVATE
     $<$<CONFIG:Debug>:-g -O1 -fsanitize=undefined>
     $<$<CONFIG:Release>:-O2 -DNDEBUG>
 )
 
-target_link_options(main PRIVATE
+target_link_options(graphtoria PRIVATE
     $<$<CONFIG:Debug>:-fsanitize=undefined>
 )
