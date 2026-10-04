@@ -56,6 +56,8 @@ std::string getFontStyleName(const FontStyle& style) {
         switch (gfnt->font) {
         case GfntFontId::CUBIC_11:
             return "俐方體11號";
+        case GfntFontId::UNIFONT_16:
+            return "Unifont 16";
         default:
             return "Unknown";
         }
