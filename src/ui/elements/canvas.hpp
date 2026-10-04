@@ -6,7 +6,7 @@
 
 #include "app/document.hpp"
 #include "drawing/shape_style.hpp"
-#include "drawing/tool.hpp"
+#include "drawing/tools/tool_factory.hpp"
 #include "render/renderer/canvas_renderer.hpp"
 #include "ui/element.hpp"
 #include "ui/layout/bounding.hpp"
@@ -27,14 +27,14 @@ class CanvasElement : public Element {
         invalidateDisplay();
     }
 
-    const drawing::Tool currentTool() const { return _currentTool; }
-    void setTool(drawing::Tool tool);
+    drawing::ToolKind currentTool() const { return _currentTool; }
+    void setTool(drawing::ToolKind tool);
 
     const drawing::ShapeStyle& style() const { return _currentStyle; }
     void setStyle(const drawing::ShapeStyle& style);
 
     const Document& document() const { return _document; }
-    const drawing::SceneObject* draft() const { return _activeTool ? _activeTool->preview() : nullptr; }
+    drawing::ToolOverlay toolOverlay() const { return _activeTool ? _activeTool->overlay() : drawing::ToolOverlay{}; }
 
     void undo();
     void redo();
@@ -48,20 +48,20 @@ class CanvasElement : public Element {
    private:
     GridMode _gridMode = GridMode::Lines;
 
-    drawing::Tool _currentTool;
+    drawing::ToolKind _currentTool;
     drawing::ShapeStyle _currentStyle;
     render::CanvasRenderer _renderer;  // 用於渲染 CanvasElement 的內容
 
     Document& _document;  // 參考外部的 Document，CanvasElement 不擁有 Document 的所有權
 
     // 目前正在使用的繪圖工具，工具存在時仍可能尚未建立草稿
-    std::unique_ptr<drawing::IDrawingTool> _activeTool;
+    std::unique_ptr<drawing::ICanvasTool> _activeTool;
 
-    bool isDrawing() const { return _activeTool->preview() != nullptr; }
+    bool isInteracting() const { return _activeTool && _activeTool->isInteracting(); }
 
     void resetTool();
 
-    void handleDraftEvent(drawing::ToolEventResult result);
+    bool handleToolResult(drawing::ToolResult result);
 };
 
 }  // namespace paint::ui

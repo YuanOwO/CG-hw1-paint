@@ -69,13 +69,15 @@ void CanvasRenderer::render(RenderContext& context, const ui::CanvasElement& can
     }
 
     // 3. 畫 Scene
-    for (const auto& shape : canvas.document().scene().objects()) {
-        _sceneRenderer.draw(context, *shape);
+    for (const auto& object : canvas.document().scene().objects()) {
+        _sceneRenderer.draw(context, *object);
     }
 
-    // 4. 畫 draft / preview
-    if (const auto* draft = canvas.draft()) {
-        _sceneRenderer.draw(context, *draft);
+    // 4. 畫工具 overlay（草稿、選取框等暫時性內容）
+    for (const auto* preview : canvas.toolOverlay().previewObjects) {
+        if (preview) {
+            _sceneRenderer.draw(context, *preview);
+        }
     }
 }
 

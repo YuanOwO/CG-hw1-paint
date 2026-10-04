@@ -2,9 +2,25 @@
 
 #include <string>
 
+#include "app/application.hpp"
 #include "app/document.hpp"
 
 namespace paint::io {
+
+static const std::string DOCUMENT_STORAGE_SERIALIZER_VERSION = "1";  // 文件格式版本號
+
+static std::string getDocumentStorageHeader() {
+    std::string header = app::Application::name();
+    for (auto&& c : header) {
+        c = std::toupper(c);
+        if (c == ' ') {
+            c = '_';
+        }
+    }
+    return header + " " + DOCUMENT_STORAGE_SERIALIZER_VERSION;
+}
+
+static const std::string DOCUMENT_STORAGE_HEADER = getDocumentStorageHeader();
 
 class DocumentStorage {
    public:

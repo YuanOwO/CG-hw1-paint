@@ -62,14 +62,14 @@ class RemoveObjectCommand : public EditCommand {
 
 class ClearSceneCommand : public EditCommand {
    public:
-    ClearSceneCommand(Scene& scene) : EditCommand(scene), _backupShapes(scene.objects()) {}
+    ClearSceneCommand(Scene& scene) : EditCommand(scene), _backupObjects(scene.objects()) {}
 
     void execute() override { _scene.clear(); }
 
-    void undo() override { _scene.setObjects(_backupShapes); }
+    void undo() override { _scene.setObjects(_backupObjects); }
 
    private:
-    std::vector<std::shared_ptr<SceneObject>> _backupShapes;
+    std::vector<std::shared_ptr<SceneObject>> _backupObjects;
 };
 
 }  // namespace paint

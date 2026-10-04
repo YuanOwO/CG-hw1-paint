@@ -7,7 +7,7 @@
 namespace paint::ui {
 
 CanvasElement::CanvasElement(Document& document)
-    : Element(), _document(document), _currentTool(drawing::Tool::TOOL_PENCIL) {
+    : Element(), _document(document), _currentTool(drawing::ToolKind::PENCIL) {
     setFocusable(true);  // CanvasElement 可以接收鍵盤事件
     setHorizontalAlignment(Alignment::Stretch);
     setVerticalAlignment(Alignment::Stretch);
@@ -18,21 +18,32 @@ CanvasElement::CanvasElement(Document& document)
     _currentStyle.stroke.join = drawing::LineJoin::MITER;
     _currentStyle.stroke.cap = drawing::LineCap::ROUND;
 
-    addEventListener<KeyDownEvent>([this](const KeyDownEvent& event) {
+    addEventListener<KeyDownEvent>([this](KeyDownEvent& event) {
         // 忽略重複按鍵事件
         if (event.isRepeat()) {
             return;
         }
         Point localPosition = windowToLocal(event.position());
-        handleDraftEvent(_activeTool->onKeyDown(event, localPosition));
+        if (handleToolResult(_activeTool->onKeyDown(event, localPosition))) {
+            event.stopPropagation();
+        }
     });
 
-    addEventListener<KeyUpEvent>([this](const KeyUpEvent& event) {  // 忽略重複按鍵事件
+    addEventListener<KeyUpEvent>([this](KeyUpEvent& event) {  // 忽略重複按鍵事件
         if (event.isRepeat()) {
             return;
         }
         Point localPosition = windowToLocal(event.position());
-        handleDraftEvent(_activeTool->onKeyUp(event, localPosition));
+        if (handleToolResult(_activeTool->onKeyUp(event, localPosition))) {
+            event.stopPropagation();
+        }
+    });
+
+    addEventListener<TextInputEvent>([this](TextInputEvent& event) {
+        Point localPosition = windowToLocal(event.position());
+        if (handleToolResult(_activeTool->onTextInput(event, localPosition))) {
+            event.stopPropagation();
+        }
     });
 
     addEventListener<ClickEvent>([this](const ClickEvent& event) {  // 只處理左鍵點擊事件，其他按鍵忽略
@@ -40,7 +51,7 @@ CanvasElement::CanvasElement(Document& document)
             return;
         }
         Point localPosition = windowToLocal(event.position());
-        handleDraftEvent(_activeTool->onClick(event, localPosition));
+        handleToolResult(_activeTool->onClick(event, localPosition));
     });
 
     addEventListener<DoubleClickEvent>(
@@ -49,7 +60,7 @@ CanvasElement::CanvasElement(Document& document)
                 return;
             }
             Point localPosition = windowToLocal(event.position());
-            handleDraftEvent(_activeTool->onDoubleClick(event, localPosition));
+            handleToolResult(_activeTool->onDoubleClick(event, localPosition));
         });
 
     addEventListener<MouseDownEvent>([this](const MouseDownEvent& event) {
@@ -59,7 +70,7 @@ CanvasElement::CanvasElement(Document& document)
         }
         captureMouse();  // 捕獲滑鼠事件，避免滑鼠移出畫布時無法接收 MouseUp 事件
         Point localPosition = windowToLocal(event.position());
-        handleDraftEvent(_activeTool->onMouseDown(event, localPosition));
+        handleToolResult(_activeTool->onMouseDown(event, localPosition));
     });
 
     addEventListener<MouseUpEvent>([this](const MouseUpEvent& event) {
@@ -69,28 +80,24 @@ CanvasElement::CanvasElement(Document& document)
         }
         releaseMouseCapture();  // 釋放滑鼠事件捕獲
         Point localPosition = windowToLocal(event.position());
-        handleDraftEvent(_activeTool->onMouseUp(event, localPosition));
+        handleToolResult(_activeTool->onMouseUp(event, localPosition));
     });
 
     addEventListener<MouseMoveEvent>([this](const MouseMoveEvent& event) {
-        // 如果沒有草稿，則不需要處理滑鼠移動事件，避免不必要的計算與渲染。
-        if (!isDrawing()) {
-            return;
-        }
         Point localPosition = windowToLocal(event.position());
-        handleDraftEvent(_activeTool->onMouseMove(event, localPosition));
+        handleToolResult(_activeTool->onMouseMove(event, localPosition));
     });
 
     resetTool();
 }
 
-void CanvasElement::setTool(drawing::Tool tool) {
+void CanvasElement::setTool(drawing::ToolKind tool) {
     if (_currentTool == tool) {
         return;  // 工具沒有改變，不需要重置
     }
 
-    // 如果目前正在繪製草稿，則先提交，再切換工具
-    handleDraftEvent(_activeTool->finish());
+    // 由目前工具自行決定切換工具時要提交或取消操作。
+    handleToolResult(_activeTool->deactivate());
 
     _currentTool = tool;
     resetTool();
@@ -99,14 +106,15 @@ void CanvasElement::setTool(drawing::Tool tool) {
 void CanvasElement::setStyle(const drawing::ShapeStyle& style) {
     _currentStyle = style;
 
-    if (!isDrawing()) {
+    if (!isInteracting()) {
         resetTool();
     }
 }
 
 void CanvasElement::undo() {
-    if (isDrawing()) {  // 如果正在繪製草稿，則取消草稿
-        resetTool();
+    if (isInteracting()) {  // 操作中先取消工具狀態，不影響文件歷史
+        handleToolResult(_activeTool->cancel());
+        releaseMouseCapture();
     } else {
         _document.undo();
     }
@@ -115,7 +123,7 @@ void CanvasElement::undo() {
 }
 
 void CanvasElement::redo() {
-    if (isDrawing()) {  // 畫畫時不可以 redo
+    if (isInteracting()) {  // 操作時不可以 redo
         return;
     }
 
@@ -130,26 +138,23 @@ void CanvasElement::clear() {
 }
 
 void CanvasElement::resetTool() {
-    _activeTool = drawing::createDrawingTool(_currentTool, _currentStyle);
+    _activeTool = drawing::createCanvasTool(_currentTool, _currentStyle);
 }
 
-void CanvasElement::handleDraftEvent(drawing::ToolEventResult result) {
-    switch (result) {
-    case drawing::ToolEventResult::COMMIT:
-        _document.addObject(_activeTool->takeShape());
-        [[fallthrough]];
-    case drawing::ToolEventResult::CANCEL:  // 注意：這裡故意不 break，因為 COMMIT 也需要清除草稿
-        resetTool();
-        [[fallthrough]];
-    case drawing::ToolEventResult::UPDATE:  // 注意：這裡故意不 break，因為 COMMIT, CANCEL
-                                            // 也需要重新繪製畫布
-        invalidateDisplay();
-        break;
-    case drawing::ToolEventResult::NONE:
-    default:
-        // 不需要提交草稿，繼續繪製
-        break;
+bool CanvasElement::handleToolResult(drawing::ToolResult result) {
+    const bool handled = result.handled;
+
+    if (auto* addObject = std::get_if<drawing::AddObjectAction>(&result.action)) {
+        if (addObject->object) {
+            _document.addObject(std::move(addObject->object));
+        }
     }
+
+    if (result.needsRedraw) {
+        invalidateDisplay();
+    }
+
+    return handled;
 }
 
 Size CanvasElement::measureContent(const Size& availableSize) {

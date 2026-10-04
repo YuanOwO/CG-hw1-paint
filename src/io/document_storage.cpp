@@ -20,10 +20,10 @@ void DocumentStorage::write(const app::DocumentData& document) {
         throw std::runtime_error("Failed to open file for writing: " + path.string());
     }
 
-    file << "YUAN_PAINT 1\n";
+    file << DOCUMENT_STORAGE_HEADER << "\n";
 
-    for (const auto& shape : document.scene.objects()) {
-        // file << "ShapeObject: " << shape->serialize() << std::endl;
+    for (const auto& object : document.scene.objects()) {
+        // file << "SceneObject: " << object->serialize() << std::endl;
     }
 
     file << "END\n";

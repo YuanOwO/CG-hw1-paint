@@ -1,58 +1,62 @@
-#include "drawing/tool.hpp"
-
 #include <algorithm>
 #include <cmath>
+
+#include "app/application.hpp"
+#include "app/windows/input_dialog.hpp"
+#include "drawing/shape_object.hpp"
+#include "drawing/text_object.hpp"
+#include "drawing/tools/creation_tool.hpp"
+#include "drawing/tools/tool_factory.hpp"
 
 namespace paint::drawing {
 namespace {
 
 // 直線、矩形、圓形等需要拖曳兩個點的工具可以共用這個基底類別。
 template <typename TShape>
-class DragTool : public DrawingTool<TShape> {
+class DragTool : public ShapeCreationTool<TShape> {
    public:
-    using DrawingTool<TShape>::DrawingTool;
+    using ShapeCreationTool<TShape>::ShapeCreationTool;
 
-    ToolEventResult onKeyDown(const KeyboardEvent& event, Point localPosition) override {
+    ToolResult onKeyDown(const KeyboardEvent& event, Point localPosition) override {
         if (!this->_draft) {
-            return ToolEventResult::NONE;
+            return {};
         }
 
-        if (event.key() == Key::Escape) {  // ESC
-            return ToolEventResult::CANCEL;
+        if (event.key() == Key::Escape) {
+            return this->cancelDraft(true);
         }
 
         if (isShiftKey(event.key())) {
             onShift(event, localPosition);
-            return ToolEventResult::UPDATE;
+            return ToolResult::redraw();
         }
 
-        return ToolEventResult::NONE;
+        return {};
     }
 
-    ToolEventResult onKeyUp(const KeyboardEvent& event, Point localPosition) override {
+    ToolResult onKeyUp(const KeyboardEvent& event, Point localPosition) override {
         if (!this->_draft) {
-            return ToolEventResult::NONE;
+            return {};
         }
 
         if (isShiftKey(event.key())) {
             this->_draft->setEnd(localPosition);
-            return ToolEventResult::UPDATE;
+            return ToolResult::redraw();
         }
 
-        return ToolEventResult::NONE;
+        return {};
     }
 
-    ToolEventResult onMouseDown(const MouseButtonEvent& event, Point localPosition) override {
-        this->beginDraft();
+    ToolResult onMouseDown(const MouseButtonEvent& event, Point localPosition) override {
+        this->beginShapeDraft();
         this->_draft->setStart(localPosition);
         this->_draft->setEnd(localPosition);
-
-        return ToolEventResult::UPDATE;
+        return ToolResult::redraw();
     }
 
-    ToolEventResult onMouseUp(const MouseButtonEvent& event, Point localPosition) override {
+    ToolResult onMouseUp(const MouseButtonEvent& event, Point localPosition) override {
         if (!this->_draft) {
-            return ToolEventResult::NONE;
+            return {};
         }
 
         this->_draft->setEnd(localPosition);
@@ -60,16 +64,12 @@ class DragTool : public DrawingTool<TShape> {
             onShift(event, localPosition);
         }
 
-        return ToolEventResult::COMMIT;
+        return this->commitDraft();
     }
 
-    ToolEventResult onMouseMove(const MouseMoveEvent& event, Point localPosition) override {
-        if (!this->_draft) {
-            return ToolEventResult::NONE;
-        }
-
-        if (!event.mouseState().isDown(MouseButton::MouseLeft)) {
-            return ToolEventResult::NONE;
+    ToolResult onMouseMove(const MouseMoveEvent& event, Point localPosition) override {
+        if (!this->_draft || !event.mouseState().isDown(MouseButton::MouseLeft)) {
+            return {};
         }
 
         this->_draft->setEnd(localPosition);
@@ -77,19 +77,19 @@ class DragTool : public DrawingTool<TShape> {
             onShift(event, localPosition);
         }
 
-        return ToolEventResult::UPDATE;
+        return ToolResult::redraw();
     }
 
    protected:
-    // Shift 鍵被按下時，會畫出正方形、正圓或 45° 斜線。這個函式可以被子類別覆寫以實現不同的行為。
+    // Shift 鍵被按下時，會畫出正方形、正圓或 45° 斜線。
     virtual void onShift(const InputEvent& event, Point localPosition) {
         const Point& start = this->_draft->start();
         const Point& now = localPosition;
 
-        float dx = now.x() - start.x();
-        float dy = now.y() - start.y();
-
+        const float dx = now.x() - start.x();
+        const float dy = now.y() - start.y();
         const auto size = std::max(std::abs(dx), std::abs(dy));
+
         Point newEnd;
         newEnd.setX(start.x() + (dx >= 0 ? size : -size));
         newEnd.setY(start.y() + (dy >= 0 ? size : -size));
@@ -111,19 +111,14 @@ class LineTool : public DragTool<LineShape> {
         const float dy = now.y() - start.y();
         const float ax = std::abs(dx);
         const float ay = std::abs(dy);
-
-        // tan(22.5°)：水平、斜線、垂直之間的分界。
         const float threshold = static_cast<float>(std::tan(M_PI / 8.0f));
 
         Point newEnd = start;
         if (ay <= ax * threshold) {
-            // 水平線：固定 Y。
             newEnd.setX(start.x() + dx);
         } else if (ax <= ay * threshold) {
-            // 垂直線：固定 X。
             newEnd.setY(start.y() + dy);
         } else {
-            // 45° 斜線：投影到最近的對角線。
             const auto size = std::max(ax, ay);
             newEnd.setX(start.x() + (dx >= 0 ? size : -size));
             newEnd.setY(start.y() + (dy >= 0 ? size : -size));
@@ -143,63 +138,55 @@ class EllipseTool : public DragTool<EllipseShape> {
     using DragTool<EllipseShape>::DragTool;
 };
 
-class PointTool : public DrawingTool<PointShape> {
+class PointTool : public ShapeCreationTool<PointShape> {
    public:
-    using DrawingTool<PointShape>::DrawingTool;
+    using ShapeCreationTool<PointShape>::ShapeCreationTool;
 
-    ToolEventResult onClick(const ClickEvent& event, Point localPosition) override {
-        beginDraft();
+    ToolResult onClick(const ClickEvent& event, Point localPosition) override {
+        beginShapeDraft();
         _draft->setPosition(localPosition);
-        return ToolEventResult::COMMIT;
+        return commitDraft();
     }
 };
 
-class PencilTool : public DrawingTool<PathShape> {
+class PencilTool : public ShapeCreationTool<PathShape> {
    public:
-    using DrawingTool<PathShape>::DrawingTool;
+    using ShapeCreationTool<PathShape>::ShapeCreationTool;
 
-    ToolEventResult onMouseDown(const MouseButtonEvent& event, Point localPosition) override {
-        this->beginDraft();
+    ToolResult onMouseDown(const MouseButtonEvent& event, Point localPosition) override {
+        this->beginShapeDraft();
         _draft->addPoint(localPosition, true);
-
-        return ToolEventResult::UPDATE;
+        return ToolResult::redraw();
     }
 
-    ToolEventResult onMouseUp(const MouseButtonEvent& event, Point localPosition) override {
+    ToolResult onMouseUp(const MouseButtonEvent& event, Point localPosition) override {
         if (!this->_draft) {
-            return ToolEventResult::NONE;
+            return {};
         }
 
         _draft->addPoint(localPosition, true);
-
-        return ToolEventResult::COMMIT;
+        return commitDraft();
     }
 
-    ToolEventResult onMouseMove(const MouseMoveEvent& event, Point localPosition) override {
-        if (!this->_draft) {
-            return ToolEventResult::NONE;
-        }
-
-        if (!event.mouseState().isDown(MouseButton::MouseLeft)) {
-            return ToolEventResult::NONE;
+    ToolResult onMouseMove(const MouseMoveEvent& event, Point localPosition) override {
+        if (!this->_draft || !event.mouseState().isDown(MouseButton::MouseLeft)) {
+            return {};
         }
 
         _draft->addPoint(localPosition);
-
-        return ToolEventResult::UPDATE;
+        return ToolResult::redraw();
     }
 };
 
-class PolygonTool : public DrawingTool<PolygonShape> {
+class PolygonTool : public ShapeCreationTool<PolygonShape> {
    public:
-    using DrawingTool<PolygonShape>::DrawingTool;
+    using ShapeCreationTool<PolygonShape>::ShapeCreationTool;
 
-    ToolEventResult onClick(const ClickEvent& event, Point localPosition) override {
+    ToolResult onClick(const ClickEvent& event, Point localPosition) override {
         if (!_draft) {
-            beginDraft();
+            beginShapeDraft();
         }
 
-        // 第一次點擊時，加入第一個點；之後的點擊，更新最後一個點並加入新點。
         if (_draft->pointCount() == 0) {
             _draft->addPoint(localPosition);
         } else {
@@ -207,91 +194,92 @@ class PolygonTool : public DrawingTool<PolygonShape> {
         }
         _draft->addPoint(localPosition);
 
-        return ToolEventResult::UPDATE;
+        return ToolResult::redraw();
     }
 
-    ToolEventResult onDoubleClick(const ClickEvent& event, Point localPosition) override {
+    ToolResult onDoubleClick(const ClickEvent& event, Point localPosition) override {
         if (!this->_draft) {
-            return ToolEventResult::NONE;
+            return {};
         }
 
         _draft->setLastPoint(localPosition);
-        return ToolEventResult::COMMIT;
+        return commitDraft();
     }
 
-    ToolEventResult onMouseMove(const MouseMoveEvent& event, Point localPosition) override {
+    ToolResult onMouseMove(const MouseMoveEvent& event, Point localPosition) override {
         if (!this->_draft) {
-            return ToolEventResult::NONE;
+            return {};
         }
 
         if (event.mouseState().isUp(MouseButton::MouseLeft) && _draft->pointCount() == 0) {
-            // 尚未加入任何點，無法預覽。
-            return ToolEventResult::CANCEL;
+            return cancelDraft();
         }
 
         _draft->setLastPoint(localPosition);
-        return ToolEventResult::UPDATE;
+        return ToolResult::redraw();
     }
 
-    ToolEventResult onKeyDown(const KeyboardEvent& event, Point localPosition) override {
+    ToolResult onKeyDown(const KeyboardEvent& event, Point localPosition) override {
         if (!this->_draft) {
-            return ToolEventResult::NONE;
+            return {};
         }
 
         if (event.key() == Key::Enter) {
-            return ToolEventResult::COMMIT;
+            return commitDraft(true);
         }
 
         if (event.key() == Key::Escape) {
-            return ToolEventResult::CANCEL;
+            return cancelDraft(true);
         }
 
         if (event.key() == Key::Backspace) {
             if (_draft->pointCount() == 0) {
-                return ToolEventResult::CANCEL;
+                return cancelDraft(true);
             }
             _draft->removeLastPoint();
-            return ToolEventResult::UPDATE;
+            return ToolResult::redraw(true);
         }
 
-        return ToolEventResult::NONE;
+        return {};
     }
 };
 
 }  // namespace
 
-const std::string getToolName(const Tool& tool) {
+const std::string getToolName(ToolKind tool) {
     switch (tool) {
-    case Tool::TOOL_POINT:
+    case ToolKind::POINT:
         return "Point";
-    case Tool::TOOL_PENCIL:
+    case ToolKind::PENCIL:
         return "Pencil";
-    case Tool::TOOL_LINE:
+    case ToolKind::LINE:
         return "Line";
-    case Tool::TOOL_RECTANGLE:
+    case ToolKind::RECTANGLE:
         return "Rectangle";
-    case Tool::TOOL_ELLIPSE:
+    case ToolKind::ELLIPSE:
         return "Ellipse";
-    case Tool::TOOL_POLYGON:
+    case ToolKind::POLYGON:
         return "Polygon";
+    case ToolKind::TEXT:
+        return "Text";
     default:
         return "Unknown";
     }
 }
 
-std::unique_ptr<IDrawingTool> createDrawingTool(Tool tool, ShapeStyle style) {
+std::unique_ptr<ICanvasTool> createCanvasTool(ToolKind tool, ShapeStyle style) {
     switch (tool) {
-    case Tool::TOOL_POINT:
+    case ToolKind::POINT:
         return std::make_unique<PointTool>(style);
-    case Tool::TOOL_PENCIL:
+    case ToolKind::PENCIL:
         return std::make_unique<PencilTool>(style);
-    case Tool::TOOL_LINE:
+    case ToolKind::LINE:
         return std::make_unique<LineTool>(style);
-    case Tool::TOOL_RECTANGLE:
+    case ToolKind::RECTANGLE:
         return std::make_unique<RectangleTool>(style);
-    case Tool::TOOL_ELLIPSE:
+    case ToolKind::ELLIPSE:
         return std::make_unique<EllipseTool>(style);
-    case Tool::TOOL_POLYGON:
+    case ToolKind::POLYGON:
         return std::make_unique<PolygonTool>(style);
     default:
         return nullptr;

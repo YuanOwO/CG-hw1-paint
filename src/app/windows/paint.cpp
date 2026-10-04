@@ -14,7 +14,7 @@
 
 using paint::drawing::LineCap;
 using paint::drawing::LineJoin;
-using paint::drawing::Tool;
+using paint::drawing::ToolKind;
 
 namespace paint::app {
 
@@ -58,7 +58,7 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
     });
 }
 
-void PaintWindow::selectTool(drawing::Tool tool) {
+void PaintWindow::selectTool(drawing::ToolKind tool) {
     _canvas->setTool(tool);
     updateToolStatus();
 }
@@ -296,11 +296,11 @@ void PaintWindow::setupShortcuts() {
     });
 
     // 設置工具快捷鍵
-    _shortcutManager.bind({Key::Digit1}, [this]() { selectTool(Tool::TOOL_PENCIL); });
-    _shortcutManager.bind({Key::Digit2}, [this]() { selectTool(Tool::TOOL_LINE); });
-    _shortcutManager.bind({Key::Digit3}, [this]() { selectTool(Tool::TOOL_RECTANGLE); });
-    _shortcutManager.bind({Key::Digit4}, [this]() { selectTool(Tool::TOOL_ELLIPSE); });
-    _shortcutManager.bind({Key::Digit5}, [this]() { selectTool(Tool::TOOL_POLYGON); });
+    _shortcutManager.bind({Key::Digit1}, [this]() { selectTool(ToolKind::PENCIL); });
+    _shortcutManager.bind({Key::Digit2}, [this]() { selectTool(ToolKind::LINE); });
+    _shortcutManager.bind({Key::Digit3}, [this]() { selectTool(ToolKind::RECTANGLE); });
+    _shortcutManager.bind({Key::Digit4}, [this]() { selectTool(ToolKind::ELLIPSE); });
+    _shortcutManager.bind({Key::Digit5}, [this]() { selectTool(ToolKind::POLYGON); });
 
     _shortcutManager.bind({Key::LeftBracket}, [this]() {
         auto style = _canvas->style();
@@ -363,12 +363,12 @@ void PaintWindow::setupToolMenu() {
     auto& toolMenu = _menu.addSubMenu("Tools");
 
     toolMenu.addMenuEntry("Select", [this]() {});
-    toolMenu.addMenuEntry("Point", [this]() { selectTool(Tool::TOOL_POINT); });
-    toolMenu.addMenuEntry("Pencil", [this]() { selectTool(Tool::TOOL_PENCIL); });
-    toolMenu.addMenuEntry("Line", [this]() { selectTool(Tool::TOOL_LINE); });
-    toolMenu.addMenuEntry("Rectangle", [this]() { selectTool(Tool::TOOL_RECTANGLE); });
-    toolMenu.addMenuEntry("Circle / Ellipse", [this]() { selectTool(Tool::TOOL_ELLIPSE); });
-    toolMenu.addMenuEntry("Polygon", [this]() { selectTool(Tool::TOOL_POLYGON); });
+    toolMenu.addMenuEntry("Point", [this]() { selectTool(ToolKind::POINT); });
+    toolMenu.addMenuEntry("Pencil", [this]() { selectTool(ToolKind::PENCIL); });
+    toolMenu.addMenuEntry("Line", [this]() { selectTool(ToolKind::LINE); });
+    toolMenu.addMenuEntry("Rectangle", [this]() { selectTool(ToolKind::RECTANGLE); });
+    toolMenu.addMenuEntry("Circle / Ellipse", [this]() { selectTool(ToolKind::ELLIPSE); });
+    toolMenu.addMenuEntry("Polygon", [this]() { selectTool(ToolKind::POLYGON); });
 }
 
 #pragma endregion  // Tool Menu
