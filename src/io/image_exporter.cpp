@@ -32,7 +32,7 @@ void PpmExporter::write(const app::DocumentData& document) {
 
     // 寫入像素資料
     const auto& pixels = buffer.pixels();
-    for (int i = 0; i < buffer.height(); i++) {
+    for (int i = buffer.height() - 1; i >= 0; i--) {  // 從上到下寫入
         for (int j = 0; j < buffer.width(); j++) {
             const auto& pixel = pixels[(i * buffer.width() + j) * 4];  // RGBA
             file.write(reinterpret_cast<const char*>(&pixel), 3);      // 寫入 RGB，忽略 A
