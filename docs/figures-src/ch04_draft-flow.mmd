@@ -1,0 +1,14 @@
+flowchart LR
+    MI[Mouse Input] --> T[Tool]
+    T -->|更新| D[Draft]
+    D -->|預覽| P[畫面預覽]
+    D -->|完成| O[正式物件]
+    O --> DOC[Document]
+    DOC --> S[Scene]
+    T -. 取消 / 互動中 Undo .-> X[丟棄 Draft]
+
+    classDef transient fill:#fff7df,stroke:#8a6d1f,color:#111,stroke-width:1px;
+    classDef bad fill:#fbe9e9,stroke:#9b3b3b,color:#111,stroke-width:1px;
+
+    class D,P transient;
+    class X bad;

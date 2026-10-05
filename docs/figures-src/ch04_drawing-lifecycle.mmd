@@ -1,9 +1,0 @@
-flowchart LR
-    gesture[使用者繪圖手勢] --> draft[Draft<br/>即時預覽]
-    draft -->|完成| command[Command<br/>提交一次操作]
-    command --> scene[Scene<br/>正式內容]
-    draft -. Esc / Undo .-> cancel[取消，不修改 Scene]
-
-
-    classDef cancel fill:#fff1f1,stroke:#995050,color:#111,stroke-width:1px;
-    class cancel cancel;

@@ -1,112 +1,365 @@
 \section{繪圖與渲染實作}
 
-\subsection{基本圖形}
+\subsection{圖形的幾何表示}
 
-每種幾何圖形都能提供 Renderer 所需的頂點。Line 回傳兩端點，Rectangle 回傳四個角，Ellipse 以固定 64 個 segment 取樣，Path 與 Polygon 則使用工具收集的點。Point 是較簡單的特例，直接以 \lstinline|GL_POINTS| 和目前的 point size 繪製。Renderer 因此只需要處理完成後的 geometry，不用知道前面是單擊、拖曳還是多次點擊。
+不同繪圖工具取得圖形的方式並不相同。例如 Line 與 Rectangle
+由滑鼠拖曳決定範圍，Pencil 記錄滑鼠移動形成 Path，
+Polygon 則由使用者逐點建立邊界。這些差異主要存在於互動階段；
+當繪圖完成後，圖形會整理成 Renderer 可以直接使用的幾何資料，
+因此後續的繪製不需要再區分頂點原本是如何輸入的。
 
-\subsection{Interactive Drawing 與 Draft}
+程式中的 Line、Rectangle、Path 與 Polygon 最後都可以表示為一組頂點，
+並記錄圖形是否形成封閉邊界。Ellipse 則依照外接矩形計算中心與半徑，
+將橢圓取樣為 64 個頂點後，以相同的方式交給 Renderer 處理。
+Point 較為單純，只需要保存位置，繪製時再配合目前的 Point Size。
 
-繪圖工具不會在 Mouse Down 時立刻修改 Document，而是先建立一個 draft。接下來的 Motion 只改變 draft 的座標並要求重畫，所以使用者可以立即看到預覽。直到 Mouse Up、DoubleClick 或 Enter 表示操作完成，Canvas 才把新物件交給 Document 與 Command History。圖~\ref{fig:drawing-lifecycle} 是 DragTool 和 PolygonTool 共用的主要流程。
+這樣的表示方式也成為後續繪圖處理的共同基礎。
+Renderer 可以由相同的頂點資料建立 Stroke 與 Fill，
+Select Tool 也可以利用圖形的幾何資訊進行 Hit Test。
+至於使用者在拖曳或連續輸入頂點時，如何從暫時的預覽形成正式物件，
+則於下一節說明。
 
-\begin{figure}[tbp]
+\subsection{互動式繪圖與 Draft}
+
+繪圖工具取得的幾何資料通常不是一次完成的。
+例如 Line、Rectangle 與 Ellipse 需要由滑鼠拖曳決定範圍，
+Pencil 會在拖曳期間持續收集路徑，
+Polygon 則需要經過多次點擊才能形成完整圖形。
+在這些操作真正完成以前，畫面仍需要即時顯示目前的繪製結果。
+
+因此，程式將互動過程中的圖形保存為暫時的 Draft。
+使用者開始繪圖後，後續的滑鼠移動只會更新 Draft，
+Canvas 再將它繪製於既有 Scene 之上作為預覽；
+此時並不修改正式的文件內容。
+直到使用者完成操作後，Draft 才會轉換成正式的繪圖物件，
+再經由 \lstinline|Document| 加入 \lstinline|Scene|。
+整體關係如圖~\ref{fig:draft-flow} 所示。
+
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/ch04_drawing-lifecycle.png}
-    \caption{繪圖工具與草稿的生命週期}
-    \label{fig:drawing-lifecycle}
+    \includegraphics[width=\textwidth]{docs/figures/ch04_draft-flow.png}
+    \caption{互動式繪圖中 Draft 與正式物件的關係}
+    \label{fig:draft-flow}
 \end{figure}
 
-切換工具時，目前工具會先處理尚未完成的 draft。若使用者在互動過程中按下 Undo，程式先取消 draft，而不是立刻復原 Scene 中上一個物件。這讓「取消這次尚未完成的動作」和「復原前一次已完成的動作」不會混在一起。
+這樣可以將「正在進行的互動」與「已完成的文件內容」分開。
+拖曳過程即使產生大量 Motion event，也只是在更新同一個 Draft，
+不會為每次移動建立一筆修改紀錄。
+因此一次完整的繪圖操作只會形成一次可復原的文件修改。
+若操作尚未完成就執行 Undo，程式也會優先取消目前的 Draft，
+而不是復原 Scene 中前一個已完成的物件。
 
-\subsection{物件選取與刪除}
-\label{sec:selection-delete}
+\subsubsection{Pencil 的路徑採樣}
 
-SelectTool 由 Scene 尾端向前搜尋，也就是先檢查最後繪製的物件。一旦命中就停止搜尋，因此圖形重疊時會優先選到視覺上的最上層物件。文字物件以字型計算出的寬高建立矩形，點擊座標落在矩形內即為命中。
+Pencil 與其他拖曳工具稍有不同。
+Line 或 Rectangle 只需要更新目前的終點，
+Pencil 則必須在滑鼠移動過程中持續加入新的頂點，
+才能保存使用者實際畫出的軌跡。
+然而，程式並不會將每一次 Mouse Motion 都直接加入 Path。
 
-圖形物件先轉成頂點序列。對於「封閉且有可見填色」的圖形，程式以 ray-crossing（even--odd）測試點擊位置是否在多邊形內；每當向右的水平射線穿過一條邊就切換一次內外狀態。這使 Rectangle、Polygon，以及由 64 個 segment 近似的 Ellipse，都能從填色區域內部選取。
+設上一個採樣點為 $P_{i-1}$，目前的滑鼠位置為 $P$，
+Stroke Width 為 $w$。程式使用的最小採樣距離為
+$$
+    d_{\min} = \max(0.2w, 1\text{ px}).
+$$
+只有當
+$$
+    \norm{P-P_{i-1}} \ge d_{\min}
+$$
+時，才會將目前位置加入 Path。
+因此 Stroke Width 增加時，Pencil 的最小採樣間距也會隨之增加。
 
-只有外框或開放路徑時，則計算點擊點 $P$ 到每條線段 $\overline{AB}$ 的最短距離。令 $\vec{v}=B-A$，投影參數與距離為
+這項限制除了避免在很短的距離內產生大量幾乎重合的頂點，
+也能減少後續 Stroke 計算遇到極短線段的情況。
+Stroke Geometry 需要由相鄰頂點計算線段方向與轉角；
+當兩個頂點距離過近時，微小的座標差異便可能造成較大的方向變化，
+進一步使轉角的幾何計算不穩定。
+因此 Pencil 在輸入階段先以距離門檻控制採樣，
+再將取得的頂點交給後續的 Stroke Renderer 處理。
 
-\[
-    t=\operatorname{clamp}\!\left(
-    \frac{(P-A)\cdot\vec{v}}{\vec{v}\cdot\vec{v}},\,0,\,1
-    \right), \qquad
-    d\!\left(P,\overline{AB}\right)=\left\lVert P-(A+t\vec{v})\right\rVert.
-\]
+\subsection{Stroke 繪製}
 
-若 $d\leq\tau$ 即判定命中，其中容差
+基本模式直接使用 OpenGL 內建的線條繪製功能，並透過
+\lstinline|glLineWidth()| 設定線寬。這種方式實作簡單，
+但在繪製由多條線段組成的粗折線時，
+轉角的外形無法由程式進一步控制。
+如圖~\ref{fig:native-custom-stroke} 左側所示，
+斜向線段的接合處可能產生明顯的突出。
 
-\[
-    \tau=\max\!\left(\frac{w}{2}+3,\,5\right)\ \text{px}
-\]
+因此，ADVANCED 模式不直接使用 OpenGL 的粗線結果，
+而是自行建立 Stroke 的幾何區域，
+以控制線條的轉角與端點外形。
+圖~\ref{fig:native-custom-stroke} 右側為自行處理後的結果。
+後續將分別說明 Stroke 區域的建立方式、
+Line Join、Line Cap，以及尖銳轉角的處理。
 
-會隨畫筆寬度 $w$ 增加，但至少保留 5 px，讓細線也容易點選；Point 物件則以 point size 代替 $w$。封閉圖形會額外檢查最後一點到第一點的邊，長度為零的線段則退化為與端點的距離比較。
-
-選取後，overlay 會在 Scene 與 draft 之上畫出 axis-aligned bounding box。該範圍由頂點的最小與最大座標取得，再向外擴張 $\max(w/2,2)$ px，避免粗畫筆被選取框截斷。
-
-Delete 或 Backspace 會產生 RemoveObjectAction，再由 Document 建立記住原始索引的 RemoveObjectCommand。因此刪除可進入歷史紀錄，Undo 也能恢復原本的繪製層級。
-
-\subsection{Stroke Rendering}
-\label{sec:stroke-rendering}
-
-Advanced mode 不直接依賴 OpenGL 的內建粗線，而是自行產生 triangle geometry。假設相鄰三點為 $A$、$B$、$C$，先計算兩段的單位方向向量
-
-\[
-    \vec{u}=\frac{B-A}{\lVert B-A\rVert}, \qquad
-    \vec{v}=\frac{C-B}{\lVert C-B\rVert}.
-\]
-
-接著將方向向量旋轉 $90^\circ$ 得到法向量 $\vec{n}_0$、$\vec{n}_1$，並以半寬 $h=w/2$ 建立左右兩側的 offset line，例如第一段的邊界會通過 $A\pm h\vec{n}_0$ 與 $B\pm h\vec{n}_0$。程式求出兩組 offset line 的交點，再用二維 cross product 判斷轉向：
-
-\[
-    \vec{u}\times\vec{v}=u_xv_y-u_yv_x.
-\]
-
-Canvas 的 Y 軸向下，因此程式中的結果大於 0 表示向右轉，小於 0 表示向左轉；這個符號接著用來選擇哪一側是外側。MITER 使用外側交點，BEVEL 用一個 triangle 截去尖角，ROUND 則補上一段 triangle fan arc。圖~\ref{fig:stroke-joins} 比較三種結果。
-
-開放路徑的端點只有一個方向。BUTT 直接停在原端點；SQUARE 沿線段方向再延伸 $h$；ROUND 則以端點為圓心補上半圓。三種結果如圖~\ref{fig:stroke-caps}。這些端點不是交給 \lstinline|glLineWidth()| 決定，而是由同一套 geometry 計算產生。
-
-\begin{figure}[tbp]
+\begin{figure}[htbp]
     \centering
-    \begin{subfigure}[t]{.52\textwidth}
+    \includegraphics[width=.75\textwidth]{docs/figures/ch04_native-custom-stroke.png}
+    \caption{OpenGL 原生粗線與自行實作 Stroke 的轉角比較}
+    \label{fig:native-custom-stroke}
+\end{figure}
+
+
+\subsubsection{由中心線建立粗線區域}
+
+自行繪製粗線時，首先需要將沒有寬度的中心線轉換成實際的粗線區域。
+對一條由 $A$ 指向 $B$ 的非零長度線段，
+先求出單位方向 $\vec u$，再取得與其垂直的單位向量 $\vec n$：
+
+$$
+    \vec u=\frac{B-A}{\lVert B-A\rVert},
+    \qquad
+    \vec n=(-u_y,u_x).
+$$
+
+若 Stroke Width 為 $w$，令半寬 $h=w/2$。
+對中心線上的任一點 $P$，沿 $\vec n$ 的正、反方向各偏移 $h$，
+即可得到兩側邊界：
+
+$$
+    P_L=P+h\vec n,
+    \qquad
+    P_R=P-h\vec n.
+$$
+
+因此線段的兩個端點 $A$、$B$ 分別產生
+$$
+    \begin{cases}
+        A_L=A+h\vec n,\qquad
+        A_R=A-h\vec n, \\
+        B_L=B+h\vec n,\qquad
+        B_R=B-h\vec n.
+    \end{cases}
+$$
+
+如圖~\ref{fig:stroke-expansion} 所示，
+$A_L$、$B_L$、$B_R$、$A_R$ 四個邊界點形成一個四邊形，
+再拆成兩個三角形交由 OpenGL 繪製。
+這就是單一線段形成粗線區域的基本方式。
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=.78\textwidth]
+    {docs/figures/ch04_stroke-expansion.png}
+    \caption{中心線向兩側偏移半寬 $h$ 形成粗線區域}
+    \label{fig:stroke-expansion}
+\end{figure}
+
+單一線段只需要上述四個邊界點即可完成繪製，
+但當多條線段共用一個頂點時，
+兩段粗線的邊界還需要在轉角處互相連接；
+開放路徑的首尾也需要決定端點的外形。
+這兩種情況分別由 Line Join 與 Line Cap 處理。
+
+\subsubsection{Line Join 與 Line Cap}
+
+Line Join 決定相鄰兩條線段在轉角處如何接合。
+本程式提供 MITER、BEVEL 與 ROUND 三種方式，
+其差異如圖~\ref{fig:stroke-joins} 所示。
+
+MITER 將兩段外側邊界延伸至交點，
+因此能保留尖銳的轉角；
+BEVEL 直接連接兩個外側端點，將尖角切平；
+ROUND 則以原頂點為圓心建立圓弧，
+並以多個三角形近似圓形的轉角。
+
+Line Cap 則決定開放路徑首尾的形狀。
+BUTT 直接在原本的端點停止；
+SQUARE 沿中心線方向向外延伸半個 Stroke Width；
+ROUND 則以端點為圓心形成半圓。
+封閉路徑的首尾彼此相接，因此所有頂點皆以 Line Join 處理，
+不需要額外建立 Line Cap。
+
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[t]{.57\textwidth}
         \centering
         \includegraphics[width=\linewidth]{docs/figures/ch04_stroke-join.png}
-        \caption{MITER、BEVEL 與 ROUND join}
+        \caption{MITER、BEVEL 與 ROUND Join}
         \label{fig:stroke-joins}
     \end{subfigure}\hfill
     \begin{subfigure}[t]{.43\textwidth}
         \centering
         \includegraphics[width=\linewidth]{docs/figures/ch04_stroke-cap.png}
-        \caption{BUTT、SQUARE 與 ROUND cap}
+        \caption{BUTT、SQUARE 與 ROUND Cap}
         \label{fig:stroke-caps}
     \end{subfigure}
-    \caption{自行產生的筆畫接合與端點；細線或虛線表示中心線}
+    \caption{Line Join 與 Line Cap 的不同形式；細線表示原始中心線}
 \end{figure}
 
-當兩段線形成很尖的角度時，外側 offset line 的交點可能離 $B$ 很遠。程式將這段距離記為 miter length $m$，並與 $hL$ 比較，其中 $L$ 是 miter limit，目前預設為 4：
+\subsubsection{Miter Limit}
 
-\[
-    \text{使用 MITER 的條件：}\qquad m \leq hL.
-\]
+MITER 雖然能保留尖銳的轉角，
+但當兩條線段形成的夾角越小時，
+外側邊界的交點會逐漸遠離原頂點，
+使 Stroke 產生過長的尖角。
 
-若 $m>hL$，即使使用者選擇 MITER，程式仍改用 BEVEL，避免出現過長的尖刺。圖~\ref{fig:miter-limit} 顯示這項判斷。
+設兩條中心線在頂點形成的夾角為 $\theta$，
+線寬的一半為 $h$，
+原頂點至 MITER 外側交點的距離為 $m$。
+由圖~\ref{fig:miter-limit} 所示的幾何關係可得
+$$
+    m=\frac{h}{\sin(\theta/2)}.
+$$
 
-\begin{figure}[tbp]
+由此可知，當夾角 $\theta$ 越小時，MITER 的尖角會越長。
+因此若不限制 MITER 的長度，
+在較尖銳的轉角處可能產生過度延伸的尖角。
+
+為避免這種情況，程式使用 Miter Limit $L$。
+只有在
+$$
+    m\leq hL
+$$
+時才使用 MITER；若 $m$ 超過限制，則改用 BEVEL。
+
+結合前述 $m$ 與 $\theta$ 的關係，可得
+$$
+    \theta
+    \geq
+    2\arcsin\!\left(\frac{1}{L}\right).
+$$
+
+目前 \lstinline|miterLimit| 預設為 4，
+因此允許使用 MITER 的最小夾角約為 $29.0^\circ$。
+圖~\ref{fig:miter-limit} 分別示範
+$m$ 位於 Miter Limit 以內而使用 MITER，
+以及 $m$ 超過限制而改用 BEVEL 的情況。
+
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=.92\textwidth]{docs/figures/ch04_miter-limit.png}
-    \caption{Miter limit 的實際轉角案例；灰底表示筆畫寬度，藍線為中心線}
+    \includegraphics[width=.75\textwidth]{docs/figures/ch04_miter-limit.png}
+    \caption{Miter length $m$ 與限制長度 $hL$ 的關係}
     \label{fig:miter-limit}
 \end{figure}
 
-程式也處理平行、近 180 度折返與過遠 inner intersection。若 offset line 無法穩定求交，Join 退回 BEVEL 或 ROUND；inner intersection 超過附近 segment 長度與半寬推導出的限制時，改用原 vertex，避免短筆畫出現異常 triangle。
+\subsubsection{退化情況處理}
 
-\subsection{Fill Rendering}
+實際建立 Stroke 區域時，
+還需要考慮長度過短、近平行或接近折返的線段。
+當線段長度過短時，方向向量的計算容易受到微小座標差異影響；
+而相鄰邊界接近平行時，
+其交點也可能變得不穩定或距離頂點過遠。
 
-OUTLINE 與 FILLED 模式直接使用 OpenGL primitive 和 \lstinline|glPolygonMode()|。ADVANCED 模式則把填色與描邊分開：封閉圖形先填入 Fill color，再畫出自行計算的 Stroke geometry。若 Fill color 完全透明或頂點少於三個，就跳過填色。目前填色仍使用 \lstinline|GL_POLYGON|，因此凹多邊形可能無法得到正確結果，這部分尚未加入 triangulation。
+因此程式會排除重複或退化的線段，
+並在無法穩定取得合理交點時採用較保守的接合方式，
+避免產生異常延伸的三角形。
+前述 Pencil 的最小距離採樣，
+也能減少極短線段進入 Stroke 計算的情況。
 
-\subsection{座標系統}
+這類數值穩定性問題與 Miter Limit 所處理的尖角問題來源不同：
+前者主要發生在退化或接近退化的幾何情況，
+後者則來自 MITER 在小夾角下會產生較長尖角的特性，
+因此程式分別進行處理。
 
-程式以 \lstinline|glOrtho(0, width, height, 0, -1, 1)| 將 UI、滑鼠與 Scene 統一為左上角原點。Canvas 再沿 parent chain 將視窗座標轉成局部座標，因此工具收到的位置、Scene 儲存的頂點與狀態列顯示一致；只有 framebuffer pixel I/O 仍採 OpenGL 的左下角順序，細節見附錄~\ref{app:framebuffer-details}。
+\subsection{Fill 繪製}
 
-\subsection{Grid}
+封閉圖形除了 Stroke 外，也可以填滿內部區域。
+在基本的 FILLED 模式中，程式使用 OpenGL 的
+\lstinline|GL_FILL| 繪製封閉圖形；
+ADVANCED 模式則將 Fill 與 Stroke 分開處理，
+先繪製內部填色，再使用前一節自行實作的方式繪製 Stroke。
 
-Grid 只提供位置參考，不會加入 Scene 或改變物件頂點。Lines 與 Dots 模式都以 25 px 為間距，None 則不繪製；CanvasRenderer 會先畫 Grid，再畫 Scene、draft 與選取框，使格線保持在背景。
+ADVANCED 模式的 Fill 直接使用 \lstinline|GL_POLYGON|。
+Renderer 依照圖形的頂點順序將所有頂點送入 OpenGL，
+並使用目前設定的 Fill Color 完成填色。
+若 Fill Color 完全透明，或圖形少於三個頂點，
+則略過 Fill。
+
+\begin{lstlisting}[language=C++]
+glColor4fv(fillColor);
+glBegin(GL_POLYGON);
+
+for (const auto& v : vertices) {
+    glVertex2f(v.x(), v.y());
+}
+
+glEnd();
+\end{lstlisting}
+
+相較於 Stroke 需要自行計算線寬、轉角與端點，
+Fill 不需要額外建立邊界，因此實作較為直接。
+目前 Fill 仍由 OpenGL 的 \lstinline|GL_POLYGON| 完成，
+程式本身沒有另外實作多邊形三角化。
+
+
+\subsection{物件選取與 Hit Test}
+
+Select Tool 需要根據滑鼠位置判斷使用者所指向的物件。
+由於不同圖形的可見區域並不相同，
+程式不只使用外接矩形進行判定，
+而是依照 Fill、Stroke 與物件種類分別處理。
+
+對具有可見 Fill 的封閉圖形，
+滑鼠位於圖形內部時即可視為命中。
+程式使用 Point-in-Polygon 判斷測試點是否位於多邊形內部：
+由測試點向水平方向延伸射線，
+依序檢查多邊形各邊是否與射線相交，
+每遇到一次交點便切換一次內、外狀態。
+完成所有邊的檢查後，即可判斷測試點是否位於圖形內。
+
+對 Stroke 的判定則以滑鼠位置至各線段的最短距離為基礎。
+設測試點為 $P$，線段兩端為 $A$、$B$，
+先將 $P-A$ 投影至線段方向，得到
+$$
+    t=
+    \frac{(P-A)\cdot(B-A)}
+    {\lVert B-A\rVert^2}.
+$$
+
+由於要計算的是到「線段」而非無限延伸直線的距離，
+程式將 $t$ 限制在 $[0,1]$，
+再取得線段上距離 $P$ 最近的點
+$$
+    Q=A+t(B-A).
+$$
+最後計算
+$$
+    d=\lVert P-Q\rVert.
+$$
+
+當 $d$ 小於 Hit Test 的容許距離時，即判定 Stroke 被選中。
+容許距離會考慮目前實際的 Stroke Width，
+並額外保留少量範圍，
+使較細的線條不需要精確點在線條的像素上才能選取。
+Point 也採用相同概念，
+但直接計算滑鼠與 Point 位置之間的距離，
+並以 Point Size 決定其可選取範圍。
+
+文字物件則使用不同方式處理。
+程式根據目前字型計算文字的寬度與高度，
+形成一個矩形範圍，
+再判斷滑鼠位置是否落在此範圍內。
+
+當同一位置同時命中多個物件時，
+Select Tool 會由 Scene 的尾端向前搜尋。
+由於 Scene 中較後面的物件也較晚繪製，
+因此這種搜尋順序會優先選取視覺上位於上層的物件。
+
+選取完成後，程式另外計算物件的外接矩形，
+並將 Stroke Width 或 Point Size 納入邊界範圍，
+最後在 Scene 與工具預覽之後繪製選取框，
+使目前選取的物件能在畫面上清楚辨識。
+
+
+\subsection{座標系統與 Grid 渲染}
+
+GLUT 的滑鼠事件以視窗左上角為原點，$x$ 軸向右、$y$ 軸向下。
+為了讓輸入與 OpenGL 繪圖使用相同方向，程式採用左上角原點的正交投影：
+
+\begin{lstlisting}[language=C++]
+glOrtho(0.0, width, height, 0.0, -1.0, 1.0);
+\end{lstlisting}
+
+因此滑鼠座標不需要另外反轉 $y$ 軸。
+由於 Canvas 只是 Element tree 中的一個元素，
+事件進入 \lstinline|CanvasElement| 後，會透過
+\lstinline|windowToLocal()| 轉換成以 Canvas 左上角為原點的局部座標。
+
+渲染時，每個 Element 也會先將座標系平移到自己的左上角，
+因此輸入與繪圖最後都使用相同的 Canvas 局部座標系。
+
+Grid 亦在此座標系中由 \lstinline|CanvasRenderer| 繪製。
+Lines 模式產生等距水平與垂直線，Dots 模式則只繪製交點。
+Grid 會先於 Scene 繪製，因此只作為畫布背景，不會覆蓋正式物件、Draft 或選取框。
