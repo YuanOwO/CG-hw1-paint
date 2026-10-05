@@ -1,6 +1,7 @@
 #include "common/color.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 namespace paint {
 
@@ -86,6 +87,11 @@ ColorHSV rgb2hsv(const ColorRGBA& rgb) {
     }
 
     return ColorHSV(h, s, v);
+}
+
+float normalizeHue(float hue) {
+    hue = std::fmod(hue, 360.0f);
+    return hue < 0.0f ? hue + 360.0f : hue;
 }
 
 std::uint8_t colorToByte(float value) {

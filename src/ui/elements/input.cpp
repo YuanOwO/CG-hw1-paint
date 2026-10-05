@@ -38,7 +38,7 @@ InputElement::InputElement(std::string value, std::string placeholder)
     setPadding({8, 4, 8, 4});
     setPreferredSize({180, 34});
 
-    auto text = std::make_unique<TextElement>("", GfntFontStyle{GfntFontId::CUBIC_11});
+    auto text = std::make_unique<TextElement>("", theme::BodyFont);
     _textElement = text.get();
 
     _textElement->setVerticalAlignment(Alignment::Center);
@@ -412,7 +412,7 @@ void InputElement::updateDisplayedText() {
 
     const std::string encoded = utf8::fromUtf32(displayed);
     _textElement->setText(encoded);
-    _textElement->setColor(ColorRGBA{0.12f, 0.16f, 0.23f});
+    _textElement->setColor(theme::Text);
 }
 
 void InputElement::notifyValueChanged() {

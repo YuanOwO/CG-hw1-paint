@@ -5,6 +5,7 @@
 #include "ui/elements/button.hpp"
 #include "ui/elements/stack_panel.hpp"
 #include "ui/elements/text.hpp"
+#include "ui/theme.hpp"
 
 namespace paint::app {
 
@@ -50,15 +51,15 @@ void ConfirmWindow::setupContent() {
     auto root = std::make_unique<ui::StackPanelElement>(ui::StackOrientation::Vertical);
 
     root->setPadding({28, 28, 28, 24});
-    root->setBackgroundColor(ColorRGBA{0.97f, 0.98f, 0.99f});
+    root->setBackgroundColor(ui::theme::WindowBackground);
 
-    auto heading = std::make_unique<ui::TextElement>(
-        this->title(), BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_18}, ColorRGBA{0.12f, 0.16f, 0.23f});
+    auto heading = std::make_unique<ui::TextElement>(this->title(), ui::theme::HeadingFont,
+                                                     ui::theme::Text);
     heading->setMargin({0, 0, 0, 12});
     root->appendChild(std::move(heading));
 
-    auto message = std::make_unique<ui::TextElement>(_message, GfntFontStyle{GfntFontId::CUBIC_11},
-                                                     ColorRGBA{0.36f, 0.40f, 0.47f});
+    auto message =
+        std::make_unique<ui::TextElement>(_message, ui::theme::BodyFont, ui::theme::MutedText);
 
     message->setMargin({0, 0, 0, 24});
     root->appendChild(std::move(message), 1.0f);
@@ -70,8 +71,8 @@ void ConfirmWindow::setupContent() {
     cancelButton->setPreferredSize({104, 36});
     cancelButton->setMargin({0, 0, 12, 0});
 
-    auto cancelText = std::make_unique<ui::TextElement>("取消", GfntFontStyle{GfntFontId::CUBIC_11});
-    cancelText->setColor(ColorRGBA{0.22f, 0.27f, 0.34f});
+    auto cancelText = std::make_unique<ui::TextElement>("取消", ui::theme::BodyFont);
+    cancelText->setColor(ui::theme::ButtonText);
     cancelText->setHorizontalAlignment(ui::Alignment::Center);
     cancelText->setVerticalAlignment(ui::Alignment::Center);
     cancelButton->appendChild(std::move(cancelText));
@@ -79,13 +80,13 @@ void ConfirmWindow::setupContent() {
     auto confirmButton = std::make_unique<ui::ButtonElement>([this]() { confirm(); });
     confirmButton->setPreferredSize({104, 36});
     confirmButton->setStyle({
-        {0.15f, 0.36f, 0.85f},
-        {0.12f, 0.31f, 0.76f},
-        {0.10f, 0.25f, 0.64f},
-        {0.15f, 0.36f, 0.85f},
+        ui::theme::Primary,
+        ui::theme::PrimaryHovered,
+        ui::theme::PrimaryPressed,
+        ui::theme::Primary,
     });
 
-    auto confirmText = std::make_unique<ui::TextElement>("確認", GfntFontStyle{GfntFontId::CUBIC_11});
+    auto confirmText = std::make_unique<ui::TextElement>("確認", ui::theme::BodyFont);
     confirmText->setColor(Color::White);
     confirmText->setHorizontalAlignment(ui::Alignment::Center);
     confirmText->setVerticalAlignment(ui::Alignment::Center);

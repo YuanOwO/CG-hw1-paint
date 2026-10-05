@@ -5,12 +5,14 @@
 #include <utility>
 
 #include "app/application.hpp"
+#include "app/windows/color_picker.hpp"
 #include "app/windows/confirm.hpp"
 #include "app/windows/input_dialog.hpp"
 #include "common/font.hpp"
 #include "ui/elements/dock_panel.hpp"
 #include "ui/elements/stack_panel.hpp"
 #include "ui/layout/bounding.hpp"
+#include "ui/theme.hpp"
 
 using paint::drawing::LineCap;
 using paint::drawing::LineJoin;
@@ -306,20 +308,19 @@ void PaintWindow::setupContent() {
 
     // 設置狀態列的文字元素
 
-    auto toolText = std::make_unique<ui::TextElement>("Tool: --", GfntFontStyle{GfntFontId::CUBIC_11});
+    auto toolText = std::make_unique<ui::TextElement>("Tool: --", ui::theme::BodyFont);
     _toolText = toolText.get();
     // margin 保證最小間距；grow 讓工具欄吸收剩餘寬度，把其他欄位推向右側
     // Thickness 的順序是 left, top, right, bottom
     toolText->setMargin({0, 0, 16, 0});
     statusBar->appendChild(std::move(toolText), 1.0f);
 
-    auto positionText =
-        std::make_unique<ui::TextElement>("Pos: (--, --)", GfntFontStyle{GfntFontId::CUBIC_11});
+    auto positionText = std::make_unique<ui::TextElement>("Pos: (--, --)", ui::theme::BodyFont);
     _positionText = positionText.get();
     positionText->setMargin({0, 0, 16, 0});
     statusBar->appendChild(std::move(positionText), 1.0f);
 
-    auto sizeText = std::make_unique<ui::TextElement>("Size: (--, --)", GfntFontStyle{GfntFontId::CUBIC_11});
+    auto sizeText = std::make_unique<ui::TextElement>("Size: (--, --)", ui::theme::BodyFont);
     _sizeText = sizeText.get();
     statusBar->appendChild(std::move(sizeText), 1.0f);
 
@@ -502,7 +503,15 @@ void PaintWindow::setupStrokeMenu() {
         style.setStrokeColor(Color::Purple);
         setShapeStyle(style);
     });
-    colorMenu.addMenuEntry("Custom...", [this]() {});
+    colorMenu.addMenuEntry("Custom...", [this]() {
+        const ColorRGBA initialColor = _canvas->style().stroke.color;
+        Application::current().createWindow<ColorPickerWindow>(
+            "Stroke Color", initialColor, [this](const ColorRGBA& color) {
+                auto style = _canvas->style();
+                style.setStrokeColor(color);
+                setShapeStyle(style);
+            });
+    });
 
     // Stroke Width Menu
 
@@ -686,7 +695,15 @@ void PaintWindow::setupFillMenu() {
         style.setFillColor(Color::Purple);
         setShapeStyle(style);
     });
-    fillColorMenu.addMenuEntry("Custom...", [this]() {});
+    fillColorMenu.addMenuEntry("Custom...", [this]() {
+        const ColorRGBA initialColor = _canvas->style().fill.color;
+        Application::current().createWindow<ColorPickerWindow>(
+            "Fill Color", initialColor, [this](const ColorRGBA& color) {
+                auto style = _canvas->style();
+                style.setFillColor(color);
+                setShapeStyle(style);
+            });
+    });
 }
 
 #pragma endregion  // Fill Menu
@@ -834,7 +851,15 @@ void PaintWindow::setupTextMenu() {
         style.color = Color::Purple;
         setTextStyle(style);
     });
-    colorMenu.addMenuEntry("Custom...", [this]() {});
+    colorMenu.addMenuEntry("Custom...", [this]() {
+        const ColorRGBA initialColor = _canvas->textStyle().color;
+        Application::current().createWindow<ColorPickerWindow>(
+            "Text Color", initialColor, [this](const ColorRGBA& color) {
+                auto style = _canvas->textStyle();
+                style.color = color;
+                setTextStyle(style);
+            });
+    });
 }
 
 #pragma endregion  // Text Menu

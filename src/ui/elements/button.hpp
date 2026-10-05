@@ -6,14 +6,15 @@
 #include "common/font.hpp"
 #include "render/renderer/button_renderer.hpp"
 #include "ui/element.hpp"
+#include "ui/theme.hpp"
 
 namespace paint::ui {
 
 struct ButtonStyle {
-    ColorRGBA background = Color::White;
-    ColorRGBA hovered = ColorRGBA{0.94f, 0.95f, 0.97f};
-    ColorRGBA pressed = ColorRGBA{0.87f, 0.89f, 0.93f};
-    ColorRGBA border = ColorRGBA{0.80f, 0.83f, 0.88f};
+    ColorRGBA background = theme::ControlBackground;
+    ColorRGBA hovered = theme::ControlHovered;
+    ColorRGBA pressed = theme::ControlPressed;
+    ColorRGBA border = theme::ControlBorder;
 };
 
 class ButtonElement : public Element {

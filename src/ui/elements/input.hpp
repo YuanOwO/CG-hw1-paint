@@ -10,6 +10,7 @@
 #include "event/events.hpp"
 #include "render/renderer/input_renderer.hpp"
 #include "ui/element.hpp"
+#include "ui/theme.hpp"
 
 namespace paint::ui {
 
@@ -22,10 +23,10 @@ struct InputCharacter {
 };
 
 struct InputStyle {
-    ColorRGBA background = Color::White;
-    ColorRGBA border = ColorRGBA{0.68f, 0.71f, 0.77f};
-    ColorRGBA focusedBorder = ColorRGBA{0.15f, 0.36f, 0.85f};
-    ColorRGBA cursor = ColorRGBA{0.12f, 0.16f, 0.23f};
+    ColorRGBA background = theme::ControlBackground;
+    ColorRGBA border = theme::InputBorder;
+    ColorRGBA focusedBorder = theme::Primary;
+    ColorRGBA cursor = theme::Text;
 };
 
 class InputElement : public Element {

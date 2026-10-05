@@ -10,6 +10,7 @@
 #include "ui/elements/input.hpp"
 #include "ui/elements/stack_panel.hpp"
 #include "ui/elements/text.hpp"
+#include "ui/theme.hpp"
 
 namespace paint::app {
 namespace {
@@ -25,15 +26,15 @@ std::unique_ptr<ui::ButtonElement> createButton(const std::string& text,
 
     if (primary) {
         button->setStyle({
-            {0.15f, 0.36f, 0.85f},
-            {0.12f, 0.31f, 0.76f},
-            {0.10f, 0.25f, 0.64f},
-            {0.15f, 0.36f, 0.85f},
+            ui::theme::Primary,
+            ui::theme::PrimaryHovered,
+            ui::theme::PrimaryPressed,
+            ui::theme::Primary,
         });
     }
 
-    auto label = std::make_unique<ui::TextElement>(text, GfntFontStyle{GfntFontId::CUBIC_11});
-    label->setColor(primary ? ColorRGBA{Color::White} : ColorRGBA{0.22f, 0.27f, 0.34f});
+    auto label = std::make_unique<ui::TextElement>(text, ui::theme::BodyFont);
+    label->setColor(primary ? ColorRGBA{Color::White} : ui::theme::ButtonText);
     label->setHorizontalAlignment(ui::Alignment::Center);
     label->setVerticalAlignment(ui::Alignment::Center);
     button->appendChild(std::move(label));
@@ -119,15 +120,15 @@ void InputDialogWindow::cancel() {
 void InputDialogWindow::setupContent(const std::string& initialValue) {
     auto root = std::make_unique<ui::StackPanelElement>(ui::StackOrientation::Vertical);
     root->setPadding({28, 28, 28, 24});
-    root->setBackgroundColor(ColorRGBA{0.97f, 0.98f, 0.99f});
+    root->setBackgroundColor(ui::theme::WindowBackground);
 
-    auto heading = std::make_unique<ui::TextElement>(
-        title(), BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_18}, ColorRGBA{0.12f, 0.16f, 0.23f});
+    auto heading =
+        std::make_unique<ui::TextElement>(title(), ui::theme::HeadingFont, ui::theme::Text);
     heading->setMargin({0, 0, 0, 12});
     root->appendChild(std::move(heading));
 
-    auto message = std::make_unique<ui::TextElement>(_message, GfntFontStyle{GfntFontId::CUBIC_11},
-                                                     ColorRGBA{0.36f, 0.40f, 0.47f});
+    auto message =
+        std::make_unique<ui::TextElement>(_message, ui::theme::BodyFont, ui::theme::MutedText);
     message->setMargin({0, 0, 0, 12});
     root->appendChild(std::move(message));
 
@@ -137,8 +138,8 @@ void InputDialogWindow::setupContent(const std::string& initialValue) {
     input->setMargin({0, 0, 0, 6});
     root->appendChild(std::move(input));
 
-    auto errorText = std::make_unique<ui::TextElement>("", GfntFontStyle{GfntFontId::CUBIC_11},
-                                                       ColorRGBA{0.78f, 0.16f, 0.16f});
+    auto errorText =
+        std::make_unique<ui::TextElement>("", ui::theme::BodyFont, ui::theme::ErrorText);
     _errorText = errorText.get();
     errorText->setMargin({0, 0, 0, 12});
     root->appendChild(std::move(errorText));

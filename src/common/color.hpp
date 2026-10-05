@@ -229,6 +229,10 @@ struct ColorHSV {
 
 ColorRGBA hsv2rgb(const ColorHSV& hsv);
 ColorHSV rgb2hsv(const ColorRGBA& rgb);
+
+// 將任意色相角度正規化到 [0, 360)。
+float normalizeHue(float hue);
+
 std::uint8_t colorToByte(float value);
 
 }  // namespace paint
