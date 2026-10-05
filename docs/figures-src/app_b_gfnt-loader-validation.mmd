@@ -5,9 +5,7 @@ flowchart LR
     valid -- 是 --> ready[建立 GfntFont]
     valid -- 否 --> reject[拒絕載入]
 
-    classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
     classDef decision fill:#fff7df,stroke:#8a6d1f,color:#111,stroke-width:1px;
     classDef bad fill:#fbe9e9,stroke:#9b3b3b,color:#111,stroke-width:1px;
-    class file,structure,glyphs,ready step;
     class valid decision;
     class reject bad;

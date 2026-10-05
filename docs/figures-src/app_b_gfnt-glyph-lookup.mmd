@@ -4,7 +4,5 @@ flowchart LR
     fallback --> found[找到：使用 Glyph<br/>metrics + bitmap]
     fallback --> missing[未找到：只推進游標]
 
-    classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
     classDef decision fill:#fff7df,stroke:#8a6d1f,color:#111,stroke-width:1px;
-    class cp,lookup,found,missing step;
     class fallback decision;

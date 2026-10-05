@@ -1,0 +1,11 @@
+classDiagram
+    direction LR
+
+    PaintWindow *-- Document : owns
+    Document *-- Scene : owns
+    Document *-- CommandHistory : owns
+
+    Scene "1" *-- "0..*" SceneObject : stores
+
+    SceneObject <|-- ShapeObject
+    SceneObject <|-- TextObject

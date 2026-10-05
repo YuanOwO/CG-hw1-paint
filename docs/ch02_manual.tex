@@ -22,7 +22,7 @@
 目前提供 Select、Point、Pencil、Line、Rectangle、Ellipse、Polygon 與 Text 等工具，
 各工具的主要操作方式整理於表~\ref{tab:drawing-tools}。
 
-\begin{table}[H]
+\begin{table}[tbp]
     \centering
     \caption{繪圖工具與操作方式}
     \label{tab:drawing-tools}
@@ -98,8 +98,10 @@ Point Size 與 Stroke Width 可以透過右鍵選單調整，
 
 \subsection{快捷鍵與滑鼠操作}
 
-程式內部以 \lstinline|Primary| 表示各作業系統慣用的主要修飾鍵。
-在 macOS 上對應 Command，在 Windows 與 Linux 上則對應 Ctrl。
+程式內部以 \lstinline|Primary| 表示各作業系統慣用的主要修飾鍵
+\footnote{
+    macOS 對應 Command，Windows 與 Linux 對應 Ctrl。
+}。
 例如表~\ref{tab:shortcuts} 中的 Primary+S，
 在 macOS 為 Command+S，在其他平台則為 Ctrl+S。
 

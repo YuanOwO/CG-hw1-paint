@@ -1,0 +1,8 @@
+classDiagram
+    direction LR
+
+    Application "1" o-- "0..*" Window : manages
+
+    Window <|-- PaintWindow
+    Window <|-- DialogWindow
+    Window <|-- ExportWindow

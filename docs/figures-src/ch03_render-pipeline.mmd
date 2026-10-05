@@ -1,8 +1,5 @@
 flowchart LR
-    tree[Window／Element Tree] --> canvas[CanvasRenderer]
-    canvas --> layers[Grid → Scene → Draft／Selection]
-    layers --> renderer[Shape／Text Renderer]
+    tree[Window / Element Tree] --> canvas[CanvasRenderer]
+    canvas --> layers[Grid → Scene → Draft / Selection]
+    layers --> renderer[Shape / Text Renderer]
     renderer --> gl[OpenGL]
-
-    classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
-    class tree,canvas,layers,renderer,gl step;

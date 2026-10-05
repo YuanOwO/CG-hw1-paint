@@ -8,7 +8,7 @@
 
 繪圖工具不會在 Mouse Down 時立刻修改 Document，而是先建立一個 draft。接下來的 Motion 只改變 draft 的座標並要求重畫，所以使用者可以立即看到預覽。直到 Mouse Up、DoubleClick 或 Enter 表示操作完成，Canvas 才把新物件交給 Document 與 Command History。圖~\ref{fig:drawing-lifecycle} 是 DragTool 和 PolygonTool 共用的主要流程。
 
-\begin{figure}[H]
+\begin{figure}[tbp]
     \centering
     \includegraphics[width=.98\textwidth]{docs/figures/ch04_drawing-lifecycle.png}
     \caption{繪圖工具與草稿的生命週期}
@@ -28,7 +28,7 @@ SelectTool 由 Scene 尾端向前搜尋，也就是先檢查最後繪製的物�
 
 \[
     t=\operatorname{clamp}\!\left(
-        \frac{(P-A)\cdot\vec{v}}{\vec{v}\cdot\vec{v}},\,0,\,1
+    \frac{(P-A)\cdot\vec{v}}{\vec{v}\cdot\vec{v}},\,0,\,1
     \right), \qquad
     d\!\left(P,\overline{AB}\right)=\left\lVert P-(A+t\vec{v})\right\rVert.
 \]

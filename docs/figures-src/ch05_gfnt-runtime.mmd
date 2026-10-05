@@ -3,6 +3,3 @@ flowchart LR
     decode --> glyph[Glyph Lookup<br/>metrics + bitmap]
     glyph --> pixels[套用文字顏色<br/>組成 RGBA]
     pixels --> render[OpenGL Bitmap Render]
-
-    classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
-    class utf8,decode,glyph,pixels,render step;

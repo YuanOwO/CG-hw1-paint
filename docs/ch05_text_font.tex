@@ -13,15 +13,15 @@
 \begin{figure}[tbp]
     \centering
     \includegraphics[width=.68\textwidth]{docs/figures/ch05_gfnt-chinese-output.png}
-    \caption{GFNT 在程式輸出中繪製「電腦圖學」的實際結果}
+    \caption{GFNT 在程式中測試多個中文字形的實際輸出結果}
     \label{fig:text-result}
 \end{figure}
 
-圖~\ref{fig:text-result} 是從程式實際輸出的圖片裁切而成，可確認四個中文字都能找到對應 Glyph，字元順序與基線也符合輸入內容。
+圖~\ref{fig:text-result} 是從程式實際輸出的圖片裁切而成，可確認多個中文字都能找到對應 Glyph，字元順序與基線也符合輸入內容。
 
 \subsection{UTF-8 與中文字元支援}
 
-UTF-8 decoder 支援 1--4 byte sequence，遇到不合法輸入時以 U+FFFD 取代。輸入框先將 UTF-8 轉成 code point 編輯，顯示時再重新編碼；TextRenderer 也使用相同流程逐字取得 glyph。
+UTF-8 decoder 支援 1--4 byte sequence，遇到不合法輸入時以 \lstinline|U+FFFD| 取代。輸入框先將 UTF-8 轉成 code point 編輯，顯示時再重新編碼；TextRenderer 也使用相同流程逐字取得 glyph。
 
 \subsection{自訂中文字型支援}
 
