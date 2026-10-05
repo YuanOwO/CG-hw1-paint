@@ -2,8 +2,12 @@ classDiagram
     direction LR
 
     PaintWindow *-- Document : owns
+    PaintWindow o-- CanvasElement : contains
+
     Document *-- Scene : owns
     Document *-- CommandHistory : owns
+
+    CanvasElement ..> Document : edits
 
     Scene "1" *-- "0..*" SceneObject : stores
 

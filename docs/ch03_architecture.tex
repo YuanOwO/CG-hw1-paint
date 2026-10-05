@@ -1,4 +1,5 @@
 \section{系統架構與設計}
+\label{sec:architecture}
 
 \subsection{整體架構}
 
@@ -17,7 +18,7 @@
 例如 Undo/Redo 只需要處理文件內容的修改，
 Renderer 也不需要知道物件是透過哪一種工具建立的。
 
-\begin{figure}[tbp]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=.96\textwidth]{docs/figures/ch03_architecture.png}
     \caption{繪圖程式的整體架構}
@@ -33,9 +34,9 @@ Renderer 也不需要知道物件是透過哪一種工具建立的。
 各視窗類別的繼承關係與 \lstinline|Application| 的管理關係
 如圖~\ref{fig:window-classes} 所示。
 
-\begin{figure}[tbp]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=.90\textwidth]{docs/figures/ch03-window-classes.png}
+    \includegraphics[width=.7\textwidth]{docs/figures/ch03-window-classes.png}
     \caption{Application 與視窗類別關係}
     \label{fig:window-classes}
 \end{figure}
@@ -84,7 +85,7 @@ FreeGLUT 的 menu callback 只提供整數 ID，
 圖~\ref{fig:document-classes} 整理了 \lstinline|PaintWindow|、
 \lstinline|Document| 與場景物件之間的擁有與繼承關係。
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=.96\textwidth]{docs/figures/ch03-document-classes.png}
     \caption{Document、Scene 與 Scene Object 類別關係}
@@ -131,7 +132,7 @@ Redo 則再次執行同一筆 Command。
 
 圖~\ref{fig:command-history} 整理了 Command History 的主要流程。
 
-\begin{figure}[tbp]
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=.92\textwidth]{docs/figures/ch03_command-history.png}
     \caption{Command、Undo 與 Redo 的資料流}
@@ -142,28 +143,40 @@ Redo 則再次執行同一筆 Command。
 \subsection{Rendering Pipeline}
 \label{sec:rendering-pipeline}
 
-當視窗需要重新顯示時，
-Element tree 會依照各自的局部座標進行 render。
-輪到 Canvas 時，
-\lstinline|CanvasRenderer| 會先繪製 Grid，
-接著按照 \lstinline|Scene| 中的順序繪製正式物件，
-再顯示目前工具尚未完成的 draft，
-最後才繪製 Select 的選取框。
+當視窗需要重新顯示時，Window 會從 Root Element 開始走訪 Element tree，
+並讓各個 Element 在自己的局部座標系中進行繪製。
+當流程進入 Canvas 時，後續的繪圖工作會交由
+\lstinline|CanvasRenderer| 處理。
 
-對於 \lstinline|Scene| 中的物件，
-\lstinline|SceneRenderer| 會先判斷物件種類，
-再交給對應的 Shape 或 Text renderer。
-圖形部分負責 Stroke 與 Fill，
-文字部分則處理字型與 Glyph 的顯示，
-最後才轉換成實際的 OpenGL 繪圖命令。
+Canvas 內的內容具有固定的前後順序。
+最先繪製的是背景 Grid，接著按照 \lstinline|Scene| 中的物件順序
+繪製已完成的圖形與文字；
+工具尚未完成的 draft 會疊在正式內容上方，
+最後才繪製 Select 工具的選取框。
+因此畫面由底到頂的合成順序為：
 
-這樣的繪製順序可以讓 Grid 保持在背景，
-正式內容位於中間，
-而工具預覽與選取提示始終顯示在最上層。
+\[
+    \text{Grid}
+    \;\rightarrow\;
+    \text{Scene Objects}
+    \;\rightarrow\;
+    \text{Tool Draft}
+    \;\rightarrow\;
+    \text{Selection Overlay}.
+\]
 
-整體 Rendering Pipeline 如圖~\ref{fig:render-pipeline} 所示。
+對於 \lstinline|Scene| 中的正式物件，
+\lstinline|SceneRenderer| 會依照物件類型將繪製工作分派給不同的 Renderer。
+\lstinline|ShapeRenderer| 負責幾何圖形的 Stroke 與 Fill，
+而 \lstinline|TextRenderer| 則負責文字與 Glyph 的繪製，
+最後再轉換成實際的 OpenGL 繪圖命令。
 
-\begin{figure}[tbp]
+這樣的設計將「畫面內容的前後層級」與「不同物件的繪製方式」分開處理：
+Canvas 決定各類內容的合成順序，
+而各 Renderer 則只負責如何將指定物件畫到畫面上。
+整體流程如圖~\ref{fig:render-pipeline} 所示。
+
+\begin{figure}[htbp]
     \centering
     \includegraphics[width=.98\textwidth]{docs/figures/ch03_render-pipeline.png}
     \caption{畫面渲染流程}

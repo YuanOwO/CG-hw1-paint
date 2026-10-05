@@ -16,18 +16,29 @@
 \fancyhead[R]{\leftmark}
 \fancyfoot[C]{\thepage}
 
-% 正文
+\pagenumbering{gobble}
+
+% 標題 & 目錄
 \maketitle
 
 \begingroup
+
+\hypersetup{linkcolor=black}
 \setlength{\columnsep}{2em}
 \setlength{\columnseprule}{0.2pt}
+
 \begin{multicols}{3}
     \scriptsize
     \tableofcontents
 \end{multicols}
+
 \endgroup
+
+% 正文
+
 \clearpage
+
+\pagenumbering{arabic}
 
 \input{docs/ch01_introduction.tex}
 \input{docs/ch02_manual.tex}
@@ -39,11 +50,11 @@
 \input{docs/ch09_challenges.tex}
 \input{docs/ch10_conclusion.tex}
 
+\clearpage
 \appendix
 
 \input{docs/app_a_gui.tex}
 \input{docs/app_b_gfnt.tex}
 \input{docs/app_c_framebuffer.tex}
-
 
 \end{document}

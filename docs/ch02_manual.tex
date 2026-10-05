@@ -1,19 +1,35 @@
 \section{使用者操作說明}
+\label{sec:manual}
 
 \subsection{主畫面}
 
-程式啟動後會建立主要繪圖視窗，中央區域為 Canvas，使用者可以直接在其中進行繪圖與物件選取。
-視窗底部的狀態列會顯示目前使用的工具、繪圖樣式、滑鼠在 Canvas 中的位置，以及目前 Canvas 的尺寸。
-預設工具為 Pencil，Grid 則預設使用 Lines 模式。
+程式啟動後會建立主要繪圖視窗，如圖~\ref{fig:main-window} 所示。
+視窗中央為 Canvas，使用者可以在其中繪製圖形、輸入文字或選取既有物件；
+底部的狀態列則顯示目前使用的工具、繪圖樣式、滑鼠在 Canvas 中的位置，
+以及 Canvas 的尺寸。預設繪圖工具為 Pencil，Grid 預設使用 Lines 模式。
 
-在 Canvas 上按下滑鼠右鍵可以開啟階層式選單，切換工具或調整各種繪圖屬性。
-圖~\ref{fig:main-window} 為程式的主畫面。
+在 Canvas 上按下滑鼠右鍵可以開啟階層式選單，
+用來切換繪圖工具及調整 Stroke、Fill、Point、Text 與 Grid 等屬性。
+圖~\ref{fig:window-with-menu} 展示了主畫面與階層式選單的實際操作畫面。
 
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\textwidth]{docs/figures/ch02_main_window.png}
-    \caption{繪圖程式主畫面}
-    \label{fig:main-window}
+
+    \begin{subfigure}[t]{.46\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{docs/figures/ch02_main_window.png}
+        \caption{繪圖程式主畫面}
+        \label{fig:main-window}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{docs/figures/ch02_window-with-menu.png}
+        \caption{主畫面與階層式選單}
+        \label{fig:window-with-menu}
+    \end{subfigure}
+
+    \caption{程式主畫面與階層式選單}
 \end{figure}
 
 
@@ -62,7 +78,6 @@
     \end{tabularx}
 \end{table}
 
-
 \subsection{繪圖屬性}
 
 程式可以分別設定圖形的 Stroke、Fill、Point 與 Text 屬性。
@@ -74,8 +89,7 @@ Fill 支援 \lstinline|OUTLINE|、\lstinline|FILLED| 與 \lstinline|ADVANCED| �
 
 Point Size 與 Stroke Width 可以透過右鍵選單調整，
 也可以利用中括號快捷鍵快速增加或減少大小。
-文字則可以選擇 FreeGLUT 或自訂的點陣字型。
-
+文字則可以選擇 FreeGLUT 內建字型或自製的點陣字型。
 
 \subsection{階層式選單}
 
@@ -89,12 +103,11 @@ Point Size 與 Stroke Width 可以透過右鍵選單調整，
     \item \textbf{Stroke}：設定線條顏色、寬度、Join 與 Cap。
     \item \textbf{Fill}：設定填滿模式與填色。
     \item \textbf{Point}：調整 Point Size。
-    \item \textbf{Text}：選擇文字字型。
+    \item \textbf{Text}：選擇文字字型與文字顏色。
     \item \textbf{Grid}：切換格線的顯示模式。
 \end{itemize}
 
 常用功能也提供鍵盤快捷鍵，因此不需要每次都透過選單操作。
-
 
 \subsection{快捷鍵與滑鼠操作}
 
@@ -124,12 +137,6 @@ Point Size 與 Stroke Width 可以透過右鍵選單調整，
     Primary+Shift+Z
         & Redo。                                       \\
 
-    C
-        & 清空目前畫布。                                     \\
-
-    G
-        & 依序切換 Lines、Dots 與 None 三種 Grid 模式。          \\
-
     Primary+N
         & 建立新文件；若目前內容尚未儲存，會先顯示確認視窗。                   \\
 
@@ -150,6 +157,12 @@ Point Size 與 Stroke Width 可以透過右鍵選單調整，
 
     Primary+R
         & 重新整理目前視窗，並重設鍵盤與滑鼠輸入狀態。                      \\
+
+    C
+        & 清空目前畫布。                                     \\
+
+    G
+        & 依序切換 Lines、Dots 與 None 三種 Grid 模式。          \\
 
     0   & 選擇 Select。                                  \\
     1   & 選擇 Pencil。                                  \\
@@ -175,24 +188,42 @@ Point Size 與 Stroke Width 可以透過右鍵選單調整，
 \end{longtable}
 }
 
-滑鼠左鍵主要用於繪圖與物件選取，右鍵則用來開啟階層式選單。
-使用 Select 時，若多個物件互相重疊，程式會優先選取視覺上最上層的物件；
-點擊空白處或按下 Esc 即可取消目前的選取。
-
-Line、Rectangle 與 Ellipse 在拖曳期間可以按住 Shift 限制形狀；
-Polygon 則可以利用雙擊或 Enter 完成，並可使用 Backspace 移除上一個頂點、
-Esc 取消本次繪製。
-
+滑鼠左鍵主要用於繪圖與物件選取，右鍵則用來開啟階層式選單。各繪圖工具的詳細滑鼠操作方式見表~\ref{tab:drawing-tools}。
 
 \subsection{視窗與對話框}
 
-程式可以同時建立多個繪圖視窗，每個視窗都有獨立的 Document 與 Undo/Redo 紀錄，
-彼此之間的繪圖內容不會互相影響。
+程式支援同時建立多個繪圖視窗。
+每個繪圖視窗都有各自獨立的 Document 與 Undo/Redo 紀錄，
+因此不同視窗中的繪圖內容與操作歷史不會互相影響。
 
-文字輸入、檔名輸入與確認操作會另外開啟對話框。
-當 Modal Dialog 開啟時，其他繪圖視窗會暫停接收使用者輸入，
+部分操作會另外開啟對話框。
+例如，Text 工具會使用文字輸入對話框取得使用者輸入的內容；
+執行可能捨棄目前文件內容的操作時，則會使用確認視窗詢問是否繼續。
+當 Modal Dialog 開啟期間，其他繪圖視窗會暫停接收使用者輸入，
 避免在對話框尚未處理完成時誤操作背景視窗。
 
 若目前文件仍有尚未儲存的修改，
-執行 New、Load 或 Close 等可能捨棄目前內容的操作時，
+執行 New、Load 或 Close 等操作時，
 程式會先顯示確認視窗，再由使用者決定是否繼續。
+
+圖~\ref{fig:dialogs} 顯示目前程式使用的兩種主要對話框：
+左側為未儲存文件的確認視窗，右側為 Text 工具使用的文字輸入對話框。
+
+\begin{figure}[htbp]
+    \centering
+
+    \begin{subfigure}[t]{.45\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{docs/figures/ch02_unsaved.png}
+        \caption{未儲存文件的確認視窗}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{.43\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{docs/figures/ch02_text-input.png}
+        \caption{文字輸入對話框}
+    \end{subfigure}
+
+    \caption{程式中的確認視窗與文字輸入對話框}
+    \label{fig:dialogs}
+\end{figure}
