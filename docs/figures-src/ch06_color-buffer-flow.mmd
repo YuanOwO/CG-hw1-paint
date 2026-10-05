@@ -1,12 +1,11 @@
 flowchart LR
-    display[畫面顯示回呼] --> dirty{內容已變更或<br/>快取尺寸不符？}
-    dirty -- 是 --> render[重新繪製 Element Tree]
-    render --> pending[標記 needsCapture = true]
-    pending --> timer[計時器呼叫 glReadPixels]
-    timer --> cache[可用的 ColorBuffer]
-    dirty -- 否：直接還原 --> cache
+    display[需要顯示畫面] --> dirty{內容是否改變？}
+    dirty -- 是 --> render[重新繪製<br/>並更新 ColorBuffer]
+    dirty -- 否 --> restore[由 ColorBuffer 還原]
+    render --> screen[顯示結果]
+    restore --> screen
 
     classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
     classDef decision fill:#fff9df,stroke:#806f27,color:#111,stroke-width:1px;
-    class display,render,pending,timer,cache step;
+    class display,render,restore,screen step;
     class dirty decision;

@@ -1,10 +1,10 @@
 flowchart LR
-    action[使用者操作] --> command[建立 Command]
-    command --> execute[執行 execute]
-    execute --> scene[修改 Scene]
-    execute -->|加入| undo[復原堆疊<br/>Undo Stack]
-    undo -->|復原 undo| redo[重做堆疊<br/>Redo Stack]
-    redo -->|重做 redo| undo
+    command[Command<br/>封裝一次操作] --> scene[Scene<br/>正式內容]
+    command --> undo[Undo Stack]
+    undo -->|Undo| redo[Redo Stack]
+    redo -->|Redo| undo
+    undo -. 還原 .-> scene
+    redo -. 重做 .-> scene
 
     classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
-    class action,command,execute,scene,undo,redo step;
+    class command,scene,undo,redo step;

@@ -20,11 +20,30 @@
 \subsection{物件選取與刪除}
 \label{sec:selection-delete}
 
-SelectTool 以目前 Scene 的物件順序進行命中測試。因為 Scene 尾端的物件最後繪製，工具會反向搜尋，讓重疊位置優先選到畫面最上層的物件。文字使用依字型寬高計算的矩形範圍；有可見填色的封閉圖形可從內部選取，透明或只有外框的圖形則依游標到各線段的距離判斷。判定容許範圍至少為 5 px，並隨 stroke width 或 point size 增加，使粗線與單點仍容易點中。
+SelectTool 由 Scene 尾端向前搜尋，也就是先檢查最後繪製的物件。一旦命中就停止搜尋，因此圖形重疊時會優先選到視覺上的最上層物件。文字物件以字型計算出的寬高建立矩形，點擊座標落在矩形內即為命中。
 
-選取後，工具 overlay 會提供包含筆畫寬度的 bounding box，CanvasRenderer 在 Scene 與 draft 之後畫出藍色虛線外框及四個角點。這些角點目前只用來標示範圍，尚未提供縮放功能。點擊空白處或按 Esc 會清除暫時的選取狀態，不會修改 Document。
+圖形物件先轉成頂點序列。對於「封閉且有可見填色」的圖形，程式以 ray-crossing（even--odd）測試點擊位置是否在多邊形內；每當向右的水平射線穿過一條邊就切換一次內外狀態。這使 Rectangle、Polygon，以及由 64 個 segment 近似的 Ellipse，都能從填色區域內部選取。
 
-按 Delete 或 Backspace 時，SelectTool 不直接改動 Scene，而是回傳 RemoveObjectAction。Canvas 將它交給 Document，以 RemoveObjectCommand 刪除並記住原本的物件索引，因此刪除操作會進入 Command History；Undo 能將物件放回原本的繪製層級，Redo 則再次刪除。
+只有外框或開放路徑時，則計算點擊點 $P$ 到每條線段 $\overline{AB}$ 的最短距離。令 $\vec{v}=B-A$，投影參數與距離為
+
+\[
+    t=\operatorname{clamp}\!\left(
+        \frac{(P-A)\cdot\vec{v}}{\vec{v}\cdot\vec{v}},\,0,\,1
+    \right), \qquad
+    d\!\left(P,\overline{AB}\right)=\left\lVert P-(A+t\vec{v})\right\rVert.
+\]
+
+若 $d\leq\tau$ 即判定命中，其中容差
+
+\[
+    \tau=\max\!\left(\frac{w}{2}+3,\,5\right)\ \text{px}
+\]
+
+會隨畫筆寬度 $w$ 增加，但至少保留 5 px，讓細線也容易點選；Point 物件則以 point size 代替 $w$。封閉圖形會額外檢查最後一點到第一點的邊，長度為零的線段則退化為與端點的距離比較。
+
+選取後，overlay 會在 Scene 與 draft 之上畫出 axis-aligned bounding box。該範圍由頂點的最小與最大座標取得，再向外擴張 $\max(w/2,2)$ px，避免粗畫筆被選取框截斷。
+
+Delete 或 Backspace 會產生 RemoveObjectAction，再由 Document 建立記住原始索引的 RemoveObjectCommand。因此刪除可進入歷史紀錄，Undo 也能恢復原本的繪製層級。
 
 \subsection{Stroke Rendering}
 \label{sec:stroke-rendering}
@@ -44,20 +63,23 @@ Advanced mode 不直接依賴 OpenGL 的內建粗線，而是自行產生 triang
 
 Canvas 的 Y 軸向下，因此程式中的結果大於 0 表示向右轉，小於 0 表示向左轉；這個符號接著用來選擇哪一側是外側。MITER 使用外側交點，BEVEL 用一個 triangle 截去尖角，ROUND 則補上一段 triangle fan arc。圖~\ref{fig:stroke-joins} 比較三種結果。
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=.82\textwidth]{docs/figures/ch04_stroke-join.png}
-    \caption{MITER、BEVEL 與 ROUND 接合方式比較；細線為中心線}
-    \label{fig:stroke-joins}
-\end{figure}
-
 開放路徑的端點只有一個方向。BUTT 直接停在原端點；SQUARE 沿線段方向再延伸 $h$；ROUND 則以端點為圓心補上半圓。三種結果如圖~\ref{fig:stroke-caps}。這些端點不是交給 \lstinline|glLineWidth()| 決定，而是由同一套 geometry 計算產生。
 
-\begin{figure}[H]
+\begin{figure}[tbp]
     \centering
-    \includegraphics[width=.76\textwidth]{docs/figures/ch04_stroke-cap.png}
-    \caption{BUTT、SQUARE 與 ROUND 端點樣式比較；虛線為原始端點}
-    \label{fig:stroke-caps}
+    \begin{subfigure}[t]{.52\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{docs/figures/ch04_stroke-join.png}
+        \caption{MITER、BEVEL 與 ROUND join}
+        \label{fig:stroke-joins}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{.43\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{docs/figures/ch04_stroke-cap.png}
+        \caption{BUTT、SQUARE 與 ROUND cap}
+        \label{fig:stroke-caps}
+    \end{subfigure}
+    \caption{自行產生的筆畫接合與端點；細線或虛線表示中心線}
 \end{figure}
 
 當兩段線形成很尖的角度時，外側 offset line 的交點可能離 $B$ 很遠。程式將這段距離記為 miter length $m$，並與 $hL$ 比較，其中 $L$ 是 miter limit，目前預設為 4：
@@ -68,25 +90,7 @@ Canvas 的 Y 軸向下，因此程式中的結果大於 0 表示向右轉，小�
 
 若 $m>hL$，即使使用者選擇 MITER，程式仍改用 BEVEL，避免出現過長的尖刺。圖~\ref{fig:miter-limit} 顯示這項判斷。
 
-程式碼~\ref{lst:miter-condition} 是 Renderer 中的實際判斷。只有選擇 MITER 且外側交點距離沒有超過限制時，才會保留兩側交點；其餘情況再依設定改畫 BEVEL 或 ROUND。
-
-\begin{lstlisting}[caption={Stroke Join 的 miter limit 判斷},label={lst:miter-condition}]
-const auto turn = cross(u, v);
-const bool turnRight = turn > 0.0f;
-
-Point outerInter = turnRight ? leftInter : rightInter;
-const GLfloat outerDistance = abs(outerInter - curr);
-const bool validMiter = style.join == LineJoin::MITER &&
-                        outerDistance <= h * style.miterLimit;
-
-if (validMiter) {
-    result.joinType = LineJoin::MITER;
-    result.inLeft = result.outLeft = leftInter;
-    result.inRight = result.outRight = rightInter;
-}
-\end{lstlisting}
-
-\begin{figure}[H]
+\begin{figure}[tbp]
     \centering
     \includegraphics[width=.92\textwidth]{docs/figures/ch04_miter-limit.png}
     \caption{Miter limit 的實際轉角案例；灰底表示筆畫寬度，藍線為中心線}
@@ -101,21 +105,8 @@ OUTLINE 與 FILLED 模式直接使用 OpenGL primitive 和 \lstinline|glPolygonM
 
 \subsection{座標系統}
 
-Window 收到 reshape callback 後，會將 viewport 設成新的視窗大小，再以 \lstinline|glOrtho(0, width, height, 0, -1, 1)| 建立 orthographic projection。這樣視窗左上角就是 $(0,0)$，X 向右增加、Y 向下增加，方向與 GLUT 傳入的滑鼠座標相同。工具不需要在每次滑鼠事件中翻轉 Y 軸，也比較容易直接用 pixel 理解線寬、點大小與游標位置。
-
-事件剛進入 Window 時使用的是視窗座標。Canvas 收到事件後，\lstinline|windowToLocal()| 會沿著 parent chain 逐層扣除每個 Element 的 bounds 左上角，得到以 Canvas 左上角為原點的局部座標；繪圖工具、SceneObject 與 Grid 都使用這套 Canvas 座標。反方向的 \lstinline|localToWindow()| 則逐層加回位移。由於目前 Element 沒有旋轉或縮放，這兩個轉換只需要處理平移。
-
-狀態列顯示的游標位置就是轉換後的 Canvas 座標，Canvas 尺寸也使用相同單位。這讓畫面上看到的位置、工具收到的座標與 SceneObject 儲存的頂點一致；只有讀寫 framebuffer 時需要另外處理 OpenGL 的左下角原點，相關內容放在第~\ref{sec:framebuffer} 節。
+程式以 \lstinline|glOrtho(0, width, height, 0, -1, 1)| 將 UI、滑鼠與 Scene 統一為左上角原點。Canvas 再沿 parent chain 將視窗座標轉成局部座標，因此工具收到的位置、Scene 儲存的頂點與狀態列顯示一致；只有 framebuffer pixel I/O 仍採 OpenGL 的左下角順序，細節見附錄~\ref{app:framebuffer-details}。
 
 \subsection{Grid}
 
-Grid 的用途是提供位置與距離的視覺參考，本身不會加入 Scene，也不會改變物件頂點，更沒有吸附功能。Lines 模式每隔 25 px 畫一條水平線和垂直線；Dots 模式改在相同交點畫 2 px 的點；None 則不畫格線。使用者可以從右鍵選單選擇模式，也可以按 G 依序切換。
-
-CanvasRenderer 先畫 Grid，再畫已提交的 SceneObject，最後才畫工具 overlay 中的 draft 與選取框。因此格線只留在背景，不會蓋住已完成的物件、拖曳中的預覽或選取提示。圖~\ref{fig:grid-coordinate} 左側用一組座標示範 \lstinline|windowToLocal()| 的結果，右側比較三種 Grid 模式與實際繪製順序。
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/ch04_grid-coordinate.png}
-    \caption{Canvas local 座標、Grid 模式與繪製順序}
-    \label{fig:grid-coordinate}
-\end{figure}
+Grid 只提供位置參考，不會加入 Scene 或改變物件頂點。Lines 與 Dots 模式都以 25 px 為間距，None 則不繪製；CanvasRenderer 會先畫 Grid，再畫 Scene、draft 與選取框，使格線保持在背景。

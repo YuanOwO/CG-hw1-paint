@@ -1,15 +1,9 @@
 flowchart LR
-    input[Window 收到輸入] --> capture{是否已捕捉滑鼠？}
-    capture -- 否 --> hit[從 RootElement<br/>遞迴執行 hitTest]
-    hit --> target[最深層的目標 Element]
-    capture -- 是 --> listener[呼叫目標的 Listener]
-    target --> listener
-    listener --> bubble[沿 parent chain<br/>向上傳到 Window]
-    listener -. stopPropagation .-> stop[停止向上傳遞]
+    input[Window Input] --> select{選擇事件目標}
+    select -- Capture／Hit Test --> listener[Target Listener]
+    listener --> bubble[沿 Parent Chain Bubbling<br/>stopPropagation 可中止]
 
     classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
     classDef decision fill:#fff9df,stroke:#806f27,color:#111,stroke-width:1px;
-    classDef stop fill:#fff1f1,stroke:#995050,color:#111,stroke-width:1px;
-    class input,hit,target,listener,bubble step;
-    class capture decision;
-    class stop stop;
+    class input,listener,bubble step;
+    class select decision;

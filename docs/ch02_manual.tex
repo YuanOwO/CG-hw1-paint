@@ -2,93 +2,195 @@
 
 \subsection{主畫面}
 
-主畫面中央是 drawing canvas，底部狀態列顯示目前工具、Stroke/Fill 或文字字型、滑鼠在 Canvas 中的位置與 Canvas 尺寸。Canvas 預設使用 Pencil，Grid 預設為 Lines。圖~\ref{fig:main-window} 為主畫面的成果展示位置，內容包含 Canvas、狀態列與右鍵選單。
+程式啟動後會建立主要繪圖視窗，中央區域為 Canvas，使用者可以直接在其中進行繪圖與物件選取。
+視窗底部的狀態列會顯示目前使用的工具、繪圖樣式、滑鼠在 Canvas 中的位置，以及目前 Canvas 的尺寸。
+預設工具為 Pencil，Grid 則預設使用 Lines 模式。
+
+在 Canvas 上按下滑鼠右鍵可以開啟階層式選單，切換工具或調整各種繪圖屬性。
+圖~\ref{fig:main-window} 為程式的主畫面。
 
 \begin{figure}[H]
     \centering
-    % 主畫面實際執行畫面放置位置
-    \fbox{\parbox[c][6cm][c]{0.85\textwidth}{
-            \centering 主畫面執行結果\\
-            畫布、階層式選單與狀態列
-        }}
+    \includegraphics[width=0.8\textwidth]{docs/figures/ch02_main_window.png}
     \caption{繪圖程式主畫面}
     \label{fig:main-window}
 \end{figure}
 
+
 \subsection{繪圖工具}
+
+目前提供 Select、Point、Pencil、Line、Rectangle、Ellipse、Polygon 與 Text 等工具，
+各工具的主要操作方式整理於表~\ref{tab:drawing-tools}。
 
 \begin{table}[H]
     \centering
-    \caption{目前工具與互動方式}
+    \caption{繪圖工具與操作方式}
     \label{tab:drawing-tools}
     \begin{tabularx}{\textwidth}{>{\bfseries}l X}
         \toprule
-        工具        & 操作方式                                                             \\
+        工具 & 操作方式                                      \\
         \midrule
-        Select    & 單擊選取最上層物件；Delete 或 Backspace 刪除，Esc 取消選取。                 \\
-        Point     & 左鍵單擊，在指定位置建立點；大小由 Point size 決定。                                 \\
-        Pencil    & 按住左鍵拖曳，工具依距離過濾過密取樣點，放開時提交 Path。                                  \\
-        Line      & 左鍵拖曳決定兩端點；按住 Shift 限制為水平、垂直或 45 度。                               \\
-        Rectangle & 左鍵拖曳決定對角；按住 Shift 以較大的軸向差建立正方形。                                  \\
-        Ellipse   & 左鍵拖曳決定外接矩形；按住 Shift 建立正圓。                                        \\
-        Polygon   & 單擊增加頂點，游標移動時更新最後一個 draft 點；雙擊或 Enter 完成。Backspace 移除最後一點，Esc 取消。 \\
-        Text      & 點擊放置 anchor，接著在 modal input dialog 輸入文字。                         \\
+        Select
+           & 單擊物件進行選取；Delete 或 Backspace 可刪除目前選取的物件，
+        Esc 或點擊空白處可取消選取。                               \\
+
+        Point
+           & 在 Canvas 上單擊建立一個點，點的大小由目前的 Point Size 決定。 \\
+
+        Pencil
+           & 按住滑鼠左鍵拖曳即可自由繪製，放開滑鼠後完成目前的 Path。           \\
+
+        Line
+           & 按住滑鼠左鍵拖曳決定線段的起點與終點；繪製時按住 Shift
+        可限制為水平、垂直或 $45^\circ$ 方向。                      \\
+
+        Rectangle
+           & 按住滑鼠左鍵拖曳決定矩形的兩個對角；按住 Shift 可限制為正方形。       \\
+
+        Ellipse
+           & 按住滑鼠左鍵拖曳決定橢圓的外接矩形；按住 Shift 可限制為正圓。        \\
+
+        Polygon
+           & 單擊滑鼠左鍵依序加入頂點，雙擊或按下 Enter 完成圖形。
+        Backspace 可移除上一個頂點，Esc 則取消本次繪製。                \\
+
+        Text
+           & 在欲放置文字的位置單擊後開啟文字輸入對話框，
+        輸入完成後將文字加入 Canvas。                             \\
+
         \bottomrule
     \end{tabularx}
 \end{table}
 
+
 \subsection{繪圖屬性}
 
-Stroke 可設定八種預設顏色、寬度，以及 MITER、BEVEL、ROUND 三種 Join。端點則有 BUTT、SQUARE、ROUND 三種 Cap。Fill 有 \lstinline|OUTLINE|、\lstinline|FILLED| 與 \lstinline|ADVANCED| 三種模式；其中 Advanced 會分開處理 Fill color 與自製 Stroke geometry。Point size 與 Stroke width 可由選單或中括號快捷鍵調整。Stroke、Fill 與 Text 選單中的 \lstinline|Custom...| callback 目前為空，因此不列為已完成功能。
+程式可以分別設定圖形的 Stroke、Fill、Point 與 Text 屬性。
 
-\subsection{Hierarchical Menu 操作}
+Stroke 可調整顏色、線寬，以及 MITER、BEVEL、ROUND 三種 Line Join；
+線段端點則提供 BUTT、SQUARE、ROUND 三種 Line Cap。
+Fill 支援 \lstinline|OUTLINE|、\lstinline|FILLED| 與 \lstinline|ADVANCED| 三種模式，
+其中 \lstinline|ADVANCED| 會分別處理填色與自製的粗線幾何。
 
-在 Canvas 上按右鍵可以開啟主選單。File 可建立、開啟、儲存與輸出檔案；Edit 提供 Undo、Redo 與清空畫布；Tools 用來切換繪圖工具。Stroke、Fill、Point、Text 與 Grid 則分別調整筆畫、填色、點大小、字型及格線。常用功能也能使用下一節列出的快捷鍵，不必每次都打開選單。
+Point Size 與 Stroke Width 可以透過右鍵選單調整，
+也可以利用中括號快捷鍵快速增加或減少大小。
+文字則可以選擇 FreeGLUT 或自訂的點陣字型。
+
+
+\subsection{階層式選單}
+
+在 Canvas 上按下滑鼠右鍵即可開啟主選單。
+選單依功能分成數個子選單：
+
+\begin{itemize}
+    \item \textbf{File}：建立文件、開啟文件、儲存及輸出圖片。
+    \item \textbf{Edit}：Undo、Redo 與清空目前畫布。
+    \item \textbf{Tools}：切換目前使用的繪圖或選取工具。
+    \item \textbf{Stroke}：設定線條顏色、寬度、Join 與 Cap。
+    \item \textbf{Fill}：設定填滿模式與填色。
+    \item \textbf{Point}：調整 Point Size。
+    \item \textbf{Text}：選擇文字字型。
+    \item \textbf{Grid}：切換格線的顯示模式。
+\end{itemize}
+
+常用功能也提供鍵盤快捷鍵，因此不需要每次都透過選單操作。
+
 
 \subsection{快捷鍵與滑鼠操作}
 
-程式在內部以 \lstinline|Primary| 表示作業系統慣用的主要修飾鍵。macOS 對應 \textbf{Command}，Windows 與 Linux 則對應 \textbf{Ctrl}。因此下表中的 \textbf{Primary+S}，在 macOS 要按 Command+S，在 Windows 或 Linux 要按 Ctrl+S。這個名稱只用來共用快捷鍵設定，畫面上實際按下的仍是各平台的按鍵。
+程式內部以 \lstinline|Primary| 表示各作業系統慣用的主要修飾鍵。
+在 macOS 上對應 Command，在 Windows 與 Linux 上則對應 Ctrl。
+例如表~\ref{tab:shortcuts} 中的 Primary+S，
+在 macOS 為 Command+S，在其他平台則為 Ctrl+S。
 
 {\small
 \begin{longtable}{>{\raggedright\arraybackslash}p{.275\textwidth} p{.65\textwidth}}
-    \caption{程式中已綁定的全部快捷鍵}\label{tab:shortcuts}                   \\
+    \caption{程式快捷鍵}\label{tab:shortcuts}              \\
     \toprule
-    快捷鍵             & 功能                                          \\
+    快捷鍵 & 功能                                          \\
     \midrule
     \endfirsthead
+
     \toprule
-    快捷鍵             & 功能                                          \\
+    快捷鍵 & 功能                                          \\
     \midrule
     \endhead
-    Primary+Z       & Undo；若工具還在繪製 draft，會先取消這次未完成的操作。            \\
-    Primary+Shift+Z & Redo。                                       \\
-    C               & 清空目前 Scene。                                 \\
-    G               & 依序切換 Lines、Dots、None 三種 Grid 模式。            \\
-    Primary+N       & 建立新檔案；若內容尚未儲存，先顯示確認視窗。                      \\
-    Primary+Shift+N & 建立另一個 PaintWindow。                          \\
-    Primary+O       & 開啟檔案。目前檔案內容的反序列化尚未完成。                       \\
-    Primary+S       & 儲存目前檔案。                                     \\
-    Primary+Shift+S & 另存新檔。                                       \\
-    Primary+E       & 透過獨立 render window 輸出 PPM P6。               \\
-    Primary+C       & 關閉目前視窗；有未儲存內容時先要求確認。                        \\
-    Primary+R       & 要求視窗重新顯示，並重設鍵盤與滑鼠的輸入狀態。                     \\
-    0               & 選擇 Select。                                  \\
-    1               & 選擇 Pencil。                                  \\
-    2               & 選擇 Line。                                    \\
-    3               & 選擇 Rectangle。                               \\
-    4               & 選擇 Ellipse。                                 \\
-    5               & 選擇 Polygon。                                 \\
-    6               & 選擇 Text。                                    \\
-    {[}             & Stroke width 與 Point size 減少 1 px，最小為 1 px。 \\
-    {]}             & Stroke width 與 Point size 增加 1 px。          \\
-    Shift+{[}       & Stroke width 與 Point size 減少 5 px，最小為 1 px。 \\
-    Shift+{]}       & Stroke width 與 Point size 增加 5 px。          \\
+
+    Primary+Z
+        & Undo；若目前仍有未完成的 draft，則先取消此次操作。              \\
+
+    Primary+Shift+Z
+        & Redo。                                       \\
+
+    C
+        & 清空目前畫布。                                     \\
+
+    G
+        & 依序切換 Lines、Dots 與 None 三種 Grid 模式。          \\
+
+    Primary+N
+        & 建立新文件；若目前內容尚未儲存，會先顯示確認視窗。                   \\
+
+    Primary+Shift+N
+        & 建立新的繪圖視窗。                                   \\
+
+    Primary+O
+        & 開啟文件。                                       \\
+
+    Primary+S
+        & 儲存目前文件。                                     \\
+
+    Primary+Shift+S
+        & 另存新檔。                                       \\
+
+    Primary+E
+        & 將目前 Canvas 輸出為 PPM P6 圖片。                   \\
+
+    Primary+R
+        & 重新整理目前視窗，並重設鍵盤與滑鼠輸入狀態。                      \\
+
+    0   & 選擇 Select。                                  \\
+    1   & 選擇 Pencil。                                  \\
+    2   & 選擇 Line。                                    \\
+    3   & 選擇 Rectangle。                               \\
+    4   & 選擇 Ellipse。                                 \\
+    5   & 選擇 Polygon。                                 \\
+    6   & 選擇 Text。                                    \\
+
+    {[}
+        & Stroke Width 與 Point Size 減少 1 px，最小為 1 px。 \\
+
+    {]}
+        & Stroke Width 與 Point Size 增加 1 px。          \\
+
+    Shift+{[}
+        & Stroke Width 與 Point Size 減少 5 px，最小為 1 px。 \\
+
+    Shift+{]}
+        & Stroke Width 與 Point Size 增加 5 px。          \\
+
     \bottomrule
 \end{longtable}
 }
 
-滑鼠左鍵負責繪圖或選取，右鍵開啟 menu。Select 會從最後繪製的物件開始搜尋，因此重疊時優先選到視覺上最上層的物件；點擊空白處或按 Esc 可取消選取。Line、Rectangle 與 Ellipse 在拖曳時可按住 Shift 限制形狀；Polygon 可用雙擊或 Enter 完成，並可用 Backspace 移除最後一個頂點、Esc 取消這次繪製。
+滑鼠左鍵主要用於繪圖與物件選取，右鍵則用來開啟階層式選單。
+使用 Select 時，若多個物件互相重疊，程式會優先選取視覺上最上層的物件；
+點擊空白處或按下 Esc 即可取消目前的選取。
+
+Line、Rectangle 與 Ellipse 在拖曳期間可以按住 Shift 限制形狀；
+Polygon 則可以利用雙擊或 Enter 完成，並可使用 Backspace 移除上一個頂點、
+Esc 取消本次繪製。
+
 
 \subsection{視窗與對話框}
 
-New Window 會建立另一個繪圖視窗，而且每個視窗各自保有 Document 與操作紀錄。文字輸入、檔名輸入與覆寫確認都使用相同的 Element、Layout 與 Event 系統。當 Modal Dialog 開啟時，其他視窗會暫停接收使用者輸入，避免使用者同時操作背景視窗。若 Document 還有未儲存的修改，New、Load 與 Close 也會先顯示確認視窗。
+程式可以同時建立多個繪圖視窗，每個視窗都有獨立的 Document 與 Undo/Redo 紀錄，
+彼此之間的繪圖內容不會互相影響。
+
+文字輸入、檔名輸入與確認操作會另外開啟對話框。
+當 Modal Dialog 開啟時，其他繪圖視窗會暫停接收使用者輸入，
+避免在對話框尚未處理完成時誤操作背景視窗。
+
+若目前文件仍有尚未儲存的修改，
+執行 New、Load 或 Close 等可能捨棄目前內容的操作時，
+程式會先顯示確認視窗，再由使用者決定是否繼續。

@@ -1,26 +1,6 @@
 \section{特殊貢獻摘要}
 
-除了題目要求的基本 drawing panel，我另外完成了幾項和程式結構或繪圖效果有關的功能。前面章節已經說明過實作細節，因此這裡只整理各項功能的目的與對應章節。
-
-\begin{table}[H]
-    \centering
-    \caption{特殊功能摘要}
-    \label{tab:contribution-summary}
-    \begin{tabularx}{\textwidth}{>{\bfseries}l X l}
-        \toprule
-        特殊功能            & 簡要說明                                                      & 詳細章節                           \\
-        \midrule
-        Undo / Redo     & 以 Command History 保留操作，並用 state ID 判斷 Document 是否回到已儲存狀態。 & 第~\ref{sec:command-history} 節  \\
-        物件選取與刪除        & 依圖形幾何與文字範圍做 hit test，顯示選取框，刪除可 Undo/Redo。             & 第~\ref{sec:selection-delete} 節 \\
-        Multi-window    & 以 Window ID 找回 C++ instance，並讓 Modal Dialog 暫停背景視窗輸入。     & 附錄~\ref{app:gui}               \\
-        Advanced Stroke & 自行計算 Join、Cap 與 Miter Limit 所需的 triangle geometry。        & 第~\ref{sec:stroke-rendering} 節 \\
-        自製 GUI          & 實作 Element tree、Layout、Event bubbling 與 mouse capture。    & 附錄~\ref{app:gui}               \\
-        GFNT            & 自行處理 UTF-8、Glyph lookup 與 bitmap font rendering。          & 附錄~\ref{app:gfnt}              \\
-        \bottomrule
-    \end{tabularx}
-\end{table}
-
-這些功能都直接服務於繪圖程式：Command History 讓操作可以復原，SelectTool 補上物件層級的互動，GUI framework 支撐多視窗與 Dialog，Stroke geometry 改善粗線外觀，GFNT 則補上中文顯示。它們沒有改變作業的核心目標，但讓我可以實際處理較完整的互動與 rendering 問題。
+除了基本 drawing panel，我另外完成可判斷儲存狀態的 Undo／Redo、物件選取與可復原刪除、多視窗與 Modal Dialog、自製 GUI framework、Advanced Stroke，以及支援 UTF-8 中文的 GFNT renderer。這些功能分別改善操作完整性、粗線品質與文字能力；核心實作見第~\ref{sec:command-history}、\ref{sec:selection-delete}、\ref{sec:stroke-rendering} 節及附錄~\ref{app:gui}、\ref{app:gfnt}。
 
 \section{成果展示與作業需求驗證}
 
@@ -28,30 +8,37 @@
 
 圖~\ref{fig:drawing-result} 集中呈現 Point、Pencil、Line、Rectangle、Ellipse、Polygon 與 Text 的操作結果，並比較不同 Fill、Stroke、Join、Cap 與 Grid 設定。
 
-\begin{figure}[H]
-    \centering
-    % 基本與進階繪圖成果的實際畫面放置位置
-    \fbox{\parbox[c][7cm][c]{0.88\textwidth}{
-            \centering 綜合繪圖成果\\
-            點／鉛筆／直線／矩形／橢圓／多邊形／文字\\
-            不同筆畫、填滿、接合方式、端點樣式與格線
-        }}
-    \caption{基本工具與進階筆畫樣式的繪圖成果}
-    \label{fig:drawing-result}
-\end{figure}
-
 \subsection{進階功能成果}
 
 圖~\ref{fig:text-result} 顯示文字輸入，圖~\ref{fig:ppm-result} 對照 Canvas 與 PPM 輸出。圖~\ref{fig:multiwindow-result} 則呈現兩個 PaintWindow 和 Confirm Dialog，用來觀察不同視窗的 Document 是否彼此獨立，以及 Dialog 開啟時背景視窗的輸入狀態。
 
 \begin{figure}[H]
     \centering
-    % 多視窗與對話框的實際畫面放置位置
-    \fbox{\parbox[c][5cm][c]{0.82\textwidth}{
-            \centering 兩個 PaintWindow 與確認對話框
-        }}
-    \caption{多視窗與確認對話框}
-    \label{fig:multiwindow-result}
+    \begin{subfigure}[t]{.38\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{docs/figures/ch06_ppm-output.png}
+        \caption{只保留 Scene 的 PPM 輸出}
+        \label{fig:ppm-result}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{.36\textwidth}
+        \centering
+        \fbox{\parbox[c][4.2cm][c]{.90\linewidth}{
+                \centering 綜合繪圖成果\\
+                點／鉛筆／直線／矩形／橢圓／多邊形／文字\\
+                不同筆畫、填滿、接合、端點與格線
+            }}
+        \caption{基本工具與進階筆畫樣式}
+        \label{fig:drawing-result}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{.21\textwidth}
+        \centering
+        \fbox{\parbox[c][4.2cm][c]{.82\linewidth}{
+                \centering 兩個 PaintWindow\\與確認對話框
+            }}
+        \caption{多視窗與確認對話框}
+        \label{fig:multiwindow-result}
+    \end{subfigure}
+    \caption{基本繪圖與進階功能成果}
 \end{figure}
 
 \subsection{Requirement Checklist}

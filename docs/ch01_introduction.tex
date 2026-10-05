@@ -2,14 +2,32 @@
 
 \subsection{作業目標}
 
-本次作業的目標為利用 OpenGL 與 FreeGLUT 實作一套互動式 2D Drawing Panel，讓使用者可以透過滑鼠與鍵盤在視窗中繪製基本幾何圖形與文字，並利用選單調整顏色、線寬、點大小及填滿模式等繪圖屬性。作業也要求程式處理 keyboard、mouse、window 與 motion event，並利用 Color Buffer 儲存及恢復畫面內容。
+本次作業的目標是使用 C++17、OpenGL 與 FreeGLUT 實作一套互動式 2D Drawing Panel。
+使用者可以透過滑鼠與鍵盤繪製基本幾何圖形與文字，並利用階層式選單調整顏色、
+線寬、點大小、填滿模式與字型等繪圖屬性。此外，程式也需要處理 keyboard、
+mouse、window 與 motion event，並利用 Color Buffer 保存與恢復畫面內容。
 
-在完成基本要求的過程中，我希望程式不只是由大量 GLUT callback 與全域變數組成，因此將視窗、Event、繪圖物件、Document 與 Renderer 等功能分開。最後完成的程式命名為 \textbf{Graphtoria}，使用 C++17、OpenGL 與 FreeGLUT 實作。
+本次完成的繪圖程式命名為 \textbf{Graphtoria}。
+除了作業要求的基本繪圖功能外，目前也加入 Select、Undo/Redo、Grid、多視窗、
+文字輸入對話框與 PPM 圖片輸出等功能。其中 Select 可以選取畫面中最上層的圖形
+或文字、顯示選取範圍，並透過可復原的 Command 刪除物件。
 
-目前程式支援 Select、Point、Pencil、Line、Rectangle、Ellipse、Polygon 與 Text 等工具，也能設定線條顏色、粗細、Join、Cap 與 Fill mode。Select 可以選取最上層圖形或文字、顯示範圍框，並透過可復原的 Command 刪除物件。另外加入 Undo/Redo、Grid、多視窗、文字輸入對話框、Color Buffer cache 與 PPM 圖片輸出等功能。尚未完成的部分集中在第~\ref{sec:limitations} 節說明。
+在實作過程中，我也希望各項功能不要全部集中在 GLUT callback 與全域狀態中，
+因此將視窗管理、使用者輸入、繪圖資料與畫面渲染分開處理。這些設計除了讓程式
+較容易整理，也使後續加入多視窗、Undo/Redo 與物件選取等功能時，不必重新修改
+整個繪圖流程。
+
 
 \subsection{系統概述}
 
-程式啟動時會先載入兩個 GFNT 字型，再建立主要繪圖視窗。畫面中央是可伸縮的 Canvas，底部狀態列顯示目前工具、滑鼠位置與畫布大小；按下右鍵則可開啟工具與屬性選單。滑鼠或鍵盤輸入進入程式後，會先轉成 Event，再由 Element tree 找出接收事件的元件。
+程式啟動後會先載入繪圖所需的字型資源，再建立主要繪圖視窗。主畫面中央為
+Canvas，底部狀態列顯示目前使用的工具、滑鼠位置與畫布大小；在 Canvas 上按下
+滑鼠右鍵則可以開啟階層式選單，切換繪圖工具或調整各種繪圖屬性。
 
-繪圖時，工具會先建立暫時的 draft，讓使用者在拖曳過程中看到預覽。操作完成後，物件才會透過 Command 加入 Scene，所以 Undo/Redo 只需要處理 Document 的變化，不必知道每一種工具如何收集滑鼠座標。顯示時則依序畫出 Grid、Scene 內容、尚未完成的工具預覽與選取框。
+使用者進行繪圖時，工具會先建立暫時的 draft，並隨著滑鼠移動更新內容，讓使用者
+可以即時看到目前的繪製結果。當操作完成後，物件才會正式加入 Scene，並透過
+Command 記錄這次修改，因此 Undo/Redo 不需要知道各種工具實際如何收集滑鼠輸入。
+
+畫面顯示時，程式會依序繪製 Grid、Scene 中已完成的物件、尚未完成的工具預覽，
+以及目前的選取範圍。滑鼠與鍵盤輸入則先由視窗轉換成程式內部的 Event，再交由
+對應的 UI 元件或 Canvas 處理。整體架構與各模組之間的關係將在後續章節進一步說明。

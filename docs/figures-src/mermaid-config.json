@@ -2,7 +2,7 @@
     "theme": "base",
     "themeVariables": {
         "fontFamily": "Noto Sans CJK TC, Arial, sans-serif",
-        "fontSize": "15px",
+        "fontSize": "18px",
         "primaryColor": "#f4f6fb",
         "primaryBorderColor": "#49566b",
         "primaryTextColor": "#111111",

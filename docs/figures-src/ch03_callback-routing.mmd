@@ -1,12 +1,10 @@
 flowchart LR
-    callback[FreeGLUT 回呼<br/>滑鼠／鍵盤／畫面顯示]
-    static[Window 靜態回呼]
-    lookup[取得目前 GLUT 視窗 ID<br/>查找 Window]
-    event[建立視窗或輸入 Event]
-    routing[命中測試／焦點／滑鼠捕捉]
-    dispatch[分派給 Element<br/>並沿父節點向上傳遞]
+    glut[FreeGLUT<br/>原始 callback]
+    registry[Window Registry<br/>依 ID 找到視窗]
+    event[Event System<br/>統一輸入狀態]
+    target[Window／Element<br/>處理事件]
 
-    callback --> static --> lookup --> event --> routing --> dispatch
+    glut --> registry --> event --> target
 
     classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
-    class callback,static,lookup,event,routing,dispatch step;
+    class glut,registry,event,target step;

@@ -1,26 +1,14 @@
-classDiagram
-    class Application
-    class Window
-    class RootElement
-    class EventTarget
-    class Element
-    class StackPanel
-    class DockPanel
-    class CanvasElement
-    class TextElement
-    class InputElement
-    class Button
-    class RenderContext
+flowchart LR
+    app[Application<br/>管理多個視窗]
+    window[Window<br/>生命週期與輸入]
+    tree[Element Tree<br/>介面結構]
+    layout[Layout Controls<br/>配置元件]
+    services[Event／Render Services]
 
-    Application "1" *-- "多個" Window : 擁有
-    Window "1" *-- "1" RootElement : 擁有
-    EventTarget <|-- Window
-    EventTarget <|-- Element
-    Element <|-- RootElement
-    Element <|-- StackPanel
-    Element <|-- DockPanel
-    Element <|-- CanvasElement
-    Element <|-- TextElement
-    Element <|-- InputElement
-    Element <|-- Button
-    Element --> RenderContext : 繪製
+    app --> window --> tree
+    tree --> layout
+    window --> services
+    tree --> services
+
+    classDef component fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
+    class app,window,tree,layout,services component;

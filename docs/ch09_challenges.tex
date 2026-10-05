@@ -2,36 +2,16 @@
 
 \subsection{GLUT Callback 與多視窗狀態}
 
-剛開始實作時，最直接的寫法是在 GLUT callback 裡讀取滑鼠位置、修改目前圖形，再呼叫 OpenGL 重畫。單一視窗與少量工具時還能維持，但加入對話框和多視窗後就出現問題：FreeGLUT 的 callback 不會附帶 C++ object pointer，同一組 static callback 也可能由不同視窗觸發。如果只靠全域變數記錄「目前視窗」，輸入很容易被送到錯誤的 Document。
+FreeGLUT callback 不會附帶 C++ object pointer，同一組 static callback 又可能由不同視窗觸發。程式因此維護 GLUT window ID 到 \lstinline|Window*| 的查找表，每次先辨識來源再轉交對應物件；Menu 也以 ID 對應實際動作。這層 routing 讓後續 Event、Element 與 Document 不必依賴全域的「目前視窗」，完整生命週期見附錄~\ref{app:gui}。
 
-我的處理方式是保留 GLUT window ID 到 \lstinline|Window*| 的查找表。每個 static callback 先用 \lstinline|glutGetWindow()| 找出來源，再轉交給對應的 Window。FreeGLUT menu 只會回傳整數 ID，因此 Menu 也建立自己的 ID 對照。視窗關閉時先移除這些 ID；timer callback 執行前則再次確認目標是否仍存在。這層 routing 讓 GLUT 保持在最外圍，後面的 Event、Element 與 Document 不需要知道 callback 是 static function。
+\subsection{Draft 與 Undo／Redo}
 
-\subsection{從原始輸入整理出可用的 Event}
-
-GLUT 提供的是 MouseDown、MouseUp、Motion 和鍵盤 callback，但繪圖工具實際需要 Click、DoubleClick、drag、focus 與 mouse capture。另一個限制是，游標拖出 Canvas 後，單靠 hit test 會把後續 Motion 送到別的 Element，最後的 MouseUp 也可能回不到原工具，留下尚未結束的 draft。
-
-因此 Window 先記錄 keyboard、mouse、focus、hover 與 click history，再把 callback 資料轉成 Event。按下與放開的位置相差不超過 4 px 才算 Click；兩次 Click 的時間不超過 300 ms 且位置接近時才產生 DoubleClick。Canvas 在 MouseDown 後取得 mouse capture，使後續 MouseMove 與 MouseUp 固定回到同一個元件；Element 從 tree 移除時，Window 也會清除落在該子樹中的 focus、hover 與 capture pointer。這些機制完成後，各個 Tool 才能用一致的事件流程處理互動。
-
-\subsection{Layout、座標與 Framebuffer 的方向差異}
-
-UI、滑鼠與 Scene 都採左上角原點、Y 向下，但 OpenGL framebuffer 的 pixel row 從左下角開始。一般繪圖可以用 orthographic projection 對齊 GLUT 座標，Element 再透過 parent bounds 把視窗座標轉成局部座標；讀回 ColorBuffer 或輸出 PPM 時，卻仍要處理 framebuffer 的 row order。若直接依讀回順序寫檔，圖片就會上下顛倒。
-
-我把 Element 的位置計算分成 measure 和 arrange，並要求 render 與 hit test 前先完成需要的 Layout。ColorBuffer 則單獨儲存 framebuffer 內容，輸出 PPM 時反向走訪 pixel rows。Timer 需要擷取畫面時，會先切換到指定的 GLUT window；完成後只有在原本的 window ID 仍有效時才切回。這樣多視窗、命中測試和圖片輸出可以共用座標定義，又不會忽略 OpenGL pixel I/O 的方向。
-
-\subsection{讓操作可以預覽，也可以 Undo / Redo}
-
-拖曳矩形或直線時需要即時預覽，但若每次 Motion 都直接加入 Scene，Undo history 會累積大量中間狀態；Polygon 又要跨越多次 Click 才能完成，不能套用單純的 MouseDown/MouseUp 流程。我最後把尚未完成的圖形留在 Tool 的 draft 中，Renderer 把它當成 overlay 畫在 Scene 後面。只有 Tool 回傳完成的物件時，Document 才建立 Command 並修改 Scene。
-
-這項分工也解決了取消操作的問題。繪圖中按 Undo 時，Canvas 先取消 draft；沒有 draft 時才復原上一個 Command。新的 Command 執行後會清除 redo stack，而 Document 以 state ID 判斷內容是否回到上次儲存的狀態。如此一來，預覽、正式資料與操作紀錄各自有清楚的生命週期。
+拖曳需要即時預覽，但若每次 Motion 都修改 Scene，Undo history 會累積大量中間狀態。程式將未完成圖形保留在 Tool 的 draft，由 Renderer 畫成 overlay；只有操作完成時，Document 才建立 Command 並修改 Scene。繪圖中按 Undo 會先取消 draft，沒有 draft 時才復原上一筆 Command，使預覽、正式資料與歷史紀錄各自有清楚的生命週期。
 
 \subsection{粗線轉角的幾何例外}
 
-自行產生粗線 triangle 時，直線本身不難，真正麻煩的是轉角。角度很尖時，兩條外側 offset line 的交點會離頂點很遠；接近 180 度折返或 segment 太短時，內側交點也可能不穩定。如果直接接受所有交點，畫面會出現長尖刺或互相交錯的 triangle。
+自行產生粗線 triangle 時，尖角會讓外側交點離頂點過遠，接近 180 度折返或短 segment 也可能造成不穩定交點。程式先移除重複點，再以 cross product 與 dot product 區分情況；MITER 超過 miter limit 時退回 BEVEL，內側交點也設距離上限。求交失敗時則使用不依賴遠端交點的 BEVEL 或 ROUND 畫法，避免快速繪製短折線時出現尖刺與交錯 triangle。
 
-程式先移除相鄰的重複點，再用 cross product 與 dot product 區分同向、一般轉彎和折返。MITER 只有在 miter length 不超過半線寬乘上 miter limit 時才使用，否則退回 BEVEL；內側交點也依附近 segment 長度設定距離上限。求交失敗時，BEVEL 與 ROUND 各自有不依賴遠端交點的替代畫法。這些條件不是為了增加選項，而是避免使用者快速畫出短折線時產生明顯破圖。
+\subsection{UTF-8 與 GFNT 資料}
 
-\subsection{文字輸入與 GFNT 資料檢查}
-
-FreeGLUT 的一般 keyboard callback 一次提供一個 byte，無法直接當成完整的 UTF-8 字元。若輸入框又用 byte index 移動 caret，Backspace 可能只刪掉中文字的一部分。我的做法是把編輯中的文字轉成 code point vector，caret index 放在字元之間，顯示時才重新編碼成 UTF-8。Glyph 寬度則由目前 FontStyle 計算，讓 caret 能跟著實際顯示位置移動。
-
-GFNT Loader 也不能直接假設檔案內容正確。它先逐欄讀取 little-endian 數值，確認 Header 和 Glyph Table 沒有超出檔案，再檢查 code point 排序、Unicode 合法範圍與每張 bitmap 的邊界。完成載入時的一次性檢查後，render loop 才使用 binary search 查找 Glyph。這讓文字繪製的主要路徑保持簡單，也能在字型檔損壞時提早停止，而不是等到 OpenGL 讀取錯誤位置才出現問題。
+FreeGLUT 的一般 keyboard callback 一次只提供一個 byte，若直接用 byte index 編輯，Backspace 可能切斷中文字。輸入框因此以 code point vector 保存文字，顯示時才重新編碼為 UTF-8。GFNT Loader 則在載入時檢查 Header、Glyph Table、Unicode 範圍、排序與 bitmap 邊界，render loop 只需 binary search glyph；格式與驗證流程見附錄~\ref{app:gfnt}。

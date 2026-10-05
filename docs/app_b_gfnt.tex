@@ -67,6 +67,15 @@ Loader 先取得檔案大小，確認至少能容納 16-byte header，再逐欄�
 
 UTF-8 decoder 會檢查 sequence 長度、continuation bytes、最小合法值、最大 code point 與 surrogate，遇到錯誤時消耗一個 byte 並回傳 U+FFFD。Glyph Table 在載入時已確認順序，因此查找時使用 \lstinline|std::lower_bound|；若找不到原字元，再依序嘗試 U+FFFD 與問號。圖~\ref{fig:gfnt-glyph-lookup} 對應 \lstinline|findGlyphOrFallback()| 的實際查找順序；三次都找不到時，Renderer 以 header 的 pixel size 推進 pen，而不繪製 bitmap。
 
+輸入框的 caret index 記錄在 Unicode code point 之間，而不是 UTF-8 byte 之間。圖~\ref{fig:utf8-caret} 以「A你B」說明兩者差異，因此刪除「你」時會移除一個完整 code point。
+
+\begin{figure}[tbp]
+    \centering
+    \includegraphics[width=.96\textwidth]{docs/figures/ch05_utf8-caret.png}
+    \caption{UTF-8 bytes、code point 與 caret index 的對應}
+    \label{fig:utf8-caret}
+\end{figure}
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=.9\textwidth]{docs/figures/app_b_gfnt-glyph-lookup.png}

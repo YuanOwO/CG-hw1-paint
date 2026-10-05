@@ -1,14 +1,10 @@
 flowchart LR
-    cp[解碼後的 code point] --> exact{findGlyph<br/>是否完全相符？}
-    exact -- 是 --> glyph[使用找到的 Glyph]
-    exact -- 否 --> replacement{是否找到 U+FFFD？}
-    replacement -- 是 --> glyph
-    replacement -- 否 --> question{是否找到問號？}
-    question -- 是 --> glyph
-    question -- 否 --> advance[不繪製內容<br/>依 pixelSize 推進]
-    glyph --> metrics[使用 bearing、尺寸、<br/>bitmapOffset 與 advanceX]
+    cp[Unicode Code Point] --> lookup[在排序表中查找]
+    lookup --> fallback[Fallback Policy<br/>原字元 → U+FFFD → 問號]
+    fallback --> found[找到：使用 Glyph<br/>metrics + bitmap]
+    fallback --> missing[未找到：只推進游標]
 
     classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
     classDef decision fill:#fff7df,stroke:#8a6d1f,color:#111,stroke-width:1px;
-    class cp,glyph,advance,metrics step;
-    class exact,replacement,question decision;
+    class cp,lookup,found,missing step;
+    class fallback decision;

@@ -359,7 +359,7 @@ void PaintWindow::setupShortcuts() {
     _shortcutManager.bind({Mod::Primary, Key::S}, [this]() { saveFile(); });
     _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::S}, [this]() { saveFileAs(); });
     _shortcutManager.bind({Mod::Primary, Key::E}, [this]() { exportFile(); });
-    _shortcutManager.bind({Mod::Primary, Key::C}, [this]() { requestClose(); });
+    // _shortcutManager.bind({Mod::Primary, Key::C}, [this]() { requestClose(); });
     _shortcutManager.bind({Mod::Primary, Key::R}, [this]() {
         requestCachedRedisplay();
         resetInputState();

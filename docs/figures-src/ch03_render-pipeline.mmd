@@ -1,10 +1,8 @@
 flowchart LR
-    window[Window::render] --> root[RootElement]
-    root --> canvas[CanvasElement]
-    canvas --> canvasRenderer[CanvasRenderer<br/>網格／Scene／草稿／選取框]
-    canvasRenderer --> sceneRenderer[SceneRenderer]
-    sceneRenderer --> leaf[ShapeRenderer／TextRenderer]
-    leaf --> gl[OpenGL]
+    tree[Window／Element Tree] --> canvas[CanvasRenderer]
+    canvas --> layers[Grid → Scene → Draft／Selection]
+    layers --> renderer[Shape／Text Renderer]
+    renderer --> gl[OpenGL]
 
     classDef step fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
-    class window,root,canvas,canvasRenderer,sceneRenderer,leaf,gl step;
+    class tree,canvas,layers,renderer,gl step;

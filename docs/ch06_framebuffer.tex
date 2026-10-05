@@ -1,48 +1,19 @@
 \section{Framebuffer 與輸出}
 \label{sec:framebuffer}
 
-\subsection{Color Buffer}
+\subsection{Color Buffer 與畫面還原}
 
-ColorBuffer 以 RGBA 格式儲存 framebuffer，每個 channel 使用 1 byte。擷取時，程式先把 UI 的左上角座標換成 OpenGL 的左下角座標，再從 single-buffer 的 front buffer 呼叫 \lstinline|glReadPixels()|。還原畫面前會暫時關閉 blending、depth、stencil、scissor 與 alpha test，接著用 \lstinline|glDrawPixels()| 寫回像素。函式結束前會還原 PACK/UNPACK alignment 與其他 OpenGL state，避免影響後續繪圖。
+ColorBuffer 以 RGBA 儲存 framebuffer，透過 \lstinline|glReadPixels()| 擷取畫面，再以 \lstinline|glDrawPixels()| 還原。Window 分別記錄「內容需要重畫」與「畫面需要重新擷取」兩種狀態：Scene 或版面改變時先重畫 Element tree，畫面穩定後再更新 cache；若只是視窗重新曝光，則直接還原像素。圖~\ref{fig:color-buffer-flow} 顯示狀態轉換，座標、pixel row 與 OpenGL state 的處理詳見附錄~\ref{app:framebuffer-details}。
 
-圖~\ref{fig:framebuffer-coordinate} 顯示同一個擷取區域在兩套座標中的位置。UI 以左上角為原點，但 \lstinline|glReadPixels()| 的位置必須從 framebuffer 左下角計算，因此程式使用視窗高度、區域上緣與區域高度求出 \lstinline|bottom|。讀回的 pixels 仍由下往上排列，座標轉換本身不會翻轉資料。
-
-\begin{figure}[H]
+\begin{figure}[tbp]
     \centering
-    \includegraphics[width=.94\textwidth]{docs/figures/ch06_framebuffer-coordinate.png}
-    \caption{UI 與 OpenGL framebuffer 的座標及 pixel row 順序}
-    \label{fig:framebuffer-coordinate}
-\end{figure}
-
-\subsection{Display Restore}
-
-Window 會分別記錄「內容需要重畫」與「畫面需要重新擷取」兩種狀態。內容改變或 cache 尺寸不符時，display callback 先重畫整棵 Element tree；等畫面完成而且沒有新的修改後，timer 才把 framebuffer 存入 ColorBuffer。下一次若只是視窗重新曝光，就能直接還原像素，不必重新走一次所有 Renderer。狀態轉換如圖~\ref{fig:color-buffer-flow}。
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/ch06_color-buffer-flow.png}
+    \includegraphics[width=.94\textwidth]{docs/figures/ch06_color-buffer-flow.png}
     \caption{ColorBuffer 快取與畫面還原流程}
     \label{fig:color-buffer-flow}
 \end{figure}
 
 \subsection{圖片輸出}
 
-輸出圖片時，程式會建立一個與 Canvas 相同尺寸的 GraphicsRenderWindow，關閉 Grid，並重用平常的 Canvas Renderer 重新畫出 Scene。呼叫 \lstinline|glFinish()| 確認繪圖完成後，再讀取 framebuffer，依 PPM P6 格式由上到下寫出 RGB bytes，alpha channel 不輸出。這種做法不會把主視窗的狀態列一起存進圖片。PNG 與 JPEG 目前沒有實作。
+輸出圖片時，程式建立與 Canvas 同尺寸的 GraphicsRenderWindow，關閉 Grid，並重用 Canvas Renderer 繪製 Scene。完成後將 framebuffer 由下到上的 RGBA rows 轉為由上到下的 RGB rows，再寫成 PPM P6；因此輸出不包含主視窗的 Grid 與狀態列。PNG 與 JPEG 目前尚未實作。
 
-由於 ColorBuffer 的第 0 列位於畫面下方，PpmExporter 會從 \lstinline|height - 1| 反向走訪到第 0 列。圖~\ref{fig:ppm-export-layout} 以小型 pixel matrix 表示這個轉換，也標出 P6 header 與忽略 alpha channel 的位置。
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=.94\textwidth]{docs/figures/ch06_ppm-export-layout.png}
-    \caption{ColorBuffer 轉成 PPM P6 時的列順序與 channel 配置}
-    \label{fig:ppm-export-layout}
-\end{figure}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=.82\textwidth]{docs/figures/ch06_ppm-output.png}
-    \caption{程式實際輸出的 PPM 圖片；畫面只保留 Scene 內容}
-    \label{fig:ppm-result}
-\end{figure}
-
-圖~\ref{fig:ppm-result} 是由程式產生的實際檔案，輸出尺寸為 $800\times578$。圖中的自由曲線與「電腦圖學」文字方向正確，而且沒有主視窗的 Grid 與狀態列，表示輸出視窗只重畫 Scene 內容。
+圖~\ref{fig:ppm-result} 的實際輸出尺寸為 $800\times578$。自由曲線與中文字方向正確，且沒有 Grid 與狀態列，可確認圖片輸出只重新繪製 Scene 內容。

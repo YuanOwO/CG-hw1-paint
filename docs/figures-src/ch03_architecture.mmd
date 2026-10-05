@@ -1,9 +1,8 @@
 flowchart LR
-    app[Application<br/>管理程式生命週期] --> window[PaintWindow<br/>介面／選單／事件]
-    window --> canvas[CanvasElement<br/>工具／草稿／選取狀態]
+    window[Application／PaintWindow<br/>生命週期與介面] --> canvas[CanvasElement<br/>工具／草稿／選取狀態]
     canvas --> document[Document<br/>CommandHistory 操作紀錄]
     document --> scene[Scene<br/>SceneObject 清單]
     scene --> renderer[Renderer<br/>圖形與文字]
 
     classDef component fill:#f4f6fb,stroke:#49566b,color:#111,stroke-width:1px;
-    class app,window,canvas,document,scene,renderer component;
+    class window,canvas,document,scene,renderer component;
