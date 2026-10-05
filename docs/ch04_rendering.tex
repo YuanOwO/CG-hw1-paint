@@ -10,12 +10,21 @@
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/drawing-lifecycle.png}
+    \includegraphics[width=.98\textwidth]{docs/figures/ch04_drawing-lifecycle.png}
     \caption{繪圖工具與草稿的生命週期}
     \label{fig:drawing-lifecycle}
 \end{figure}
 
 切換工具時，目前工具會先處理尚未完成的 draft。若使用者在互動過程中按下 Undo，程式先取消 draft，而不是立刻復原 Scene 中上一個物件。這讓「取消這次尚未完成的動作」和「復原前一次已完成的動作」不會混在一起。
+
+\subsection{物件選取與刪除}
+\label{sec:selection-delete}
+
+SelectTool 以目前 Scene 的物件順序進行命中測試。因為 Scene 尾端的物件最後繪製，工具會反向搜尋，讓重疊位置優先選到畫面最上層的物件。文字使用依字型寬高計算的矩形範圍；有可見填色的封閉圖形可從內部選取，透明或只有外框的圖形則依游標到各線段的距離判斷。判定容許範圍至少為 5 px，並隨 stroke width 或 point size 增加，使粗線與單點仍容易點中。
+
+選取後，工具 overlay 會提供包含筆畫寬度的 bounding box，CanvasRenderer 在 Scene 與 draft 之後畫出藍色虛線外框及四個角點。這些角點目前只用來標示範圍，尚未提供縮放功能。點擊空白處或按 Esc 會清除暫時的選取狀態，不會修改 Document。
+
+按 Delete 或 Backspace 時，SelectTool 不直接改動 Scene，而是回傳 RemoveObjectAction。Canvas 將它交給 Document，以 RemoveObjectCommand 刪除並記住原本的物件索引，因此刪除操作會進入 Command History；Undo 能將物件放回原本的繪製層級，Redo 則再次刪除。
 
 \subsection{Stroke Rendering}
 \label{sec:stroke-rendering}
@@ -37,7 +46,7 @@ Canvas 的 Y 軸向下，因此程式中的結果大於 0 表示向右轉，小�
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.82\textwidth]{docs/figures/stroke-join.png}
+    \includegraphics[width=.82\textwidth]{docs/figures/ch04_stroke-join.png}
     \caption{MITER、BEVEL 與 ROUND 接合方式比較；細線為中心線}
     \label{fig:stroke-joins}
 \end{figure}
@@ -46,7 +55,7 @@ Canvas 的 Y 軸向下，因此程式中的結果大於 0 表示向右轉，小�
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.76\textwidth]{docs/figures/stroke-cap.png}
+    \includegraphics[width=.76\textwidth]{docs/figures/ch04_stroke-cap.png}
     \caption{BUTT、SQUARE 與 ROUND 端點樣式比較；虛線為原始端點}
     \label{fig:stroke-caps}
 \end{figure}
@@ -79,7 +88,7 @@ if (validMiter) {
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.92\textwidth]{docs/figures/miter-limit.png}
+    \includegraphics[width=.92\textwidth]{docs/figures/ch04_miter-limit.png}
     \caption{Miter limit 的實際轉角案例；灰底表示筆畫寬度，藍線為中心線}
     \label{fig:miter-limit}
 \end{figure}
@@ -102,11 +111,11 @@ Window 收到 reshape callback 後，會將 viewport 設成新的視窗大小，
 
 Grid 的用途是提供位置與距離的視覺參考，本身不會加入 Scene，也不會改變物件頂點，更沒有吸附功能。Lines 模式每隔 25 px 畫一條水平線和垂直線；Dots 模式改在相同交點畫 2 px 的點；None 則不畫格線。使用者可以從右鍵選單選擇模式，也可以按 G 依序切換。
 
-CanvasRenderer 先畫 Grid，再畫已提交的 SceneObject，最後才畫工具的 draft。因此格線只留在背景，不會蓋住已完成的物件或拖曳中的預覽。圖~\ref{fig:grid-coordinate} 左側用一組座標示範 \lstinline|windowToLocal()| 的結果，右側比較三種 Grid 模式與實際繪製順序。
+CanvasRenderer 先畫 Grid，再畫已提交的 SceneObject，最後才畫工具 overlay 中的 draft 與選取框。因此格線只留在背景，不會蓋住已完成的物件、拖曳中的預覽或選取提示。圖~\ref{fig:grid-coordinate} 左側用一組座標示範 \lstinline|windowToLocal()| 的結果，右側比較三種 Grid 模式與實際繪製順序。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/grid-coordinate.png}
+    \includegraphics[width=.98\textwidth]{docs/figures/ch04_grid-coordinate.png}
     \caption{Canvas local 座標、Grid 模式與繪製順序}
     \label{fig:grid-coordinate}
 \end{figure}

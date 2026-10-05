@@ -11,7 +11,7 @@ plt.rcParams["font.family"] = font_manager.FontProperties(fname=FONT_PATH).get_n
 plt.rcParams["axes.unicode_minus"] = False
 
 
-OUT = Path(__file__).resolve().parents[1] / "figures" / "miter-limit.png"
+OUT = Path(__file__).resolve().parents[1] / "figures" / "ch04_miter-limit.png"
 
 STROKE_COLOR = "#cbd3df"
 CENTER_COLOR = "#1654c0"

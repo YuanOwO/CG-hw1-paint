@@ -163,7 +163,7 @@ def draw_grid_coordinate() -> None:
     draw.text(
         (1390, 900), "繪製順序：背景參考 → 正式物件 → 工具預覽", font=font(25), fill=INK
     )
-    save(image, "grid-coordinate.png")
+    save(image, "ch04_grid-coordinate.png")
 
 
 def draw_utf8_caret() -> None:
@@ -220,7 +220,7 @@ def draw_utf8_caret() -> None:
         fill=INK,
         spacing=9,
     )
-    save(image, "utf8-caret.png")
+    save(image, "ch05_utf8-caret.png")
 
 
 def draw_framebuffer_coordinates() -> None:
@@ -285,7 +285,7 @@ def draw_framebuffer_coordinates() -> None:
     draw.text(
         (1575, 835), "glReadPixels() 由下往上存入 rows", font=font(25), fill=GREEN
     )
-    save(image, "framebuffer-coordinate.png")
+    save(image, "ch06_framebuffer-coordinate.png")
 
 
 def draw_ppm_export() -> None:
@@ -359,7 +359,7 @@ def draw_ppm_export() -> None:
                 width=3,
             )
     draw.text((1765, 880), "輸出結果維持正確的上下方向", font=font(25), fill=GREEN)
-    save(image, "ppm-export-layout.png")
+    save(image, "ch06_ppm-export-layout.png")
 
 
 def main() -> None:

@@ -9,7 +9,7 @@ ColorBuffer 以 RGBA 格式儲存 framebuffer，每個 channel 使用 1 byte。�
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.94\textwidth]{docs/figures/framebuffer-coordinate.png}
+    \includegraphics[width=.94\textwidth]{docs/figures/ch06_framebuffer-coordinate.png}
     \caption{UI 與 OpenGL framebuffer 的座標及 pixel row 順序}
     \label{fig:framebuffer-coordinate}
 \end{figure}
@@ -20,7 +20,7 @@ Window 會分別記錄「內容需要重畫」與「畫面需要重新擷取」�
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/color-buffer-flow.png}
+    \includegraphics[width=.98\textwidth]{docs/figures/ch06_color-buffer-flow.png}
     \caption{ColorBuffer 快取與畫面還原流程}
     \label{fig:color-buffer-flow}
 \end{figure}
@@ -33,14 +33,14 @@ Window 會分別記錄「內容需要重畫」與「畫面需要重新擷取」�
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.94\textwidth]{docs/figures/ppm-export-layout.png}
+    \includegraphics[width=.94\textwidth]{docs/figures/ch06_ppm-export-layout.png}
     \caption{ColorBuffer 轉成 PPM P6 時的列順序與 channel 配置}
     \label{fig:ppm-export-layout}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.82\textwidth]{docs/figures/ppm-output.png}
+    \includegraphics[width=.82\textwidth]{docs/figures/ch06_ppm-output.png}
     \caption{程式實際輸出的 PPM 圖片；畫面只保留 Scene 內容}
     \label{fig:ppm-result}
 \end{figure}

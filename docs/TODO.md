@@ -19,7 +19,7 @@
 
 ## 可選
 
-- Section 8.2：錄製或截圖 Undo/Redo、Polygon Backspace/Escape 與 Shift constraint。
-- Section 10：若之後完成 `.gpt` serialization、Select、Custom color 或 Scale，更新限制與 checklist。
+- Section 8.2：錄製或截圖 Select 選取框與刪除後 Undo/Redo、Polygon Backspace/Escape，以及 Shift constraint。
+- Section 10：若之後完成 `.gpt` serialization、Select 的移動／縮放／多選、Custom color 或 Scale，更新限制與 checklist。
 - Appendix A：加入 StackPanel grow 與 DockPanel 剩餘空間分配的數值範例。
 - 全文：在最終繳交前依老師偏好調整 screenshot 數量；Mermaid source 已保留在 `docs/figures-src/`，可用本機 Mermaid CLI 重新產生 PDF，不依賴線上 renderer。

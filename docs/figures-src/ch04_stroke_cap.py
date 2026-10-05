@@ -9,7 +9,7 @@ plt.rcParams["font.family"] = font_manager.FontProperties(fname=FONT_PATH).get_n
 plt.rcParams["axes.unicode_minus"] = False
 
 
-OUT = Path(__file__).resolve().parents[1] / "figures" / "stroke-cap.png"
+OUT = Path(__file__).resolve().parents[1] / "figures" / "ch04_stroke-cap.png"
 
 
 def main() -> None:

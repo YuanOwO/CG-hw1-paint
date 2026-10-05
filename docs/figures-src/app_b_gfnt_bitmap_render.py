@@ -10,7 +10,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[2]
-OUTPUT = ROOT / "docs" / "figures" / "gfnt-bitmap-render.png"
+OUTPUT = ROOT / "docs" / "figures" / "app_b_gfnt-bitmap-render.png"
 DEFAULT_CUBIC = Path(
     "/Users/yuan/projects/CG/hw1-font-converter/Cubic-11-1.500/fonts/ttf/Cubic_11.ttf"
 )

@@ -25,6 +25,7 @@
         \toprule
         工具        & 操作方式                                                             \\
         \midrule
+        Select    & 單擊選取最上層物件；Delete 或 Backspace 刪除，Esc 取消選取。                 \\
         Point     & 左鍵單擊，在指定位置建立點；大小由 Point size 決定。                                 \\
         Pencil    & 按住左鍵拖曳，工具依距離過濾過密取樣點，放開時提交 Path。                                  \\
         Line      & 左鍵拖曳決定兩端點；按住 Shift 限制為水平、垂直或 45 度。                               \\
@@ -32,7 +33,6 @@
         Ellipse   & 左鍵拖曳決定外接矩形；按住 Shift 建立正圓。                                        \\
         Polygon   & 單擊增加頂點，游標移動時更新最後一個 draft 點；雙擊或 Enter 完成。Backspace 移除最後一點，Esc 取消。 \\
         Text      & 點擊放置 anchor，接著在 modal input dialog 輸入文字。                         \\
-        Select    & 選單項目已建立，但 callback 為空，\statuspending。                            \\
         \bottomrule
     \end{tabularx}
 \end{table}
@@ -72,6 +72,7 @@ Stroke 可設定八種預設顏色、寬度，以及 MITER、BEVEL、ROUND 三�
     Primary+E       & 透過獨立 render window 輸出 PPM P6。               \\
     Primary+C       & 關閉目前視窗；有未儲存內容時先要求確認。                        \\
     Primary+R       & 要求視窗重新顯示，並重設鍵盤與滑鼠的輸入狀態。                     \\
+    0               & 選擇 Select。                                  \\
     1               & 選擇 Pencil。                                  \\
     2               & 選擇 Line。                                    \\
     3               & 選擇 Rectangle。                               \\
@@ -86,7 +87,7 @@ Stroke 可設定八種預設顏色、寬度，以及 MITER、BEVEL、ROUND 三�
 \end{longtable}
 }
 
-滑鼠左鍵負責繪圖，右鍵開啟 menu。Line、Rectangle 與 Ellipse 在拖曳時可按住 Shift 限制形狀；Polygon 可用雙擊或 Enter 完成，並可用 Backspace 移除最後一個頂點、Esc 取消這次繪製。
+滑鼠左鍵負責繪圖或選取，右鍵開啟 menu。Select 會從最後繪製的物件開始搜尋，因此重疊時優先選到視覺上最上層的物件；點擊空白處或按 Esc 可取消選取。Line、Rectangle 與 Ellipse 在拖曳時可按住 Shift 限制形狀；Polygon 可用雙擊或 Enter 完成，並可用 Backspace 移除最後一個頂點、Esc 取消這次繪製。
 
 \subsection{視窗與對話框}
 

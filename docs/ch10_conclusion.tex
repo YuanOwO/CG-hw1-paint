@@ -3,7 +3,7 @@
 
 目前最直接的限制是 \lstinline|.gpt| 檔案只會寫出檔頭與結尾標記，讀取時也還沒有解析 Scene，因此 Save/Load 不能真正儲存繪圖內容。下一步需要先定義各種 SceneObject 與 Style 的序列化格式，再測試存檔後重新開啟是否能還原相同內容。現階段若要保留畫面，應使用 PPM export。
 
-Select 與 Custom color 已經出現在 menu 中，但 callback 仍是空的。若繼續擴充，我會先完成 selection model 與物件 hit testing，再讓 Move 和 Delete 也透過 Command 執行。Renderer 方面，\lstinline|GL_POLYGON| 對凹多邊形不可靠，之後可加入 triangulation；Ellipse 固定使用 64 個 segments，也可以依半徑調整。圖片輸出目前只有 PPM，尚未支援 PNG 或 JPEG。Grid、游標位置與 Canvas 尺寸已經能顯示，但程式沒有額外的 scale/ruler。
+Select 已支援單一物件的 hit testing、最上層選取、範圍框與可復原的刪除，但還不能移動、縮放或多選；選取框的四個角點目前也只是視覺提示。Custom color 已經出現在 menu 中，但 callback 仍是空的。Renderer 方面，\lstinline|GL_POLYGON| 對凹多邊形不可靠，之後可加入 triangulation；Ellipse 固定使用 64 個 segments，也可以依半徑調整。圖片輸出目前只有 PPM，尚未支援 PNG 或 JPEG。Grid、游標位置與 Canvas 尺寸已經能顯示，但程式沒有額外的 scale/ruler。
 
 \section{心得}
 

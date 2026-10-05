@@ -6,10 +6,10 @@
 
 在完成基本要求的過程中，我希望程式不只是由大量 GLUT callback 與全域變數組成，因此將視窗、Event、繪圖物件、Document 與 Renderer 等功能分開。最後完成的程式命名為 \textbf{Graphtoria}，使用 C++17、OpenGL 與 FreeGLUT 實作。
 
-目前程式支援 Point、Pencil、Line、Rectangle、Ellipse、Polygon 與 Text 等工具，也能設定線條顏色、粗細、Join、Cap 與 Fill mode。另外加入 Undo/Redo、Grid、多視窗、文字輸入對話框、Color Buffer cache 與 PPM 圖片輸出等功能。尚未完成的部分集中在第~\ref{sec:limitations} 節說明。
+目前程式支援 Select、Point、Pencil、Line、Rectangle、Ellipse、Polygon 與 Text 等工具，也能設定線條顏色、粗細、Join、Cap 與 Fill mode。Select 可以選取最上層圖形或文字、顯示範圍框，並透過可復原的 Command 刪除物件。另外加入 Undo/Redo、Grid、多視窗、文字輸入對話框、Color Buffer cache 與 PPM 圖片輸出等功能。尚未完成的部分集中在第~\ref{sec:limitations} 節說明。
 
 \subsection{系統概述}
 
 程式啟動時會先載入兩個 GFNT 字型，再建立主要繪圖視窗。畫面中央是可伸縮的 Canvas，底部狀態列顯示目前工具、滑鼠位置與畫布大小；按下右鍵則可開啟工具與屬性選單。滑鼠或鍵盤輸入進入程式後，會先轉成 Event，再由 Element tree 找出接收事件的元件。
 
-繪圖時，工具會先建立暫時的 draft，讓使用者在拖曳過程中看到預覽。操作完成後，物件才會透過 Command 加入 Scene，所以 Undo/Redo 只需要處理 Document 的變化，不必知道每一種工具如何收集滑鼠座標。顯示時則依序畫出 Grid、Scene 內容與尚未完成的工具預覽。
+繪圖時，工具會先建立暫時的 draft，讓使用者在拖曳過程中看到預覽。操作完成後，物件才會透過 Command 加入 Scene，所以 Undo/Redo 只需要處理 Document 的變化，不必知道每一種工具如何收集滑鼠座標。顯示時則依序畫出 Grid、Scene 內容、尚未完成的工具預覽與選取框。

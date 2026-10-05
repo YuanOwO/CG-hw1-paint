@@ -11,6 +11,7 @@
         特殊功能            & 簡要說明                                                      & 詳細章節                           \\
         \midrule
         Undo / Redo     & 以 Command History 保留操作，並用 state ID 判斷 Document 是否回到已儲存狀態。 & 第~\ref{sec:command-history} 節  \\
+        物件選取與刪除        & 依圖形幾何與文字範圍做 hit test，顯示選取框，刪除可 Undo/Redo。             & 第~\ref{sec:selection-delete} 節 \\
         Multi-window    & 以 Window ID 找回 C++ instance，並讓 Modal Dialog 暫停背景視窗輸入。     & 附錄~\ref{app:gui}               \\
         Advanced Stroke & 自行計算 Join、Cap 與 Miter Limit 所需的 triangle geometry。        & 第~\ref{sec:stroke-rendering} 節 \\
         自製 GUI          & 實作 Element tree、Layout、Event bubbling 與 mouse capture。    & 附錄~\ref{app:gui}               \\
@@ -19,7 +20,7 @@
     \end{tabularx}
 \end{table}
 
-這些功能都直接服務於繪圖程式：Command History 讓操作可以復原，GUI framework 支撐多視窗與 Dialog，Stroke geometry 改善粗線外觀，GFNT 則補上中文顯示。它們沒有改變作業的核心目標，但讓我可以實際處理較完整的互動與 rendering 問題。
+這些功能都直接服務於繪圖程式：Command History 讓操作可以復原，SelectTool 補上物件層級的互動，GUI framework 支撐多視窗與 Dialog，Stroke geometry 改善粗線外觀，GFNT 則補上中文顯示。它們沒有改變作業的核心目標，但讓我可以實際處理較完整的互動與 rendering 問題。
 
 \section{成果展示與作業需求驗證}
 
@@ -84,7 +85,7 @@
     Undo / Redo                            & 已完成    & CommandHistory 與 Add/Insert/Remove/Clear commands。                                     \\
     Multi-window                           & 已完成    & Application 管理視窗，Window registry 負責 callback routing；Modal Dialog 開啟時背景視窗停止接收輸入。       \\
     Save / Load document                   & 部分完成   & \lstinline|.gpt| 可寫 header/END 並有 UI/Command；Scene serialization/deserialization 尚未完成。 \\
-    Selection tool                         & 尚未完成   & Tools/Select 選單 callback 為空。                                                           \\
+    Selection tool                         & 已完成    & 可選取最上層圖形或文字、顯示範圍框，並以 Delete/Backspace 刪除；支援 Esc 取消與 Undo/Redo。                  \\
     PNG / JPEG export                      & 尚未完成   & 僅支援 binary PPM。                                                                        \\
     Fancy ideas                            & 已完成    & 自製 GUI、advanced stroke、GFNT、UTF-8、多視窗與 framebuffer cache。                              \\
     \bottomrule

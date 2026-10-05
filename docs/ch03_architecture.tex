@@ -6,7 +6,7 @@
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.96\textwidth]{docs/figures/architecture.png}
+    \includegraphics[width=.96\textwidth]{docs/figures/ch03_architecture.png}
     \caption{繪圖程式的整體架構}
     \label{fig:architecture}
 \end{figure}
@@ -32,7 +32,7 @@ Window* Window::currentWindow() {
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/callback-routing.png}
+    \includegraphics[width=.98\textwidth]{docs/figures/ch03_callback-routing.png}
     \caption{GLUT 回呼的路由流程}
     \label{fig:callback-routing}
 \end{figure}
@@ -41,7 +41,7 @@ Window* Window::currentWindow() {
 
 Document 記錄檔名、Canvas 尺寸、Scene 與 Command History，是繪圖內容修改的入口。Scene 依照繪製順序儲存 SceneObject，其中 ShapeObject 包含 Point、Line、Rectangle、Ellipse、Path 與 Polygon，TextObject 則記錄文字位置、UTF-8 字串與文字樣式。
 
-這樣分層之後，Scene 不需要知道 UI，也不會直接呼叫 OpenGL。工具完成時只產生一個 SceneObject，再由 Document 建立 Command 修改 Scene。拖曳中的 draft 留在 tool overlay，所以尚未完成的圖形不會先進入 Scene，也不會多產生一筆 Undo 紀錄。
+這樣分層之後，Scene 不需要知道 UI，也不會直接呼叫 OpenGL。繪圖工具完成時只產生一個 SceneObject，再由 Document 建立 Command 修改 Scene。SelectTool 則只保留目前選取物件的暫時狀態；刪除時回傳 RemoveObjectAction，由 Canvas 交給 Document 建立 RemoveObjectCommand。拖曳中的 draft 與選取範圍都留在 tool overlay，所以這些暫時內容不會進入 Scene，也不會多產生一筆 Undo 紀錄。
 
 \subsection{Event 與 Input}
 
@@ -49,7 +49,7 @@ Document 記錄檔名、Canvas 尺寸、Scene 與 Command History，是繪圖內
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/event-propagation.png}
+    \includegraphics[width=.98\textwidth]{docs/figures/ch03_event-propagation.png}
     \caption{Event 目標選取與沿父節點向上傳遞的流程}
     \label{fig:event-propagation}
 \end{figure}
@@ -59,7 +59,7 @@ Document 記錄檔名、Canvas 尺寸、Scene 與 Command History，是繪圖內
 \subsection{Command History 與 Undo/Redo}
 \label{sec:command-history}
 
-加入、插入、移除物件與清空畫布都會建立可以復原的 Command。新的 Command 執行後會進入 undo stack，同時清空 redo stack；Undo 會執行反向操作，並把同一筆紀錄移到 redo stack，Redo 則再次執行它。除了兩個 stack 之外，每筆紀錄還記錄操作前後的 state ID，讓程式可以判斷目前內容是否回到上次儲存的狀態。圖~\ref{fig:command-history} 整理了這個流程。
+加入、插入、移除物件與清空畫布都會建立可以復原的 Command。SelectTool 刪除物件時，RemoveObjectCommand 會先記住物件原本在 Scene 中的索引；Undo 依該索引插回物件，因此重疊物件的前後層級也會還原。新的 Command 執行後會進入 undo stack，同時清空 redo stack；Undo 會執行反向操作，並把同一筆紀錄移到 redo stack，Redo 則再次執行它。除了兩個 stack 之外，每筆紀錄還記錄操作前後的 state ID，讓程式可以判斷目前內容是否回到上次儲存的狀態。圖~\ref{fig:command-history} 整理了這個流程。
 
 程式碼~\ref{lst:command-history} 節錄實際的 stack 移動方式。執行新操作時先呼叫 Command，再記錄前後狀態並清空 redo stack；Undo 則把最後一筆紀錄移到另一側。
 
@@ -84,7 +84,7 @@ void CommandHistory::undo() {
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.92\textwidth]{docs/figures/command-history.png}
+    \includegraphics[width=.92\textwidth]{docs/figures/ch03_command-history.png}
     \caption{Command、復原與重做的資料流}
     \label{fig:command-history}
 \end{figure}
@@ -92,11 +92,11 @@ void CommandHistory::undo() {
 \subsection{Rendering Pipeline}
 \label{sec:rendering-pipeline}
 
-Window 開始重繪時，Element tree 會按照各自的局部座標依序 render。輪到 Canvas 之後，CanvasRenderer 先畫 Grid，再按照 Scene 中的順序畫出物件，最後補上工具的 draft overlay。SceneRenderer 會判斷物件是 Shape 還是 Text，再交給對應的 Renderer 呼叫 OpenGL。整條 Rendering Pipeline 如圖~\ref{fig:render-pipeline} 所示。
+Window 開始重繪時，Element tree 會按照各自的局部座標依序 render。輪到 Canvas 之後，CanvasRenderer 先畫 Grid，再按照 Scene 中的順序畫出物件，接著補上工具的 draft preview，最後在最上層畫選取範圍。SceneRenderer 會判斷物件是 Shape 還是 Text，再交給對應的 Renderer 呼叫 OpenGL。整條 Rendering Pipeline 如圖~\ref{fig:render-pipeline} 所示。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/render-pipeline.png}
+    \includegraphics[width=.98\textwidth]{docs/figures/ch03_render-pipeline.png}
     \caption{目前的畫面渲染流程}
     \label{fig:render-pipeline}
 \end{figure}

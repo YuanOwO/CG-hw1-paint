@@ -1,6 +1,6 @@
 flowchart LR
     app[Application<br/>管理程式生命週期] --> window[PaintWindow<br/>介面／選單／事件]
-    window --> canvas[CanvasElement<br/>工具與草稿疊加層]
+    window --> canvas[CanvasElement<br/>工具／草稿／選取狀態]
     canvas --> document[Document<br/>CommandHistory 操作紀錄]
     document --> scene[Scene<br/>SceneObject 清單]
     scene --> renderer[Renderer<br/>圖形與文字]

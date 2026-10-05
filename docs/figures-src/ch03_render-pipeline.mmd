@@ -1,7 +1,7 @@
 flowchart LR
     window[Window::render] --> root[RootElement]
     root --> canvas[CanvasElement]
-    canvas --> canvasRenderer[CanvasRenderer<br/>網格／Scene／草稿疊加層]
+    canvas --> canvasRenderer[CanvasRenderer<br/>網格／Scene／草稿／選取框]
     canvasRenderer --> sceneRenderer[SceneRenderer]
     sceneRenderer --> leaf[ShapeRenderer／TextRenderer]
     leaf --> gl[OpenGL]

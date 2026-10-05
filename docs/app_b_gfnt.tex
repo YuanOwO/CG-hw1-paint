@@ -11,7 +11,7 @@ FreeGLUT 內建 Bitmap/Stroke 字型不足以涵蓋中文，因此程式使用�
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.94\textwidth]{docs/figures/gfnt-layout.png}
+    \includegraphics[width=.94\textwidth]{docs/figures/app_b_gfnt-layout.png}
     \caption{GFNT v1 二進位檔案配置}
     \label{fig:gfnt-layout}
 \end{figure}
@@ -51,7 +51,7 @@ Loader 先取得檔案大小，確認至少能容納 16-byte header，再逐欄�
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.96\textwidth]{docs/figures/gfnt-loader-validation.png}
+    \includegraphics[width=.96\textwidth]{docs/figures/app_b_gfnt-loader-validation.png}
     \caption{GFNT Loader 的讀取與驗證順序}
     \label{fig:gfnt-loader-validation}
 \end{figure}
@@ -69,7 +69,7 @@ UTF-8 decoder 會檢查 sequence 長度、continuation bytes、最小合法值�
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.9\textwidth]{docs/figures/gfnt-glyph-lookup.png}
+    \includegraphics[width=.9\textwidth]{docs/figures/app_b_gfnt-glyph-lookup.png}
     \caption{GFNT Glyph 查找與替代字元使用順序}
     \label{fig:gfnt-glyph-lookup}
 \end{figure}
@@ -89,7 +89,7 @@ TextRenderer 以 header 的 ascender/descender 計算 baseline 與 line height�
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/gfnt-bitmap-render.png}
+    \includegraphics[width=.98\textwidth]{docs/figures/app_b_gfnt-bitmap-render.png}
     \caption{GFNT 字形定位與點陣圖著色；使用 Cubic-11 及 Unifont 16 的實際「你」字點陣圖}
     \label{fig:gfnt-bitmap-render}
 \end{figure}
