@@ -2,6 +2,7 @@
 
 #include <utility>
 
+#include "drawing/tools/select_tool.hpp"
 #include "drawing/tools/shape_tools.hpp"
 #include "drawing/tools/text_tool.hpp"
 
@@ -9,6 +10,8 @@ namespace paint::drawing {
 
 const std::string getToolName(ToolKind tool) {
     switch (tool) {
+    case ToolKind::SELECT:
+        return "Select";
     case ToolKind::POINT:
         return "Point";
     case ToolKind::PENCIL:
@@ -28,8 +31,11 @@ const std::string getToolName(ToolKind tool) {
     }
 }
 
-std::unique_ptr<ICanvasTool> createCanvasTool(ToolKind tool, ShapeStyle shapeStyle, TextStyle textStyle) {
+std::unique_ptr<ICanvasTool> createCanvasTool(ToolKind tool, const Scene& scene, ShapeStyle shapeStyle,
+                                              TextStyle textStyle) {
     switch (tool) {
+    case ToolKind::SELECT:
+        return std::make_unique<SelectTool>(scene);
     case ToolKind::POINT:
         return std::make_unique<PointTool>(shapeStyle);
     case ToolKind::PENCIL:

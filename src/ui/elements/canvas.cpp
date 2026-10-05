@@ -158,7 +158,8 @@ void CanvasElement::insertText(Point anchor, std::string text, drawing::TextStyl
 }
 
 void CanvasElement::resetTool() {
-    _activeTool = drawing::createCanvasTool(_currentTool, _currentStyle, _currentTextStyle);
+    _activeTool =
+        drawing::createCanvasTool(_currentTool, _document.scene(), _currentStyle, _currentTextStyle);
 }
 
 bool CanvasElement::handleToolResult(drawing::ToolResult result) {
@@ -167,6 +168,12 @@ bool CanvasElement::handleToolResult(drawing::ToolResult result) {
     if (auto* addObject = std::get_if<drawing::AddObjectAction>(&result.action)) {
         if (addObject->object) {
             _document.addObject(std::move(addObject->object));
+        }
+    }
+
+    if (auto* removeObject = std::get_if<drawing::RemoveObjectAction>(&result.action)) {
+        if (removeObject->object) {
+            _document.removeObject(std::move(removeObject->object));
         }
     }
 

@@ -9,7 +9,10 @@
 
 namespace paint::drawing {
 
+class Scene;
+
 enum class ToolKind {
+    SELECT,
     POINT,
     PENCIL,
     LINE,
@@ -21,6 +24,7 @@ enum class ToolKind {
 
 const std::string getToolName(ToolKind tool);
 
-std::unique_ptr<ICanvasTool> createCanvasTool(ToolKind tool, ShapeStyle shapeStyle, TextStyle textStyle);
+std::unique_ptr<ICanvasTool> createCanvasTool(ToolKind tool, const Scene& scene, ShapeStyle shapeStyle,
+                                              TextStyle textStyle);
 
 }  // namespace paint::drawing

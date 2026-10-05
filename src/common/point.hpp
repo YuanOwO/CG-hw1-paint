@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <string>
+#include <vector>
 
 namespace paint {
 
@@ -51,6 +52,12 @@ float cross(const Vector& a, const Vector& b);
 Vector normalize(const Vector& vec);
 
 Vector perpendicular(const Vector& vec);
+
+// 計算 point 到線段 start-end 的最短距離；線段退化時視為到 start 的距離。
+float distanceToSegment(const Point& point, const Point& start, const Point& end);
+
+// 使用奇偶規則判斷 point 是否位於多邊形內；頂點不足三個時回傳 false。
+bool pointInPolygon(const Point& point, const std::vector<Point>& vertices);
 
 // 求直線 AB 與 CD 的交點；平行或共線時回傳 false
 bool lineInter(const Point& a, const Point& b, const Point& c, const Point& d, Point& result);

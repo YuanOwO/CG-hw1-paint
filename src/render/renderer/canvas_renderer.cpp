@@ -51,6 +51,39 @@ void CanvasRenderer::drawDotGrid(RenderContext& context, int width, int height, 
     glPopAttrib();
 }
 
+void CanvasRenderer::drawSelectionBounds(
+    RenderContext& context, const std::vector<drawing::ToolOverlay::SelectionBounds>& selectionBounds) const {
+    for (const auto& bounds : selectionBounds) {
+        const float left = bounds.topLeft.x();
+        const float top = bounds.topLeft.y();
+        const float right = bounds.bottomRight.x();
+        const float bottom = bounds.bottomRight.y();
+
+        glPushAttrib(GL_CURRENT_BIT | GL_LINE_BIT | GL_POINT_BIT | GL_ENABLE_BIT);
+        glColor4f(0.1f, 0.45f, 1.0f, 1.0f);
+        glLineWidth(1.0f);
+        glEnable(GL_LINE_STIPPLE);
+        glLineStipple(1, 0xF0F0);
+
+        glBegin(GL_LINE_LOOP);
+        glVertex2f(left, top);
+        glVertex2f(right, top);
+        glVertex2f(right, bottom);
+        glVertex2f(left, bottom);
+        glEnd();
+
+        glDisable(GL_LINE_STIPPLE);
+        glPointSize(5.0f);
+        glBegin(GL_POINTS);
+        glVertex2f(left, top);
+        glVertex2f(right, top);
+        glVertex2f(right, bottom);
+        glVertex2f(left, bottom);
+        glEnd();
+        glPopAttrib();
+    }
+}
+
 void CanvasRenderer::render(RenderContext& context, const ui::CanvasElement& canvas) {
     // 1. 畫背景
     // context.setColor(canvas.backgroundColor());
@@ -73,12 +106,17 @@ void CanvasRenderer::render(RenderContext& context, const ui::CanvasElement& can
         _sceneRenderer.draw(context, *object);
     }
 
-    // 4. 畫工具 overlay（草稿、選取框等暫時性內容）
-    for (const auto* preview : canvas.toolOverlay().previewObjects) {
+    const auto overlay = canvas.toolOverlay();
+
+    // 4. 畫工具預覽物件
+    for (const auto* preview : overlay.previewObjects) {
         if (preview) {
             _sceneRenderer.draw(context, *preview);
         }
     }
+
+    // 5. 畫選取框
+    drawSelectionBounds(context, overlay.selectionBounds);
 }
 
 }  // namespace paint::render

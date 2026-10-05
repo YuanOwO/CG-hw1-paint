@@ -16,6 +16,14 @@ namespace paint::drawing {
 // selection bounds、marquee、handles 等 overlay 資訊。
 struct ToolOverlay {
     std::vector<const SceneObject*> previewObjects;
+
+    // 選取框使用浮點座標，避免物件邊界在轉成整數時被截短。
+    struct SelectionBounds {
+        Point topLeft;
+        Point bottomRight;
+    };
+
+    std::vector<SelectionBounds> selectionBounds;
 };
 
 struct NoAction {};
@@ -24,12 +32,16 @@ struct AddObjectAction {
     std::unique_ptr<SceneObject> object;
 };
 
+struct RemoveObjectAction {
+    std::shared_ptr<SceneObject> object;
+};
+
 struct RequestTextInputAction {
     Point anchor;
     TextStyle style;
 };
 
-using ToolAction = std::variant<NoAction, AddObjectAction, RequestTextInputAction>;
+using ToolAction = std::variant<NoAction, AddObjectAction, RemoveObjectAction, RequestTextInputAction>;
 
 // 工具事件的結果。action 描述要交給編輯器執行的動作，工具本身不直接修改 Document。
 struct ToolResult {
@@ -41,6 +53,10 @@ struct ToolResult {
 
     static ToolResult addObject(std::unique_ptr<SceneObject> object, bool handled = false) {
         return {handled, true, AddObjectAction{std::move(object)}};
+    }
+
+    static ToolResult removeObject(std::shared_ptr<SceneObject> object, bool handled = false) {
+        return {handled, true, RemoveObjectAction{std::move(object)}};
     }
 
     static ToolResult requestTextInput(Point anchor, TextStyle style) {

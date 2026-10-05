@@ -366,6 +366,7 @@ void PaintWindow::setupShortcuts() {
     });
 
     // 設置工具快捷鍵
+    _shortcutManager.bind({Key::Digit0}, [this]() { selectTool(ToolKind::SELECT); });
     _shortcutManager.bind({Key::Digit1}, [this]() { selectTool(ToolKind::PENCIL); });
     _shortcutManager.bind({Key::Digit2}, [this]() { selectTool(ToolKind::LINE); });
     _shortcutManager.bind({Key::Digit3}, [this]() { selectTool(ToolKind::RECTANGLE); });
@@ -440,7 +441,7 @@ void PaintWindow::setupMenu() {
 void PaintWindow::setupToolMenu() {
     auto& toolMenu = _menu.addSubMenu("Tools");
 
-    toolMenu.addMenuEntry("Select", [this]() {});
+    toolMenu.addMenuEntry("Select", [this]() { selectTool(ToolKind::SELECT); });
     toolMenu.addMenuEntry("Point", [this]() { selectTool(ToolKind::POINT); });
     toolMenu.addMenuEntry("Pencil", [this]() { selectTool(ToolKind::PENCIL); });
     toolMenu.addMenuEntry("Line", [this]() { selectTool(ToolKind::LINE); });
