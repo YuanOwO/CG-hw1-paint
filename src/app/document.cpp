@@ -24,6 +24,17 @@ void Document::setCanvasSize(int width, int height) {
 void Document::replaceContent(Scene scene, Path filename) {
     _scene = std::move(scene);
     _filename = std::move(filename);
+    _canvasWidth = 0;
+    _canvasHeight = 0;
+    _history.reset();
+    markSaved();  // 替換內容後，標記為未修改
+}
+
+void Document::replaceContent(DocumentData data) {
+    _scene = std::move(data.scene);
+    _filename = std::move(data.filename);
+    _canvasWidth = data.canvasWidth;
+    _canvasHeight = data.canvasHeight;
     _history.reset();
     markSaved();  // 替換內容後，標記為未修改
 }

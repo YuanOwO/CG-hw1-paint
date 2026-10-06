@@ -105,6 +105,7 @@ class PathShape : public ShapeObject {
     std::vector<Point> getVertices() const override;
 
     void addPoint(const Point& p, const bool force = false);
+    void setPoints(const std::vector<Point>& newPoints) { points = newPoints; }
 
    private:
     std::vector<Point> points;
@@ -122,6 +123,7 @@ class PolygonShape : public ShapeObject {
     std::size_t pointCount() const { return points.size(); }
 
     void addPoint(const Point& point);
+    void setPoints(const std::vector<Point>& newPoints) { points = newPoints; }
     void setLastPoint(const Point& point);
     void removeLastPoint();
 

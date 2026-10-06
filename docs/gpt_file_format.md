@@ -172,8 +172,6 @@ END
 5. `OBJECTS`、`POINTS` 與 `TEXT` 的宣告長度必須和實際內容一致。
 6. `TEXT` payload 必須是合法 UTF-8，且不可被檔案結尾截斷。
 7. `END` 後只允許空白；多餘資料視為格式錯誤。
-8. 為避免惡意或損毀檔案耗盡記憶體，實作應設定合理上限，例如物件一百萬個、
-   單一 path/polygon 一千萬個點、文字 64 MiB；超過上限直接拒絕。
 
 錯誤訊息應包含檔名、行號（若適用）和預期的記錄，方便使用者定位問題。任何解析
 失敗都不得修改目前已開啟的文件。
@@ -200,9 +198,8 @@ END
   還原原本的參數化物件。
 - 反序列化時先依 `OBJECT` 建立物件大類；遇到 `shape` 時再依 `SHAPE`
   建立正確的 concrete shape class，最後套用 style 與 geometry。
-- `LoadCommand` 目前只把 `scene` 傳給 `Document::replaceContent()`，會丟失已讀出的
-  `canvasWidth` 與 `canvasHeight`。實作載入時需讓 `replaceContent` 接受完整
-  `DocumentData`，或另外傳入畫布尺寸。
+- `LoadCommand` 在完整解析成功後，會以 `DocumentData` 一次替換 Scene、
+  Canvas 尺寸與檔名；解析失敗不會修改目前文件。
 - 物件型別目前靠 RTTI 區分；若之後希望減少 `dynamic_cast`，可在 `SceneObject`
   增加 `ObjectKind { Shape, Text }`，並為圖形增加
   `ShapeKind { Point, Line, Rectangle, Ellipse, Path, Polygon }`。檔案仍保存對應的名稱，

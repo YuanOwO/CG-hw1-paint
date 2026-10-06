@@ -36,9 +36,9 @@ class Document {
     Document(const Path& filename) : _filename(filename) {}
     Document(DocumentData data)
         : _filename(std::move(data.filename)),
-          _scene(std::move(data.scene)),
           _canvasWidth(data.canvasWidth),
-          _canvasHeight(data.canvasHeight) {}
+          _canvasHeight(data.canvasHeight),
+          _scene(std::move(data.scene)) {}
 
     // 禁止拷貝與移動操作，確保元素的唯一性
     Document(const Document&) = delete;
@@ -62,6 +62,7 @@ class Document {
     void markSaved() { _history.markSaved(); }
 
     void replaceContent(Scene scene, Path filename);
+    void replaceContent(DocumentData data);
 
     // 文件操作
 

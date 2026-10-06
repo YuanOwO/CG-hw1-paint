@@ -38,7 +38,7 @@ class LoadCommand : public FileCommand {
         auto data = io::DocumentStorage::read(_filename, serializer);
 
         // read 完全成功後才替換原文件。
-        _document.replaceContent(std::move(data.scene), _filename);
+        _document.replaceContent(std::move(data));
     }
 
    private:
