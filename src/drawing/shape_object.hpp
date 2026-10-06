@@ -8,11 +8,23 @@
 
 namespace paint::drawing {
 
+enum class ShapeKind {
+    Point,
+    Line,
+    Rectangle,
+    Ellipse,
+    Path,
+    Polygon,
+};
+
 class ShapeObject : public SceneObject {
    public:
     ShapeObject(ShapeStyle style) : _style(style) {}
 
     virtual ~ShapeObject() = default;
+
+    ObjectKind objectKind() const override { return ObjectKind::Shape; }
+    virtual ShapeKind shapeKind() const = 0;
 
     const ShapeStyle& style() const { return _style; }   // 取得形狀的樣式資訊
     virtual bool isClosed() const = 0;                   // 是否為封閉形狀
@@ -27,6 +39,7 @@ class PointShape : public ShapeObject {
     PointShape(const ShapeStyle& style) : ShapeObject(style) {}
 
     bool isClosed() const override { return false; }
+    ShapeKind shapeKind() const override { return ShapeKind::Point; }
 
     std::vector<Point> getVertices() const override;
 
@@ -57,6 +70,7 @@ class LineShape : public TwoPointShape {
     using TwoPointShape::TwoPointShape;
 
     bool isClosed() const override { return false; }
+    ShapeKind shapeKind() const override { return ShapeKind::Line; }
 
     std::vector<Point> getVertices() const override;
 };
@@ -66,6 +80,7 @@ class RectangleShape : public TwoPointShape {
     using TwoPointShape::TwoPointShape;
 
     bool isClosed() const override { return true; }
+    ShapeKind shapeKind() const override { return ShapeKind::Rectangle; }
 
     std::vector<Point> getVertices() const override;
 };
@@ -75,6 +90,7 @@ class EllipseShape : public TwoPointShape {
     using TwoPointShape::TwoPointShape;
 
     bool isClosed() const override { return true; }
+    ShapeKind shapeKind() const override { return ShapeKind::Ellipse; }
 
     std::vector<Point> getVertices() const override;
 };
@@ -84,6 +100,7 @@ class PathShape : public ShapeObject {
     using ShapeObject::ShapeObject;
 
     bool isClosed() const override { return false; }
+    ShapeKind shapeKind() const override { return ShapeKind::Path; }
 
     std::vector<Point> getVertices() const override;
 
@@ -98,6 +115,7 @@ class PolygonShape : public ShapeObject {
     using ShapeObject::ShapeObject;
 
     bool isClosed() const override { return points.size() >= 3; }
+    ShapeKind shapeKind() const override { return ShapeKind::Polygon; }
 
     std::vector<Point> getVertices() const override;
 

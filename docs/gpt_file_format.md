@@ -11,18 +11,17 @@
 ## 基本編碼
 
 - 檔案副檔名為 `.gpt`。
+- 檔案的前 4 bytes 固定為 ASCII magic `GPTD`（Graphtoria Document）。
+  Magic 是檔案格式識別字，不得根據應用程式顯示名稱動態產生。
 - 除 `TEXT` 的內容外，所有記錄都是以 LF（`\n`）結尾的 ASCII 行。
 - 文字內容使用 UTF-8。讀取器可同時接受 LF 與 CRLF 記錄行，但寫入器一律輸出 LF。
 - 關鍵字與 symbolic value 區分大小寫，固定使用本文件列出的形式。
-- 整數使用十進位；浮點數必須是有限的十進位數，不允許 `nan` 或 `inf`。
-- 寫入浮點數時使用 classic/C locale 以及足以 round-trip `float` 的精度
-  （`std::numeric_limits<float>::max_digits10`）。
 - 記錄之間不得插入未定義的行；v1 讀取器採嚴格解析。
 
 ## 文件結構
 
 ```text
-GRAPHTORIA 1
+GPTD 1
 CANVAS <width> <height>
 OBJECTS <count>
 <object 0>
@@ -43,7 +42,8 @@ END
 每個圖形物件使用以下外框：
 
 ```text
-OBJECT <type>
+OBJECT shape
+SHAPE <shape-kind>
 SHAPE_STYLE <fill-mode> <point-size>
 FILL <r> <g> <b> <a>
 STROKE <width> <r> <g> <b> <a> <join> <cap> <miter-limit>
@@ -53,14 +53,21 @@ END_OBJECT
 
 允許的 symbolic value：
 
-| 欄位 | 值 |
-| --- | --- |
-| `type` | `point`, `line`, `rectangle`, `ellipse`, `path`, `polygon` |
-| `fill-mode` | `outline`, `filled`, `advanced` |
-| `join` | `none`, `miter`, `bevel`, `round` |
-| `cap` | `butt`, `square`, `round` |
+| 欄位         | 值                                                         |
+| ------------ | ---------------------------------------------------------- |
+| `shape-kind` | `point`, `line`, `rectangle`, `ellipse`, `path`, `polygon` |
+| `fill-mode`  | `outline`, `filled`, `advanced`                            |
+| `join`       | `none`, `miter`, `bevel`, `round`                          |
+| `cap`        | `butt`, `square`, `round`                                  |
 
-顏色分量 `r g b a` 的範圍都是 0 到 1。`point-size`、stroke `width` 與
+`OBJECT` 只用來區分 `shape` 與 `text` 兩種物件大類；圖形的具體種類由
+下一行 `SHAPE` 記錄。這對應到程式內部的兩層列舉，避免把文字與每種圖形
+混在同一個列舉中。
+
+顏色分量 `r g b a` 的範圍都是 0 到 1。檔案一律保存實際 RGBA
+分量，不保存 `Red`、`Blue` 等色名或 `Color` enum 整數值；因此預設色、
+自訂顏色與透明度都使用相同表示法，且不會因色盤修改而改變。
+`point-size`、stroke `width` 與
 `miter-limit` 至少為 1。即使某個形狀目前不會使用所有 style 欄位，寫入器仍須完整
 輸出，以確保載入後的物件資料相同。
 
@@ -109,11 +116,11 @@ END_OBJECT
 
 支援的字型如下：
 
-| `font-kind` | `font-name` | 額外欄位 |
-| --- | --- | --- |
-| `bitmap` | `8x13`, `9x15`, `helvetica-10`, `helvetica-12`, `helvetica-18`, `times-roman-10`, `times-roman-24` | 無 |
-| `stroke` | `roman`, `mono-roman` | 正數 `size` |
-| `gfnt` | `cubic-11`, `unifont-16` | 無 |
+| `font-kind` | `font-name`                                                                                        | 額外欄位    |
+| ----------- | -------------------------------------------------------------------------------------------------- | ----------- |
+| `bitmap`    | `8x13`, `9x15`, `helvetica-10`, `helvetica-12`, `helvetica-18`, `times-roman-10`, `times-roman-24` | 無          |
+| `stroke`    | `roman`, `mono-roman`                                                                              | 正數 `size` |
+| `gfnt`      | `cubic-11`, `unifont-16`                                                                           | 無          |
 
 `line-spacing` 必須是正數。字型以名稱保存，不直接保存 enum 的整數值，避免 enum
 重新排序後誤讀舊檔。
@@ -121,16 +128,18 @@ END_OBJECT
 ## 完整範例
 
 ```text
-GRAPHTORIA 1
+GPTD 1
 CANVAS 800 600
 OBJECTS 3
-OBJECT rectangle
+OBJECT shape
+SHAPE rectangle
 SHAPE_STYLE advanced 1
 FILL 0.25 0.5 0.75 1
 STROKE 3 0 0 0 1 miter round 4
 BOUNDS 20 30 220 130
 END_OBJECT
-OBJECT path
+OBJECT shape
+SHAPE path
 SHAPE_STYLE outline 1
 FILL 0 0 0 0
 STROKE 5 1 0.2 0.1 1 round round 4
@@ -154,13 +163,16 @@ END
 
 讀取器先建立暫時的 `DocumentData`，完成下列所有檢查後才交給目前的 `Document`：
 
-1. 檔頭必須完全符合 `GRAPHTORIA 1`；未知 major version 回報不支援。
-2. 每個必要記錄必須存在且順序正確，數量不得為負或溢位。
-3. 所有座標與樣式浮點數必須有限；顏色與樣式值必須在合法範圍內。
-4. `OBJECTS`、`POINTS` 與 `TEXT` 的宣告長度必須和實際內容一致。
-5. `TEXT` payload 必須是合法 UTF-8，且不可被檔案結尾截斷。
-6. `END` 後只允許空白；多餘資料視為格式錯誤。
-7. 為避免惡意或損毀檔案耗盡記憶體，實作應設定合理上限，例如物件一百萬個、
+1. 前 4 bytes 必須符合 `GPTD`，完整檔頭必須符合 `GPTD 1`；未知
+   major version 回報不支援。
+2. `OBJECT` 的值只能是 `shape` 或 `text`。`OBJECT shape` 之後必須緊接
+   合法的 `SHAPE <shape-kind>` 記錄；`OBJECT text` 之後不得出現 `SHAPE`。
+3. 每個必要記錄必須存在且順序正確，數量不得為負或溢位。
+4. 所有座標與樣式浮點數必須有限；顏色與樣式值必須在合法範圍內。
+5. `OBJECTS`、`POINTS` 與 `TEXT` 的宣告長度必須和實際內容一致。
+6. `TEXT` payload 必須是合法 UTF-8，且不可被檔案結尾截斷。
+7. `END` 後只允許空白；多餘資料視為格式錯誤。
+8. 為避免惡意或損毀檔案耗盡記憶體，實作應設定合理上限，例如物件一百萬個、
    單一 path/polygon 一千萬個點、文字 64 MiB；超過上限直接拒絕。
 
 錯誤訊息應包含檔名、行號（若適用）和預期的記錄，方便使用者定位問題。任何解析
@@ -174,7 +186,7 @@ END
 
 ## 版本演進
 
-`GRAPHTORIA 1` 的數字是格式 major version。任何會讓 v1 讀取器誤解資料的變更都要
+`GPTD 1` 的數字是格式 major version。任何會讓 v1 讀取器誤解資料的變更都要
 升版；新版讀取器可提供明確的 v1-to-current migration。應避免在相同版本中默默新增
 記錄，因為 v1 採嚴格解析。
 
@@ -186,10 +198,12 @@ END
 - `PathShape` 與 `PolygonShape` 可用 `getVertices()` 取得需要保存的點。
 - `TwoPointShape` 應保存 `start()`、`end()`，不可保存矩形或橢圓的採樣頂點；否則無法
   還原原本的參數化物件。
-- 反序列化時先依 `OBJECT` type 建立正確的 concrete class，再套用 geometry。
+- 反序列化時先依 `OBJECT` 建立物件大類；遇到 `shape` 時再依 `SHAPE`
+  建立正確的 concrete shape class，最後套用 style 與 geometry。
 - `LoadCommand` 目前只把 `scene` 傳給 `Document::replaceContent()`，會丟失已讀出的
   `canvasWidth` 與 `canvasHeight`。實作載入時需讓 `replaceContent` 接受完整
   `DocumentData`，或另外傳入畫布尺寸。
-- 物件型別目前靠 RTTI 區分；若之後希望減少 `dynamic_cast`，可以在 `SceneObject`
-  增加穩定的 `ObjectType`，但檔案仍應保存上述名稱而不是 enum 整數。
-
+- 物件型別目前靠 RTTI 區分；若之後希望減少 `dynamic_cast`，可在 `SceneObject`
+  增加 `ObjectKind { Shape, Text }`，並為圖形增加
+  `ShapeKind { Point, Line, Rectangle, Ellipse, Path, Polygon }`。檔案仍保存對應的名稱，
+  不保存 enum 整數值。

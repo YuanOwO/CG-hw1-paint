@@ -6,6 +6,7 @@
 #include "command/command.hpp"
 #include "io/document_storage.hpp"
 #include "io/image_exporter.hpp"
+#include "io/serializer/gptd_serializer.hpp"
 
 using paint::app::Document;
 
@@ -33,7 +34,8 @@ class LoadCommand : public FileCommand {
     LoadCommand(Document& document, const Path& filename) : FileCommand(document), _filename(filename) {}
 
     void execute() override {
-        auto data = io::DocumentStorage::read(_filename);
+        io::GptdSerializer serializer;
+        auto data = io::DocumentStorage::read(_filename, serializer);
 
         // read 完全成功後才替換原文件。
         _document.replaceContent(std::move(data.scene), _filename);
@@ -50,7 +52,8 @@ class SaveCommand : public FileCommand {
     void execute() override {
         auto data = _document.data();
         data.filename = _filename;
-        io::DocumentStorage::write(data);
+        io::GptdSerializer serializer;
+        io::DocumentStorage::write(data, serializer);
 
         // 必須等 write 成功後才更新。
         _document.setFilename(_filename);

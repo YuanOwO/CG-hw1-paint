@@ -15,6 +15,8 @@ class TextObject : public SceneObject {
     TextObject(const Point& position, const std::string& text, const TextStyle& style)
         : _position(position), _text(text), _style(style) {}
 
+    ObjectKind objectKind() const override { return ObjectKind::Text; }
+
     const Point& position() const { return _position; }
     void setPosition(Point position) { _position = position; }
 
