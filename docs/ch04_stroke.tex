@@ -67,7 +67,7 @@ Outline 與 Filled 模式以 \lstinline|glLineWidth()| 搭配 OpenGL 線條繪�
 \begin{itemize}
     \item \textbf{Miter}：外側同樣收至 $X_{\text{out}}$，兩段線身在尖角處直接接合，不需額外三角形。轉角很尖時 $X_{\text{out}}$ 會遠離頂點，因此超過 Miter Limit 時改用 Bevel，推導見第~\ref{sec:miter-limit} 節與圖~\ref{fig:miter-limit}。
     \item \textbf{Bevel}：外側保留兩段各自在 $B$ 的截面端點 $O_0$、$O_1$（向右轉時為 $B-h\vec n_0$ 與 $B-h\vec n_1$），再補上 $\triangle O_0O_1X_{\text{in}}$，將尖角切平。
-    \item \textbf{Round}：先用 $\triangle X_{\text{in}}BO_0$ 和 $\triangle X_{\text{in}}O_1B$ 填滿頂點與內側之間的區域，再以 $B$ 為圓心、$h$ 為半徑，從 $O_0$ 到 $O_1$ 繪製 triangle fan。圓弧的旋轉方向依 $c$ 的正負決定，以確保畫在外側。分段數為 $\max\!\left(4,\lceil\frac{\abs{\Delta\phi}}{(\pi/16)}\rceil\right)$，其中 $\Delta\phi$ 為圓弧張角，張角越大分段越多。
+    \item \textbf{Round}：先用 $\triangle X_{\text{in}}BO_0$ 和 $\triangle X_{\text{in}}O_1B$ 填滿頂點與內側之間的區域，再以 $B$ 為圓心、$h$ 為半徑，從 $O_0$ 到 $O_1$ 繪製 triangle fan。圓弧的旋轉方向依 $c$ 的正負決定，以確保畫在外側。分段數為 $\max\!\left(4,\left\lceil\frac{\abs{\Delta\phi}}{\pi/16}\right\rceil\right)$，其中 $\Delta\phi$ 為圓弧張角，張角越大分段越多。
 \end{itemize}
 
 \begin{figure}[htbp]

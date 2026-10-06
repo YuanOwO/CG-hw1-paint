@@ -7,20 +7,27 @@
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.62\textwidth]{docs/figures/app_c_c4-component.png}
+    \includegraphics[width=.66\textwidth]{docs/figures/app_c_c4-component.png}
     \caption{Graphtoria 的 C4 Component 圖}
     \label{fig:c4-component}
 \end{figure}
 
 \subsection{資料模型}
 
-Document 擁有 Scene 與 CommandHistory，如圖~\ref{fig:class-document}。Scene 依繪製順序保存 SceneObject；Shape 依幾何分為單點、兩點決定的圖形與頂點序列，對應第~\ref{sec:geometry-representation} 節的幾何表示。對 Scene 的每一種修改都包裝成可 \lstinline|execute()| 與 \lstinline|undo()| 的 Command，由 CommandHistory 以 undo 與 redo 兩個堆疊管理。每執行一個 Command 都會產生新的狀態編號，與存檔時的編號比較，即可判斷文件是否有未儲存的變更；因此修改後再 Undo 回存檔時的狀態，也會正確視為未修改。
+Document 擁有 Scene 與 CommandHistory，如圖~\ref{fig:class-command}。Scene 依繪製順序保存 SceneObject，其繼承關係如圖~\ref{fig:class-scene}：Shape 依幾何分為單點、兩點決定的圖形與頂點序列，對應第~\ref{sec:geometry-representation} 節的幾何表示。對 Scene 的每一種修改都包裝成可 \lstinline|execute()| 與 \lstinline|undo()| 的 Command，目前有新增、插入、刪除與清空四種，由 CommandHistory 以 undo 與 redo 兩個堆疊管理。每執行一個 Command 都會產生新的狀態編號，與存檔時的編號比較，即可判斷文件是否有未儲存的變更；因此修改後再 Undo 回存檔時的狀態，也會正確視為未修改。
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{docs/figures/app_c_class-document.png}
-    \caption{Document、Command 與 Scene 物件的類別圖}
-    \label{fig:class-document}
+    \includegraphics[width=.88\textwidth]{docs/figures/app_c_class-command.png}
+    \caption{Document 與 Command 的類別圖}
+    \label{fig:class-command}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=.88\textwidth]{docs/figures/app_c_class-scene.png}
+    \caption{Scene 物件的類別圖}
+    \label{fig:class-scene}
 \end{figure}
 
 \subsection{繪圖工具}
@@ -29,7 +36,7 @@ Document 擁有 Scene 與 CommandHistory，如圖~\ref{fig:class-document}。Sce
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=.6\textwidth]{docs/figures/app_c_class-tools.png}
+    \includegraphics[width=.85\textwidth]{docs/figures/app_c_class-tools.png}
     \caption{繪圖工具的類別圖}
     \label{fig:class-tools}
 \end{figure}
@@ -40,7 +47,7 @@ Document 擁有 Scene 與 CommandHistory，如圖~\ref{fig:class-document}。Sce
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=\textwidth]{docs/figures/app_c_sequence-line.png}
+    \includegraphics[width=.85\textwidth]{docs/figures/app_c_sequence-line.png}
     \caption{以 Line 工具繪製一條直線的循序圖}
     \label{fig:sequence-line}
 \end{figure}

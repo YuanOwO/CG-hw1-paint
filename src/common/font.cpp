@@ -22,7 +22,7 @@ void initializeFonts(const std::filesystem::path& fontDirectory) {
     g_fonts[GfntFontId::CUBIC_11] =
         std::make_unique<GfntFont>(GfntFont::load(fontDirectory / "Cubic-11" / "Cubic_11.gfnt"));
     g_fonts[GfntFontId::UNIFONT_16] =
-        std::make_unique<GfntFont>(GfntFont::load(fontDirectory / "unifont" / "Unifont_16.gfnt"));
+        std::make_unique<GfntFont>(GfntFont::load(fontDirectory / "unifont" / "unifont_16.gfnt"));
 }
 
 void* mapFont(const BitmapFont& font) {

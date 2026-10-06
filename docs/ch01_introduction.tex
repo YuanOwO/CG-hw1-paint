@@ -8,15 +8,15 @@
 
 \subsection{Graphtoria 系統概述}
 
-本次實作的程式命名為 \textbf{Graphtoria}。
+本次實作的程式命名為 \textbf{Graphtoria}，主畫面如圖~\ref{fig:main-window}。
 系統提供 Select、Point、Pencil、Line、Rectangle、Ellipse、Polygon 和 Text 等工具，主要透過滑鼠在 Canvas 上操作；
 右鍵選單則用來切換工具，以及設定 Stroke、Fill、Point Size、Font 與 Grid。
 
 繪圖過程中的圖形會先保存為 Draft，讓使用者在完成操作前看到即時預覽。
-畫面內容則可保存至 Color Buffer，當視窗重新顯示時直接還原；
+畫面內容會保存至 Color Buffer，畫面沒有變動而需要重畫時可以直接還原；
 Scene 也能輸出成 PPM P6 圖片，且輸出結果不包含 Grid、狀態列等介面元素。
 
-除了基本繪圖功能，系統亦支援物件選取與刪除、Undo / Redo、多視窗、文字輸入對話框和自訂顏色選擇器。
+除了基本繪圖功能，系統亦支援物件選取與刪除、Undo/Redo、多視窗、文字輸入對話框和自訂顏色選擇器。
 Stroke Rendering 包含 Miter、Bevel、Round Join 與 Butt、Square、Round Cap；
 文字部分除了 FreeGLUT 內建字型，也支援 UTF-8 與自訂 GFNT 點陣字型。
 程式內部將繪圖工具、文件內容、事件處理和 Renderer 分開，以避免所有操作狀態集中在 GLUT callback 中。

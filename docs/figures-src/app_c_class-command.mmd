@@ -1,0 +1,29 @@
+classDiagram
+    direction LR
+    class Document {
+        +addObject(object)
+        +removeObject(object)
+        +undo()
+        +redo()
+        +isModified() bool
+    }
+    class CommandHistory {
+        +execute(command)
+        +undo()
+        +redo()
+        +markSaved()
+    }
+    class IUndoableCommand {
+        <<interface>>
+        +execute()
+        +undo()
+    }
+    class Scene {
+        +add(object)
+        +insert(index, object)
+        +remove(object)
+        +clear()
+    }
+    Document *-- CommandHistory
+    Document *-- Scene
+    CommandHistory o-- IUndoableCommand

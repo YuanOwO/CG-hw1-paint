@@ -1,0 +1,19 @@
+classDiagram
+    direction LR
+    class SceneObject {
+        <<abstract>>
+    }
+    class ShapeObject {
+        <<abstract>>
+        +getVertices()
+        +isClosed() bool
+    }
+    SceneObject <|-- ShapeObject
+    SceneObject <|-- TextObject
+    ShapeObject <|-- PointShape
+    ShapeObject <|-- TwoPointShape
+    ShapeObject <|-- PathShape
+    ShapeObject <|-- PolygonShape
+    TwoPointShape <|-- LineShape
+    TwoPointShape <|-- RectangleShape
+    TwoPointShape <|-- EllipseShape

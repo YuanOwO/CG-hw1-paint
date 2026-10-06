@@ -2,11 +2,8 @@ classDiagram
     direction TB
     class ICanvasTool {
         <<interface>>
-        +onMouseDown() ToolResult
-        +onMouseMove() ToolResult
-        +onMouseUp() ToolResult
-        +onClick() ToolResult
-        +onKeyDown() ToolResult
+        +onMouseDown/Move/Up() ToolResult
+        +onClick/KeyDown() ToolResult
         +overlay() ToolOverlay
         +cancel() ToolResult
     }
@@ -18,11 +15,6 @@ classDiagram
     }
     class ShapeCreationTool~T~
     class DragTool~T~
-    class ToolResult {
-        +handled : bool
-        +needsRedraw : bool
-        +action : ToolAction
-    }
 
     ICanvasTool <|.. SelectTool
     ICanvasTool <|.. TextTool
@@ -35,4 +27,3 @@ classDiagram
     DragTool~T~ <|-- LineTool
     DragTool~T~ <|-- RectangleTool
     DragTool~T~ <|-- EllipseTool
-    ICanvasTool ..> ToolResult : 回傳
