@@ -17,7 +17,7 @@
 \subsection{座標轉換與像素傳輸}
 \label{sec:pixel-transfer}
 
-UI 座標以左上角為原點、Y 軸向下，OpenGL 的視窗座標則以左下角為原點、Y 軸向上。對高度為 $H$ 的視窗中左上角為 $(x,y)$、高度為 $h$ 的區域，其 OpenGL 底邊為 $y_{\text{bottom}}=H-y-h$，如圖~\ref{fig:framebuffer-coordinate}。讀回的像素由下往上逐列排列，還原時以相同順序寫回，因此 ColorBuffer 內部不需翻轉；讀寫前也將 pack／unpack alignment 設為 1，使每列像素緊密排列。
+UI 座標以左上角為原點、Y 軸向下，OpenGL 的視窗座標則以左下角為原點、Y 軸向上。對高度為 $H$ 的視窗中左上角為 $(x,y)$、高度為 $h$ 的區域，其 OpenGL 底邊為 $y_{\text{bottom}}=H-y-h$，如圖~\ref{fig:framebuffer-coordinate}。讀回的像素由下往上逐列排列，還原時以相同順序寫回，因此 ColorBuffer 內部不需翻轉；讀寫前也將 pack/unpack alignment 設為 1，使每列像素緊密排列。
 
 \begin{figure}[htbp]
     \centering
