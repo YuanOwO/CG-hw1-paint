@@ -1,0 +1,28 @@
+%%{init: {"flowchart": {"wrappingWidth": 400}}}%%
+flowchart TB
+    user["<b>使用者</b><br/><small>[Person]</small><br/>以滑鼠、鍵盤與右鍵選單操作"]:::person
+    glut["<b>FreeGLUT / OpenGL</b><br/><small>[External System]</small><br/>視窗、輸入 callback 與繪圖 API"]:::ext
+
+    subgraph app["Graphtoria [Container]"]
+        ui["<b>GUI Framework</b><br/><small>[Component: src/ui]</small><br/>Window、Element Tree、事件分派"]:::comp
+        tools["<b>Tools</b><br/><small>[Component: src/drawing/tools]</small><br/>繪圖互動、Draft、ToolResult"]:::comp
+        doc["<b>Document</b><br/><small>[Component: src/app, src/command]</small><br/>Scene、Command、Undo/Redo"]:::comp
+        render["<b>Renderers</b><br/><small>[Component: src/render]</small><br/>Stroke、Fill、文字、ColorBuffer"]:::comp
+        io["<b>IO</b><br/><small>[Component: src/io]</small><br/>GPTD 讀寫、PPM 匯出"]:::comp
+    end
+
+    fs["<b>檔案系統</b><br/><small>[External System]</small><br/>.gpt 文件、.ppm 圖片"]:::ext
+
+    user -- "操作" --> glut
+    glut -- "callback" --> ui
+    ui -- "Canvas 輸入事件" --> tools
+    ui -- "套用 ToolResult" --> doc
+    ui -- "繪製" --> render
+    render -- "繪圖指令" --> glut
+    doc -- "存檔、讀檔、匯出" --> io
+    io -- "讀寫" --> fs
+
+    classDef person fill:#08427b,stroke:#052e56,color:#fff
+    classDef ext fill:#999999,stroke:#6b6b6b,color:#fff
+    classDef comp fill:#85bbf0,stroke:#5d82a8,color:#000
+    style app fill:#ffffff,stroke:#666,stroke-dasharray: 6 4

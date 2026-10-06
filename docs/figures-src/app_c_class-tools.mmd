@@ -1,0 +1,38 @@
+classDiagram
+    direction TB
+    class ICanvasTool {
+        <<interface>>
+        +onMouseDown() ToolResult
+        +onMouseMove() ToolResult
+        +onMouseUp() ToolResult
+        +onClick() ToolResult
+        +onKeyDown() ToolResult
+        +overlay() ToolOverlay
+        +cancel() ToolResult
+    }
+    class CreationTool~T~ {
+        #draft : T
+        #beginDraft()
+        #commitDraft() ToolResult
+        #cancelDraft() ToolResult
+    }
+    class ShapeCreationTool~T~
+    class DragTool~T~
+    class ToolResult {
+        +handled : bool
+        +needsRedraw : bool
+        +action : ToolAction
+    }
+
+    ICanvasTool <|.. SelectTool
+    ICanvasTool <|.. TextTool
+    ICanvasTool <|.. CreationTool~T~
+    CreationTool~T~ <|-- ShapeCreationTool~T~
+    ShapeCreationTool~T~ <|-- DragTool~T~
+    ShapeCreationTool~T~ <|-- PointTool
+    ShapeCreationTool~T~ <|-- PencilTool
+    ShapeCreationTool~T~ <|-- PolygonTool
+    DragTool~T~ <|-- LineTool
+    DragTool~T~ <|-- RectangleTool
+    DragTool~T~ <|-- EllipseTool
+    ICanvasTool ..> ToolResult : 回傳

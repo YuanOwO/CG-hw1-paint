@@ -1,0 +1,25 @@
+sequenceDiagram
+    participant C as CanvasElement
+    participant T as LineTool
+    participant D as Document
+    participant H as CommandHistory
+    participant S as Scene
+
+    Note over C: MouseDown（取得 mouse capture）
+    C->>T: onMouseDown
+    T->>T: beginDraft()
+    T-->>C: ToolResult：重畫
+    loop 拖曳中
+        C->>T: onMouseMove
+        T->>T: 更新 Draft 終點
+        T-->>C: ToolResult：重畫（Draft 畫在 Scene 上方）
+    end
+    Note over C: MouseUp
+    C->>T: onMouseUp
+    T->>T: commitDraft()
+    T-->>C: ToolResult：AddObjectAction
+    C->>D: addObject(line)
+    D->>H: execute(AddObjectCommand)
+    H->>S: AddObjectCommand.execute()<br/>→ add(line)
+    H->>H: 推入 undo 堆疊，清空 redo 堆疊
+    C->>C: invalidateDisplay()
