@@ -66,6 +66,9 @@ class Window : public EventTarget {
 
     void setTitle(const std::string& title);
 
+    // 要求 GLUT 調整視窗大小；實際尺寸會在 reshape callback 中更新。
+    void resize(int width, int height);
+
     void close();
     void setModal(bool modal);
 
