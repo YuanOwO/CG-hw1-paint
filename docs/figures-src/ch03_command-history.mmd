@@ -1,7 +1,0 @@
-flowchart LR
-    command[Command<br/>封裝一次操作] -. 執行 .-> scene[Scene<br/>正式內容]
-    command --> undo[Undo Stack]
-    undo -->|Undo| redo[Redo Stack]
-    redo -->|Redo| undo
-    undo -. 還原 .-> scene
-    redo -. 重做 .-> scene

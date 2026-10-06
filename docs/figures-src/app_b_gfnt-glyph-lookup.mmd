@@ -1,8 +1,0 @@
-flowchart LR
-    cp[Unicode Code Point] --> lookup[在排序表中查找]
-    lookup --> fallback[Fallback Policy<br/>原字元 → U+FFFD → 問號]
-    fallback --> found[找到：使用 Glyph<br/>metrics + bitmap]
-    fallback --> missing[未找到：只推進游標]
-
-    classDef decision fill:#fff7df,stroke:#8a6d1f,color:#111,stroke-width:1px;
-    class fallback decision;
