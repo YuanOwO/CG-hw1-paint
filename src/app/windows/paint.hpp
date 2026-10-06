@@ -35,11 +35,11 @@ class PaintWindow : public ui::Window {
     void requestTextInput(Point anchor, drawing::PaintStyle paint, drawing::TextStyle style);
 
     void requestNewFile();
-    void requestLoadFile();
+    void requestOpenFile();
     void requestClose();
 
     void newFile();
-    void loadFile();
+    void openFile();
     void saveFile();
     void saveFileAs();
     void exportFile();

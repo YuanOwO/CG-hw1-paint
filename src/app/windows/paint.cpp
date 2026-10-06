@@ -192,15 +192,15 @@ void PaintWindow::requestNewFile() {
     }
 }
 
-void PaintWindow::requestLoadFile() {
-    // 在加載文件前，檢查是否有未保存的更改
+void PaintWindow::requestOpenFile() {
+    // 在開啟文件前，檢查是否有未保存的更改
     if (_document.isModified()) {
         auto& app = app::Application::current();
         app.createWindow<ConfirmWindow>("Unsaved Changes",
                                         "你有未保存的更改。\n你確定要開啟一個新的檔案而不保存嗎？",
-                                        [this]() { loadFile(); });
+                                        [this]() { openFile(); });
     } else {
-        loadFile();  // 直接加載文件，因為沒有未保存的更改
+        openFile();  // 直接開啟文件，因為沒有未保存的更改
     }
 }
 
@@ -220,7 +220,7 @@ void PaintWindow::newFile() {
     requestRedisplay();
 }
 
-void PaintWindow::loadFile() {
+void PaintWindow::openFile() {
     const std::string initialFilename = _document.filename().empty() ? "" : _document.filename().string();
 
     auto& app = app::Application::current();
@@ -232,7 +232,16 @@ void PaintWindow::loadFile() {
                 filename += ".gpt";
             }
 
-            _document.load(filename);
+            _document.open(filename);
+
+            // 檔案記錄的是 Canvas 大小，視窗還要加上狀態列等介面所佔的空間。
+            const int canvasWidth = _document.canvasWidth();
+            const int canvasHeight = _document.canvasHeight();
+            if (canvasWidth > 0 && canvasHeight > 0) {
+                resize(canvasWidth + (width() - _canvas->width()),
+                       canvasHeight + (height() - _canvas->height()));
+            }
+
             requestRedisplay();
         },
         nullptr,
@@ -384,7 +393,7 @@ void PaintWindow::setupShortcuts() {
 
     _shortcutManager.bind({Mod::Primary, Key::N}, [this]() { requestNewFile(); });
     _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::N}, [this]() { newWindow(); });
-    _shortcutManager.bind({Mod::Primary, Key::O}, [this]() { requestLoadFile(); });
+    _shortcutManager.bind({Mod::Primary, Key::O}, [this]() { requestOpenFile(); });
     _shortcutManager.bind({Mod::Primary, Key::S}, [this]() { saveFile(); });
     _shortcutManager.bind({Mod::Primary, Mod::Shift, Key::S}, [this]() { saveFileAs(); });
     _shortcutManager.bind({Mod::Primary, Key::E}, [this]() { exportFile(); });
@@ -424,7 +433,7 @@ void PaintWindow::setupMenu() {
     auto& fileMenu = _menu.addSubMenu("File");
     fileMenu.addMenuEntry("New", [this]() { requestNewFile(); });
     fileMenu.addMenuEntry("New Window", [this]() { newWindow(); });
-    fileMenu.addMenuEntry("Load", [this]() { requestLoadFile(); });
+    fileMenu.addMenuEntry("Open", [this]() { requestOpenFile(); });
     fileMenu.addMenuEntry("Save", [this]() { saveFile(); });
     fileMenu.addMenuEntry("Save As", [this]() { saveFileAs(); });
     fileMenu.addMenuEntry("Export", [this]() { exportFile(); });

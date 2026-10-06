@@ -47,9 +47,9 @@ void Document::newFile() {
     onModifiedChangedInternal();
 }
 
-void Document::load(const Path& filename) {
-    LoadCommand loadCommand(*this, filename);
-    loadCommand.execute();
+void Document::open(const Path& filename) {
+    OpenCommand openCommand(*this, filename);
+    openCommand.execute();
     onModifiedChangedInternal();
 }
 
