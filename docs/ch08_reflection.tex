@@ -1,0 +1,19 @@
+\section{遇到的困難與心得}
+
+\subsection{Stroke 幾何實作}
+
+粗線的做法前後改了好幾次。我一開始直接使用原生的 \lstinline|glLineWidth()|，但線寬調大後，折線轉角處會出現缺角，如圖~\ref{fig:native-custom-stroke} 左側。為了補上缺口，我先在每個頂點額外畫一個 \lstinline|GL_POINTS|，但 OpenGL 的點是方形的，轉角處反而多出一塊突出的方角。接著改成在頂點畫圓，外觀雖然接近圓角，但線段與圓會在頂點處重疊。當時我預期之後可能會研究半透明顏色，若真的支援，重疊區域就會被混色兩次，使轉角顏色明顯變深。
+
+因此我最後決定自己計算轉角的幾何：判斷內外側、求 offset line 交點，只補上缺口所需的三角形。做完後上網查資料，才知道這個技術叫 Line Join，Miter、Bevel、Round 正是常見的三種做法，於是照此整理成第~\ref{sec:line-join} 節的實作；之後快速畫 Pencil 出現的尖刺，則再以 Miter Limit 與內側距離限制解決（第~\ref{sec:stroke-degenerate} 節）。
+
+\subsection{事件與介面設計}
+
+FreeGLUT 只提供低階的 callback，沒有 Focus、Mouse Capture、事件冒泡與 Modal。加入多視窗、文字輸入與對話框後，滑鼠拖出 Canvas、背景視窗仍收到輸入等問題陸續出現，我只好逐步建立 Element Tree、Hit Test、Bubbling、Focus 與 Mouse Capture（附錄~\ref{app:gui}）。這是整份作業花最多時間的部分。
+
+\subsection{跨平台與文字處理}
+
+最難發現的跨平台問題是 Windows 上的 Ctrl+字母：FreeGLUT 傳入的是 control code 1 到 26 而非 \lstinline|'a'| 到 \lstinline|'z'|，導致 Undo、Save 等快捷鍵全部失效。最後以 \lstinline|mapCharacterWithCtrl()| 還原按鍵，並用 Primary 統一 Command 與 Ctrl。文字方面，FreeGLUT 無法顯示中文，鍵盤 callback 也接收不到輸入法的結果，這兩個限制帶出了 GFNT 字型與 Unicode 輸入模式（第~\ref{sec:text-input}、\ref{sec:gfnt-render} 節）。
+
+\subsection{心得}
+
+原本以為這次作業主要是用 OpenGL 把圖形畫出來，實際上最花時間的反而是 OpenGL 沒有提供的部分：GUI、事件傳遞、Stroke 幾何與中文字型。功能陸續增加後，若把工具狀態、文件修改與 OpenGL 指令都寫在 callback 裡，程式很快就難以維護，因此我將 Window/Element、Tool、Document/Command 與 Renderer 分開，這讓我體會到，看似簡單的 Drawing Panel 背後其實需要清楚的模組分工，才能持續除錯與擴充。

@@ -1,0 +1,28 @@
+\section{Fill 與 Hit Test}
+
+\subsection{Fill Rendering}
+\label{sec:fill-rendering}
+
+Fill 只作用於封閉圖形，依第~\ref{sec:paint-style} 節的模式繪製：Outline 只畫外框；Filled 以 Primary Color 填滿；Advanced 先以 Fill Color 填滿內部，再疊上第~\ref{sec:stroke-geometry} 節的自製 Stroke，如圖~\ref{fig:ppm-export} 的房屋與太陽。填色以 \lstinline|GL_POLYGON| 送出頂點，而 OpenGL 只保證其對凸多邊形正確；Rectangle 與 Ellipse 不受影響，但 Polygon 工具畫出的凹多邊形可能填錯，完整支援需先 triangulation。
+
+\subsection{Point-in-Polygon}
+\label{sec:point-in-polygon}
+
+有可見填色的封閉圖形，點擊內部也應能選取。判斷採用 Ray Casting：從測試點 $(x,y)$ 向右發射水平射線，與邊界交點數為奇數即在內部。對每條邊 $(x_i,y_i)\to(x_j,y_j)$，只有 $(y_i>y)\ne(y_j>y)$ 時射線才會穿過，交點為
+\[
+    x_c=x_i+\frac{(x_j-x_i)(y-y_i)}{y_j-y_i},
+\]
+若 $x_c>x$ 便切換一次 inside 狀態。此條件只計入 $y\in[\min(y_i,y_j),\max(y_i,y_j))$ 的邊，射線通過共同頂點時只計算一次，水平邊也會被略過而不會除以零。
+
+\subsection{Stroke Hit Test}
+\label{sec:stroke-hit-test}
+
+點擊線條時，計算測試點 $P$ 到線段 $AB$ 的最短距離。將 $P-A$ 投影到 $B-A$ 得到參數 $t$：
+\[
+    t=\operatorname{clamp}\!\left(\frac{(P-A)\cdot(B-A)}{\norm{B-A}^2},\ 0,\ 1\right),\qquad Q=A+t(B-A).
+\]
+其中 $\operatorname{clamp}(x,0,1)$ 將 $x$ 限制在 $[0,1]$ 之間，使投影點 $Q$ 落在線段 $AB$ 上，而非其延長線上。若 $\norm{P-Q}\le\tau=\max(w/2+3,\ 5)$ px 即命中，其中 $w/2$ 對應線身半寬，其餘為點擊容差；$A=B$ 時直接取 $\norm{P-A}$。封閉路徑另外檢查首尾相連的邊，Point 則以 Point Size 代替 $w$。
+
+\subsection{選取順序與選取框}
+
+封閉且有可見填色的 Shape 先做第~\ref{sec:point-in-polygon} 節的判定，未命中再做第~\ref{sec:stroke-hit-test} 節的判定；Text 則以字型 metrics 求出外接矩形。Scene 依陣列順序繪製，後加入的物件在上層，因此 Select 工具從尾端往前檢查，第一個命中的即為最上層物件。選取框為頂點的外接矩形向外擴張 $\max(w/2,\,2)$ px，避免壓在線條上。

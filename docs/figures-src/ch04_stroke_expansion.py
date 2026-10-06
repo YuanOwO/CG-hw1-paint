@@ -99,8 +99,8 @@ def main():
     ax.text(A_right[0] - 0.35, A_right[1] - 0.18, "$A_R$")
     ax.text(B_left[0] + 0.10, B_left[1] + 0.05, "$B_L$")
     ax.text(B_right[0] + 0.10, B_right[1] - 0.18, "$B_R$")
-    ax.text(P_left[0] - 0.35, P_left[1] + 0.1, r"$+h\vec{n}$")
-    ax.text(P_right[0] + 0.1, P_right[1] - 0.15, r"$-h\vec{n}$")
+    ax.text(P_left[0] - 0.35, P_left[1] + 0.1, r"$-h\vec{n}$")
+    ax.text(P_right[0] + 0.1, P_right[1] - 0.15, r"$+h\vec{n}$")
 
     ax.set_aspect("equal")
     ax.axis("off")

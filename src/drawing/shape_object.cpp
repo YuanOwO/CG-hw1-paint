@@ -66,7 +66,7 @@ void PathShape::addPoint(const Point& p, const bool force) {
     }
 
     // 避免筆刷的點太密集，導致繪製出來的線條過於粗糙。
-    const bool isTooClose = abs(points.back() - p) < std::max(_style.strokeWidth() * 0.2f, 1.0f);
+    const bool isTooClose = abs(points.back() - p) < std::max(_style.stroke.width * 0.2f, 1.0f);
 
     if (force && isTooClose && points.size() >= 2) {
         // 強制加入點時，若太接近前一個點，則將前一個點移除，避免重疊。

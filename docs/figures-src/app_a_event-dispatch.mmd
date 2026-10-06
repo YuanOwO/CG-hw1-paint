@@ -1,0 +1,12 @@
+flowchart LR
+    glut["GLUT callback"] --> lookup["glutGetWindow()<br/>查表找到 Window"]
+    lookup --> modal{"另有 Modal<br/>視窗？"}
+    modal -- "是" --> pop["將 Modal 視窗<br/>提到最前，丟棄事件"]
+    modal -- "否" --> kind{"事件種類"}
+    kind -- "滑鼠" --> mouse["Mouse Capture 優先<br/>否則 Hit Test<br/>最深層 Element"]
+    kind -- "鍵盤/文字" --> key["Focused Element<br/>否則 Window"]
+    mouse --> bubble["target listener<br/>→ parent → … →<br/>RootElement → Window"]
+    key --> bubble
+
+    classDef decision fill:#fff9df,stroke:#806f27,color:#111,stroke-width:1px;
+    class modal,kind decision;

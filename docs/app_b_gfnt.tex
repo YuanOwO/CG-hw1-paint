@@ -1,104 +1,65 @@
-\section{GFNT 自訂點陣字型格式}
+\section{GFNT 自訂點陣字型}
 \label{app:gfnt}
 
-\subsection{設計動機}
+\subsection{設計目的與產生方式}
 
-FreeGLUT 內建 Bitmap/Stroke 字型不足以涵蓋中文，因此程式使用簡單的 GFNT binary resource。格式採用固定大小的 header 與 glyph entry，載入時可以先檢查檔案範圍，之後再依排序過的 Unicode code point 做 binary search。正文的圖~\ref{fig:gfnt-runtime} 已整理文字繪製的主流程；本附錄再分別說明檔案結構、Loader 檢查與找不到字元時的 fallback。
+GFNT 事先將字型中的字形轉為點陣資料，並以簡單的二進位格式保存，設計理由與繪製流程見第~\ref{sec:gfnt-render} 節。
 
-\subsection{Binary Layout}
+目前隨程式附上兩套字型，使用者可在選單中切換，授權條款隨字型檔一同附上：
+\begin{itemize}
+    \item \textbf{Cubic 11（俐方體 11 號）}：以 12 px 轉換，共 10{,}268 個字元，風格為像素字型。
+    \item \textbf{GNU Unifont}：以 16 px 轉換，共 57{,}071 個字元，涵蓋的字元範圍較廣。
+\end{itemize}
 
-格式使用 1-byte packing，並由 C++ 的 static assertion 確認 GfntHeaderV1 為 16 bytes、GfntGlyphV1 為 18 bytes。檔案中的整數欄位一律使用 little-endian。若 Glyph 數量為 $N$，Bitmap Data 的檔案 offset 就是 $16+18N$。圖~\ref{fig:gfnt-layout} 與表~\ref{tab:gfnt-fields} 都依照目前程式中的 struct 欄位與大小整理。
+\subsection{檔案結構}
+\label{app:gfnt-layout}
 
-\begin{figure}[H]
+GFNT 由三個區段依序組成，所有整數皆為 little-endian，各欄位的位置與大小如圖~\ref{fig:gfnt-layout}：
+\begin{itemize}
+    \item \textbf{Header}（16 bytes）：magic 固定為 \texttt{GFNT}，version 為 1；pixelSize 為轉換時的像素大小；ascender 與 descender 分別為基線上方與下方的高度；glyphCount 為字形數量 $N$。
+    \item \textbf{Glyph Table}（$18N$ bytes）：每筆記錄一個字元的 code point、bitmap 寬高、bearing、advance，以及 bitmap 在 Bitmap Data 中的位移，並依 code point 嚴格遞增排列。
+    \item \textbf{Bitmap Data}：所有字形的 bitmap 依序相接，每個像素以 1 byte 表示 alpha（0--255），列由上往下存放。
+\end{itemize}
+由於 Bitmap Data 緊接在 Glyph Table 之後，起點必為 $16+18N$，檔案不需要另外記錄各區段的位移。
+
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=.94\textwidth]{docs/figures/app_b_gfnt-layout.png}
-    \caption{GFNT v1 二進位檔案配置}
+    \includegraphics[width=\textwidth]{docs/figures/app_b_gfnt-layout.png}
+    \caption{GFNT 的檔案結構；bitmapOffset 為相對於 Bitmap Data 起點的位移}
     \label{fig:gfnt-layout}
 \end{figure}
 
-\begin{longtable}{>{\ttfamily}l r r l}
-    \caption{GFNT v1 欄位、相對 offset 與大小}\label{tab:gfnt-fields}           \\
-    \toprule
-    Field        & Offset & Size & Meaning                              \\
-    \midrule
-    \endfirsthead
-    \toprule
-    Field        & Offset & Size & Meaning                              \\
-    \midrule
-    \endhead
-    \multicolumn{4}{l}{\normalfont\textbf{GfntHeaderV1 (16 bytes)}}     \\
-    magic        & 0      & 4    & ASCII \lstinline|GFNT|               \\
-    version      & 4      & 2    & 格式版本，目前為 1                           \\
-    pixelSize    & 6      & 2    & nominal pixel size，不可為 0             \\
-    ascender     & 8      & 2    & baseline 上方高度，\lstinline|int16_t|    \\
-    descender    & 10     & 2    & baseline 下方高度，\lstinline|int16_t|    \\
-    glyphCount   & 12     & 4    & glyph table entry 數量                 \\
-    \midrule
-    \multicolumn{4}{l}{\normalfont\textbf{GfntGlyphV1 (18 bytes each)}} \\
-    codepoint    & 0      & 4    & Unicode codepoint                    \\
-    width        & 4      & 2    & bitmap 寬度                            \\
-    height       & 6      & 2    & bitmap 高度                            \\
-    bearingX     & 8      & 2    & pen 到 bitmap 左側的水平位移                 \\
-    bearingY     & 10     & 2    & baseline 到 bitmap 頂端的垂直位移            \\
-    advanceX     & 12     & 2    & 下一個 pen X 增量                         \\
-    bitmapOffset & 14     & 4    & 相對 Bitmap Data 開頭的 byte offset       \\
-    \bottomrule
-\end{longtable}
+\subsection{Font Metrics 與字形定位}
+\label{app:gfnt-metrics}
 
-\subsection{Loader 與驗證}
-
-Loader 先取得檔案大小，確認至少能容納 16-byte header，再逐欄讀取不同寬度的整數。接著檢查 magic、version、pixel size、ascender、descender，以及 $16+18N$ 是否超出檔案。Bitmap Data 讀完後，程式還會逐一檢查 Glyph：code point 必須按照遞增順序排列，不得超過 U+10FFFF 或落在 surrogate 範圍，而且流程如圖~\ref{fig:gfnt-loader-validation} 所示。
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=.96\textwidth]{docs/figures/app_b_gfnt-loader-validation.png}
-    \caption{GFNT Loader 的讀取與驗證順序}
-    \label{fig:gfnt-loader-validation}
-\end{figure}
-
+字形以基線對齊，繪製時維護一個 pen，即下一個字元在基線上的起始位置，初始為文字的左端，遇到換行則回到左端並下移一個行高。設文字區塊左上角的 Y 座標為 $y_0$，則第一行的基線為 $y_b=y_0+\text{ascender}$，每行的行高為 $\text{ascender}+\text{descender}$。對 pen 位置 $x_p$ 上的一個字形，其 bitmap 左上角為
 \[
-    o + w\times h
-    \le \text{Bitmap Data size}.
+    x=x_p+\text{bearingX},\qquad y=y_b-\text{bearingY},
 \]
+畫完後 pen 前進 advanceX。bearingY 是 bitmap 頂端到基線的距離，因此 bitmap 高度大於 bearingY 的部分會延伸到基線以下，如圖~\ref{fig:gfnt-metrics} 中「你」的底部。由於每個字形只儲存實際有墨跡的範圍，空白字元的 bitmap 大小可以是 0，只用 advanceX 推進 pen。
 
-其中 $o$、$w$、$h$ 分別對應 \lstinline|bitmapOffset|、\lstinline|width| 與 \lstinline|height|。程式實際以減法形式比較，避免加法 overflow。這些檢查都在載入字型時完成，render loop 不需要每畫一個字就重新檢查。
-
-\subsection{UTF-8 Decoder 與 Glyph Lookup}
-
-UTF-8 decoder 會檢查 sequence 長度、continuation bytes、最小合法值、最大 code point 與 surrogate，遇到錯誤時消耗一個 byte 並回傳 U+FFFD。Glyph Table 在載入時已確認順序，因此查找時使用 \lstinline|std::lower_bound|；若找不到原字元，再依序嘗試 U+FFFD 與問號。圖~\ref{fig:gfnt-glyph-lookup} 對應 \lstinline|findGlyphOrFallback()| 的實際查找順序；三次都找不到時，Renderer 以 header 的 pixel size 推進 pen，而不繪製 bitmap。
-
-輸入框的 caret index 記錄在 Unicode code point 之間，而不是 UTF-8 byte 之間。圖~\ref{fig:utf8-caret} 以「A你B」說明兩者差異，因此刪除「你」時會移除一個完整 code point。
-
-\begin{figure}[tbp]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=.96\textwidth]{docs/figures/ch05_utf8-caret.png}
-    \caption{UTF-8 bytes、code point 與 caret index 的對應}
-    \label{fig:utf8-caret}
+    \includegraphics[width=.62\textwidth]{docs/figures/app_b_gfnt-bitmap-render.png}
+    \caption{Cubic 11 中「你」（U+4F60）的字形 metrics；每格代表一個像素}
+    \label{fig:gfnt-metrics}
 \end{figure}
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=.9\textwidth]{docs/figures/app_b_gfnt-glyph-lookup.png}
-    \caption{GFNT Glyph 查找與替代字元使用順序}
-    \label{fig:gfnt-glyph-lookup}
-\end{figure}
+\subsection{載入與驗證}
+\label{app:gfnt-loader}
 
-\subsection{Bitmap Rendering}
+Loader 不直接把檔案內容複製進 C++ struct，而是逐欄位讀取 bytes 並以位移運算組合數值。這樣結果不受執行平台的 endian 與 struct padding 影響，負數也以明確的 two's complement 運算還原。
 
-TextRenderer 以 header 的 ascender/descender 計算 baseline 與 line height。每個 glyph 的左上角為
+字型檔在載入時一次完成以下檢查，任何一項失敗都會拒絕載入：
+\begin{itemize}
+    \item 檔案至少包含完整的 Header，magic 與 version 正確，pixelSize 不為 0，ascender 與 descender 不為負數。
+    \item glyphCount 所需的 Glyph Table 沒有超出檔案大小，避免依錯誤的數量配置記憶體。
+    \item Glyph Table 依 code point 嚴格遞增，且每個 code point 都是合法的 Unicode 字元（不超過 U+10FFFF，也不是 surrogate）。
+    \item 每個字形的 bitmap 範圍都位於 Bitmap Data 內；比較時以減法改寫 $\text{offset}+w\times h\le\text{size}$，避免加法溢位。
+\end{itemize}
+由於所有範圍都在載入時驗證過，繪製時可以直接取用 bitmap，不必每畫一個字都重複檢查邊界。
 
-\[
-    x=\text{penX}+b_x, \qquad
-    y=\text{baselineY}-b_y.
-\]
+\subsection{查找與替代字元}
+\label{app:gfnt-lookup}
 
-其中 $b_x$ 與 $b_y$ 是 Glyph 的 horizontal bearing 與 vertical bearing。Bitmap Data 每個 pixel 儲存 alpha；Renderer 讀取目前的 OpenGL color，組成 RGBA pixels，再開啟一般 alpha blending。因為 Glyph rows 由上到下儲存，繪製時使用負的 Y pixel zoom。完成一個 Glyph 後，penX 再增加 \lstinline|advanceX|。整個執行流程已在圖~\ref{fig:gfnt-runtime} 表示。
-
-圖~\ref{fig:gfnt-bitmap-render} 使用實際的 Cubic-11 與 Unifont 字型繪製「你」（U+4F60）。Cubic-11 雖然名稱包含 11，但本專案轉換時使用的 \lstinline|pixelSize| 為 12，因此產生的「你」字 bitmap 為 $13\times11$ pixels，高度是 11 pixels。左半部依 Converter 產生 GFNT 欄位的方式，標出基線、bearing、bitmap 範圍與 advance；右半部則將 Unifont 的 $16\times16$ alpha bitmap 逐格畫出，並顯示 Renderer 如何把目前顏色乘上 Glyph alpha 形成 RGBA pixels。圖中的第一列對應 GFNT Bitmap Data 的起始位置，負的 Y pixel zoom 會讓 \lstinline|glDrawPixels()| 由 Glyph 上方往下顯示。
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/app_b_gfnt-bitmap-render.png}
-    \caption{GFNT 字形定位與點陣圖著色；使用 Cubic-11 及 Unifont 16 的實際「你」字點陣圖}
-    \label{fig:gfnt-bitmap-render}
-\end{figure}
+Glyph Table 已依 code point 排序，因此以 \lstinline|std::lower_bound| 進行二分搜尋，$N$ 個字形只需 $O(\log N)$ 次比較；載入時檢查嚴格遞增，正是為了保證二分搜尋的前提成立。找不到字元時依序改用 U+FFFD 與問號；若字型連這兩者都沒有，則不繪製 bitmap，只以 pixelSize 推進 pen，使後續文字仍維持在正確位置。字形的著色與繪製流程見第~\ref{sec:gfnt-render} 節。

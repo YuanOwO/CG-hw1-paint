@@ -1,0 +1,34 @@
+{
+    "theme": "default",
+    "themeVariables": {
+        "fontFamily": "Noto Sans CJK TC, Arial, sans-serif",
+        "fontSize": "24px"
+    },
+    "flowchart": {
+        "curve": "basis",
+        "htmlLabels": true,
+        "nodeSpacing": 35,
+        "rankSpacing": 40,
+        "useMaxWidth": false,
+        "wrappingWidth": 500
+    },
+    "class": {
+        "useMaxWidth": false
+    },
+    "classDiagram": {
+        "useMaxWidth": false
+    },
+    "sequence": {
+        "useMaxWidth": false,
+        "width": 110,
+        "actorMargin": 30,
+        "boxMargin": 4,
+        "messageFontSize": 20,
+        "actorFontSize": 20,
+        "noteFontSize": 20,
+        "messageMargin": 22,
+        "noteMargin": 6,
+        "bottomMarginAdj": 0,
+        "height": 44
+    }
+}

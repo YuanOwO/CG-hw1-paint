@@ -1,7 +1,0 @@
-flowchart LR
-    glut[FreeGLUT<br/>原始 callback]
-    registry[Window Registry<br/>依 ID 找到視窗]
-    event[Event System<br/>統一輸入狀態]
-    target[Window / Element<br/>處理事件]
-
-    glut --> registry --> event --> target

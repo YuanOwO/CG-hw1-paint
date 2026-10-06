@@ -1,5 +1,8 @@
 flowchart TB
-    root[RootElement] --> dock[DockPanel]
-    dock --> canvas[CanvasElement]
-    dock --> bottom[StackPanel<br/>底部狀態列]
-    bottom --> status[工具 / 游標位置 / 畫布尺寸]
+    win["PaintWindow"] --> root["RootElement"]
+    root --> dock["DockPanelElement"]
+    dock -- "Dock::Bottom" --> status["StackPanelElement<br/>水平排列的狀態列"]
+    dock -- "最後一個 child：剩餘空間" --> canvas["CanvasElement<br/>可取得 focus，按下時 capture"]
+    status -- "grow 1" --> t1["TextElement<br/>Tool"]
+    status -- "grow 1" --> t2["TextElement<br/>Pos"]
+    status -- "grow 1" --> t3["TextElement<br/>Size"]

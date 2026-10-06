@@ -31,17 +31,15 @@ class PaintWindow : public ui::Window {
     ui::TextElement* _sizeText = nullptr;
 
     void selectTool(drawing::ToolKind tool);
-    void setShapeStyle(const drawing::ShapeStyle& style);
-    void setTextStyle(const drawing::TextStyle& style);
     void updateToolStatus();
-    void requestTextInput(Point anchor, drawing::TextStyle style);
+    void requestTextInput(Point anchor, drawing::PaintStyle paint, drawing::TextStyle style);
 
     void requestNewFile();
-    void requestLoadFile();
+    void requestOpenFile();
     void requestClose();
 
     void newFile();
-    void loadFile();
+    void openFile();
     void saveFile();
     void saveFileAs();
     void exportFile();
@@ -53,6 +51,7 @@ class PaintWindow : public ui::Window {
     void setupMenu();
 
     void setupToolMenu();
+    void setupColorMenu();
     void setupStrokeMenu();
     void setupFillMenu();
     void setupPointMenu();

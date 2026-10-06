@@ -197,7 +197,7 @@ void TextRenderer::render(RenderContext& context, const ui::TextElement& element
 }
 
 void TextRenderer::draw(RenderContext& context, const drawing::TextObject& object) {
-    drawText(context, object.text(), object.style().font, object.style().color, object.position());
+    drawText(context, object.text(), object.style().font, object.paint().color, object.position());
 }
 
 void TextRenderer::drawText(RenderContext& context, const std::string& text, const FontStyle& fontStyle,

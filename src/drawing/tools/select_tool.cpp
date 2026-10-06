@@ -36,7 +36,7 @@ std::optional<SelectionBounds> objectBounds(const SceneObject& object) {
         }
 
         // 邊界需包含 stroke，選取框才不會壓在圖形線條上。
-        float renderedWidth = shape->style().strokeWidth();
+        float renderedWidth = shape->style().stroke.width;
         if (const auto* point = dynamic_cast<const PointShape*>(shape)) {
             renderedWidth = point->style().pointSize;
         }
@@ -78,17 +78,17 @@ bool hitTest(const SceneObject& object, Point point) {
 
     // 有填色的封閉圖形可以直接點擊內部；透明圖形則只選得到邊線。
     const bool hasVisibleFill =
-        (shape->style().fillMode == FillMode::FILLED && shape->style().stroke.color.a > 0.0f) ||
-        (shape->style().fillMode == FillMode::ADVANCED && shape->style().fill.color.a > 0.0f);
+        (shape->style().fillMode == FillMode::FILLED && shape->paint().color.a > 0.0f) ||
+        (shape->style().fillMode == FillMode::ADVANCED && shape->paint().fillColor.a > 0.0f);
     if (shape->isClosed() && hasVisibleFill && pointInPolygon(point, vertices)) {
         return true;
     }
 
-    if (shape->style().stroke.color.a <= 0.0f) {
+    if (shape->paint().color.a <= 0.0f) {
         return false;
     }
 
-    float renderedWidth = shape->style().strokeWidth();
+    float renderedWidth = shape->style().stroke.width;
     if (const auto* pointShape = dynamic_cast<const PointShape*>(shape)) {
         renderedWidth = pointShape->style().pointSize;
     }

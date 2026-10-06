@@ -84,6 +84,23 @@ void Window::setTitle(const std::string& title) {
     }
 }
 
+void Window::resize(int width, int height) {
+    if (_id == 0 || width <= 0 || height <= 0 || (width == _width && height == _height)) {
+        return;
+    }
+
+    const int previousWindow = glutGetWindow();
+    if (previousWindow != _id) {
+        glutSetWindow(_id);
+    }
+
+    glutReshapeWindow(width, height);
+
+    if (previousWindow != 0 && previousWindow != _id) {
+        glutSetWindow(previousWindow);
+    }
+}
+
 void Window::close() {
     _shouldClose = true;
 }

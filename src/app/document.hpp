@@ -67,7 +67,7 @@ class Document {
     // 文件操作
 
     void newFile();
-    void load(const Path& filename);
+    void open(const Path& filename);
     void save();  // 保存到當前文件名
     void save(const Path& filename);
     void exportImage(const Path& filename);

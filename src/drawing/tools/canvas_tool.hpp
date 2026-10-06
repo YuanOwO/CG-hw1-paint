@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "common/point.hpp"
+#include "drawing/paint_style.hpp"
 #include "drawing/scene_object.hpp"
 #include "drawing/text_style.hpp"
 #include "event/events.hpp"
@@ -38,6 +39,7 @@ struct RemoveObjectAction {
 
 struct RequestTextInputAction {
     Point anchor;
+    PaintStyle paint;
     TextStyle style;
 };
 
@@ -59,9 +61,9 @@ struct ToolResult {
         return {handled, true, RemoveObjectAction{std::move(object)}};
     }
 
-    static ToolResult requestTextInput(Point anchor, TextStyle style) {
+    static ToolResult requestTextInput(Point anchor, PaintStyle paint, TextStyle style) {
         return {
-            true, false, RequestTextInputAction{anchor, std::move(style)}
+            true, false, RequestTextInputAction{anchor, paint, std::move(style)}
         };
     }
 };

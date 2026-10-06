@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "common/point.hpp"
+#include "drawing/paint_style.hpp"
 #include "drawing/scene_object.hpp"
 #include "drawing/shape_style.hpp"
 
@@ -19,24 +20,26 @@ enum class ShapeKind {
 
 class ShapeObject : public SceneObject {
    public:
-    ShapeObject(ShapeStyle style) : _style(style) {}
+    ShapeObject(const PaintStyle& paint, const ShapeStyle& style) : _paint(paint), _style(style) {}
 
     virtual ~ShapeObject() = default;
 
     ObjectKind objectKind() const override { return ObjectKind::Shape; }
     virtual ShapeKind shapeKind() const = 0;
 
+    const PaintStyle& paint() const { return _paint; }   // 取得形狀的顏色資訊
     const ShapeStyle& style() const { return _style; }   // 取得形狀的樣式資訊
     virtual bool isClosed() const = 0;                   // 是否為封閉形狀
     virtual std::vector<Point> getVertices() const = 0;  // 採樣取得形狀的頂點座標，供繪製邊框使用
 
    protected:
+    const PaintStyle _paint;
     const ShapeStyle _style;
 };
 
 class PointShape : public ShapeObject {
    public:
-    PointShape(const ShapeStyle& style) : ShapeObject(style) {}
+    using ShapeObject::ShapeObject;
 
     bool isClosed() const override { return false; }
     ShapeKind shapeKind() const override { return ShapeKind::Point; }

@@ -1,8 +1,0 @@
-flowchart LR
-    input[Window Input] --> select{選擇事件目標}
-    select -- Capture / Hit Test --> listener[Target Listener]
-    listener --> bubble[沿 Parent Chain Bubbling<br/>stopPropagation 可中止]
-
-
-    classDef decision fill:#fff9df,stroke:#806f27,color:#111,stroke-width:1px;
-    class select decision;

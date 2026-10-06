@@ -33,7 +33,7 @@ class GptdDumperV1 {
     const char* lineCapName(drawing::LineCap cap);
     const char* shapeKindName(drawing::ShapeKind kind);
 
-    void writeShapeStyle(const drawing::ShapeStyle& style);
+    void writeShapeStyle(const drawing::PaintStyle& paint, const drawing::ShapeStyle& style);
     void writeTwoPointGeometry(const drawing::TwoPointShape& shape);
     void writePointList(const std::vector<Point>& points);
     void writeShape(const drawing::ShapeObject& shape);

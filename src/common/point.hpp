@@ -31,8 +31,6 @@ class Point {
     Point operator*(float scalar) const { return Point(_x * scalar, _y * scalar); }
     Point operator/(float scalar) const { return Point(_x / scalar, _y / scalar); }
 
-    std::string toString() const { return "(" + std::to_string(_x) + ", " + std::to_string(_y) + ")"; }
-
    protected:
     float _x, _y;
 };

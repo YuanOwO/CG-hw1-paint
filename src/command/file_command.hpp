@@ -29,9 +29,9 @@ class NewFileCommand : public FileCommand {
     }
 };
 
-class LoadCommand : public FileCommand {
+class OpenCommand : public FileCommand {
    public:
-    LoadCommand(Document& document, const Path& filename) : FileCommand(document), _filename(filename) {}
+    OpenCommand(Document& document, const Path& filename) : FileCommand(document), _filename(filename) {}
 
     void execute() override {
         io::GptdSerializer serializer;

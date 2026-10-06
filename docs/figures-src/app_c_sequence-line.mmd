@@ -1,0 +1,24 @@
+sequenceDiagram
+    participant C as CanvasElement
+    participant T as LineTool
+    participant D as Document
+    participant H as CommandHistory
+    participant S as Scene
+
+    Note over C: MouseDown
+    C->>T: onMouseDown
+    T->>T: beginDraft()
+    T-->>C: 重畫
+    loop 拖曳中
+        C->>T: onMouseMove
+        T->>T: 更新 Draft
+        T-->>C: 重畫
+    end
+    Note over C: MouseUp
+    C->>T: onMouseUp
+    T->>T: commitDraft()
+    T-->>C: AddObjectAction
+    C->>D: addObject()
+    D->>H: execute(cmd)
+    H->>S: cmd.execute()
+    C->>C: 重畫

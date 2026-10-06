@@ -1,0 +1,27 @@
+flowchart TB
+    user["<b>使用者</b><br/><small>[Person]</small>"]:::person
+    glut["<b>FreeGLUT / OpenGL</b><br/><small>[External System]</small>"]:::ext
+
+    subgraph app["Graphtoria [Container]"]
+        ui["<b>GUI Framework</b><br/><small>[src/ui]</small>"]:::comp
+        tools["<b>Tools</b><br/><small>[src/drawing/tools]</small>"]:::comp
+        doc["<b>Document</b><br/><small>[src/app, src/command]</small>"]:::comp
+        render["<b>Renderers</b><br/><small>[src/render]</small>"]:::comp
+        io["<b>IO</b><br/><small>[src/io]</small>"]:::comp
+    end
+
+    fs["<b>檔案系統</b><br/><small>[External System]</small><br/>.gpt、.ppm"]:::ext
+
+    user -- "操作" --> glut
+    glut -- "callback" --> ui
+    ui -- "輸入事件" --> tools
+    ui -- "ToolResult" --> doc
+    ui -- "繪製" --> render
+    render -- "繪圖指令" --> glut
+    doc -- "存取" --> io
+    io -- "讀寫" --> fs
+
+    classDef person fill:#08427b,stroke:#052e56,color:#fff
+    classDef ext fill:#999999,stroke:#6b6b6b,color:#fff
+    classDef comp fill:#85bbf0,stroke:#5d82a8,color:#000
+    style app fill:#ffffff,stroke:#666,stroke-dasharray: 6 4
