@@ -3,9 +3,7 @@
 
 \subsection{設計目的與產生方式}
 
-GFNT 的目的是在不引入字型解析函式庫的前提下，讓程式能夠顯示中文。FreeGLUT 內建字型只支援 ASCII，而一般的 TTF 字型以曲線描述字形，必須先解析再光柵化，對這次作業而言過於複雜。
-
-因此本專案事先將字型中的字形轉為點陣資料，並以簡單的二進位格式保存。程式執行時只需依 Unicode code point 找到對應的字形，取得其尺寸與定位資訊，再把點陣資料畫到畫面上。
+GFNT 事先將字型中的字形轉為點陣資料，並以簡單的二進位格式保存，設計理由與繪製流程見第~\ref{sec:gfnt-render} 節。
 
 目前隨程式附上兩套字型，使用者可在選單中切換，授權條款隨字型檔一同附上：
 \begin{itemize}
@@ -34,7 +32,7 @@ GFNT 由三個區段依序組成，所有整數皆為 little-endian，各欄位�
 \subsection{Font Metrics 與字形定位}
 \label{app:gfnt-metrics}
 
-字形以基線對齊。設文字區塊左上角的 Y 座標為 $y_0$，則第一行的基線為 $y_b=y_0+\text{ascender}$，每行的行高為 $\text{ascender}+\text{descender}$。對 pen 位置 $x_p$ 上的一個字形，其 bitmap 左上角為
+字形以基線對齊，繪製時維護一個 pen，即下一個字元在基線上的起始位置，初始為文字的左端，遇到換行則回到左端並下移一個行高。設文字區塊左上角的 Y 座標為 $y_0$，則第一行的基線為 $y_b=y_0+\text{ascender}$，每行的行高為 $\text{ascender}+\text{descender}$。對 pen 位置 $x_p$ 上的一個字形，其 bitmap 左上角為
 \[
     x=x_p+\text{bearingX},\qquad y=y_b-\text{bearingY},
 \]
@@ -62,5 +60,6 @@ Loader 不直接把檔案內容複製進 C++ struct，而是逐欄位讀取 byte
 由於所有範圍都在載入時驗證過，繪製時可以直接取用 bitmap，不必每畫一個字都重複檢查邊界。
 
 \subsection{查找與替代字元}
+\label{app:gfnt-lookup}
 
 Glyph Table 已依 code point 排序，因此以 \lstinline|std::lower_bound| 進行二分搜尋，$N$ 個字形只需 $O(\log N)$ 次比較；載入時檢查嚴格遞增，正是為了保證二分搜尋的前提成立。找不到字元時依序改用 U+FFFD 與問號；若字型連這兩者都沒有，則不繪製 bitmap，只以 pixelSize 推進 pen，使後續文字仍維持在正確位置。字形的著色與繪製流程見第~\ref{sec:gfnt-render} 節。

@@ -29,7 +29,7 @@ FreeGLUT 的鍵盤 callback 每次只提供一個 byte，無法接收輸入法�
 
 FreeGLUT 沒有中文字形，而 TrueType 以 Bézier 曲線描述字形，解析與光柵化的成本都高，因此本專案另外設計 GFNT \footnote{本專案的自定義格式，取自 ``Graphtoria Font''} 點陣字型格式，預先將字形轉為 alpha bitmap。檔案包含字型 metrics、依 code point 排序的 Glyph 表與 bitmap 資料，詳細格式見附錄~\ref{app:gfnt}。
 
-繪製流程如圖~\ref{fig:gfnt-runtime}。繪製時維護一個「pen」，即下一個字元在基線上的起始位置，初始為文字的左端。對每個 code point，先在依 code point 排序的 Glyph 表中以二分搜尋（\lstinline|std::lower_bound|）找到 Glyph，找不到時依序改用 U+FFFD 與問號；再由 bearing 求出 bitmap 左上角相對於 pen 的位置，畫完後將 pen 向右移動 advance，遇到換行則回到左端並下移一個行高。由於 \lstinline|glDrawPixels()| 不會以目前的 \lstinline|glColor| 替單通道 bitmap 上色，程式先建立 RGBA buffer：RGB 填入文字顏色，A 為 bitmap alpha 乘上文字顏色的 alpha，再開啟 blending 繪製。GFNT 的 bitmap 由上往下儲存，與 OpenGL 預設的列順序相反，因此將 \lstinline|glPixelZoom()| 的 Y 設為 $-1$。實際輸出如圖~\ref{fig:gfnt-result}。
+繪製流程如圖~\ref{fig:gfnt-runtime}：對每個 code point 在 Glyph 表中查得字形，依 font metrics 求出 bitmap 位置後繪製並推進 pen，定位與查找的細節見附錄~\ref{app:gfnt-metrics}、\ref{app:gfnt-lookup}。由於 \lstinline|glDrawPixels()| 不會以目前的 \lstinline|glColor| 替單通道 bitmap 上色，程式先建立 RGBA buffer：RGB 填入文字顏色，A 為 bitmap alpha 乘上文字顏色的 alpha，再開啟 blending 繪製。GFNT 的 bitmap 由上往下儲存，與 OpenGL 預設的列順序相反，因此將 \lstinline|glPixelZoom()| 的 Y 設為 $-1$。實際輸出如圖~\ref{fig:gfnt-result}。
 
 \begin{figure}[htbp]
     \centering

@@ -3,7 +3,7 @@
 
 \subsection{設計動機與理念}
 
-本專案最初直接在 FreeGLUT callback 中處理滑鼠、鍵盤與視窗事件。隨著功能增加，Canvas、狀態列、文字輸入框、對話框與多視窗各自需要排列方式、事件處理與輸入狀態，若全部集中在 callback 或主視窗中，程式很快就難以維護。因此實作過程中逐步抽出 Window、Element、Layout 與 Event 等基礎機制，形成一套只涵蓋本作業需求的 Mini GUI Framework。它並非要重做完整的 GUI toolkit，而是將 FreeGLUT 的低階 callback 與應用程式邏輯分離，讓主視窗、Canvas、輸入框與對話框建立在同一套介面與事件模型上。
+隨著 Canvas、狀態列、文字輸入框、對話框與多視窗陸續加入，本專案逐步從 FreeGLUT callback 中抽出 Window、Element、Layout 與 Event 等機制，形成只涵蓋本作業需求的 Mini GUI Framework。它並非完整的 GUI toolkit，目的是將低階 callback 與應用程式邏輯分離，讓所有介面元件建立在同一套事件模型上。
 
 設計概念受到瀏覽器中 HTML 與 DOM 的啟發：介面由具有父子關係的節點組成，如同 HTML 文件的元素樹；滑鼠事件先經 Hit Test 找到 target，再沿父節點向上 bubbling；Focus、Mouse Capture 與 Modal 則用來處理實際互動時的輸入狀態。由於沒有 CSS 與瀏覽器排版引擎，版面配置改採較簡單的 Measure/Arrange 兩階段計算，並只提供本作業需要的 Stack 與 Dock 兩種容器。所有元件最後都以 OpenGL 繪製在所屬視窗的 framebuffer 上。
 
@@ -66,6 +66,6 @@ GLUT callback 是不帶任何物件的 static function，因此 \lstinline|Windo
 \subsection{Menu 與 Shortcut}
 \label{app:gui-menu}
 
-FreeGLUT 的選單以整數 ID 識別，callback 也只會收到被點選項目的 ID。\lstinline|Menu| 將一個 GLUT 選單包裝成物件：建立時記錄所屬視窗，並在全域對照表中登記「選單 ID $\to$ Menu」；每個項目則保存「項目 ID $\to$ \lstinline|std::function|」。子選單同樣是 \lstinline|Menu|，由父選單擁有，因此整個選單會形成一棵樹，釋放時一併銷毀。callback 觸發時，先以 \lstinline|glutGetMenu()| 找到所屬的 Menu，確認沒有被 Modal 視窗擋下後，再執行對應項目的動作。由於 GLUT 以全域狀態記錄「目前的視窗與選單」，新增項目前會暫時切換到自己的視窗與選單，完成後再切回原本的狀態。
+FreeGLUT 的選單以整數 ID 識別，callback 只會收到被點選項目的 ID。\lstinline|Menu| 將 GLUT 選單包裝成物件，讓每個項目直接對應一個 \lstinline|std::function|，子選單由父選單擁有而形成一棵樹。callback 觸發時先找到所屬的 Menu，確認沒有被 Modal 視窗擋下後，再執行對應項目的動作。
 
 快捷鍵由 \lstinline|ShortcutManager| 管理。每組快捷鍵是一個 key chord，也就是必須同時按住的按鍵與修飾鍵集合；修飾鍵中的 Primary 在 macOS 對應 Command，在其他平台對應 Ctrl，讓同一組綁定能跨平台使用。KeyDown 事件發生時，管理器只考慮包含剛按下按鍵、且所有按鍵都處於按下狀態的 chord，並在多個 chord 同時符合時選擇按鍵數最多的一組，例如按下 Primary+Shift+Z 時執行 Redo，而不是同樣符合的 Primary+Z。按住不放產生的重複事件則會被忽略，避免動作連續觸發。快捷鍵在 Window 層處理，因此鍵盤事件會先送到 focused element，只有元素沒有呼叫 \lstinline|stopPropagation()| 時才會 bubbling 到 Window 並觸發快捷鍵。主視窗中，選單項目與對應的快捷鍵綁定到同一個函式，避免兩邊的行為不同步。
