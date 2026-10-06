@@ -167,123 +167,129 @@ def draw_grid_coordinate() -> None:
 
 
 def draw_utf8_caret() -> None:
-    image, draw = canvas(930)
-    draw.text(
-        (70, 45), "UTF-8 bytes、code point 與 caret 的對應", font=font(42), fill=INK
-    )
-    panel(draw, (60, 130, 2340, 850), "輸入框以 code point 為編輯單位")
+    image, draw = canvas(820)
 
-    draw.text((150, 235), "顯示文字", font=font(28), fill=GRAY)
-    cells = [("A", 360, 300), ("你", 780, 300), ("B", 1360, 300)]
-    widths = [300, 460, 300]
-    for (char, x, y), width in zip(cells, widths):
-        box = (x, y, x + width, y + 170)
-        draw.rounded_rectangle(box, radius=18, fill=PALE_BLUE, outline=BLUE, width=3)
-        centered(draw, box, char, 82, fill=BLUE)
+    # 同一字串「A你B」上下對照：上排是 code point，下排是 UTF-8 bytes。
+    # 上排格子的寬度剛好跨過對應的 bytes，讓「一個中文字 = 3 bytes」一眼可見。
+    cell = 300
+    left = 470
+    edges = [left + cell * i for i in range(6)]  # 6 個 byte 邊界
+    top_row = (190, 380)
+    bottom_row = (520, 660)
 
-    caret_x = [330, 690, 1270, 1690]
-    for index, x in enumerate(caret_x):
-        draw.line((x, 280, x, 500), fill=RED, width=4)
-        draw.text((x - 12, 520), str(index), font=font(25), fill=RED)
-    draw.text((1770, 405), "caret index 位於字元之間", font=font(26), fill=RED)
+    centered(draw, (40, top_row[0], left - 30, top_row[1]), "Code point", 46, fill=BLUE)
+    centered(draw, (40, bottom_row[0], left - 30, bottom_row[1]), "UTF-8 bytes", 46, fill=INK)
 
-    draw.text((150, 610), "code point", font=font(27), fill=GRAY)
-    cp_boxes = [
-        ((360, 590, 660, 675), "U+0041"),
-        ((780, 590, 1240, 675), "U+4F60"),
-        ((1360, 590, 1660, 675), "U+0042"),
+    characters = [
+        (edges[0], edges[1], "A", "U+0041"),
+        (edges[1], edges[4], "你", "U+4F60"),
+        (edges[4], edges[5], "B", "U+0042"),
     ]
-    for box, label in cp_boxes:
-        outline = RED if label == "U+4F60" else GREEN
-        width = 4 if label == "U+4F60" else 2
-        draw.rounded_rectangle(
-            box, radius=12, fill=PALE_GREEN, outline=outline, width=width
-        )
-        centered(draw, box, label, 27)
+    for x0, x1, glyph, codepoint in characters:
+        box = (x0 + 6, top_row[0], x1 - 6, top_row[1])
+        draw.rounded_rectangle(box, radius=18, fill=PALE_BLUE, outline=BLUE, width=5)
+        centered(draw, (x0, top_row[0] + 10, x1, top_row[1] - 60), glyph, 88)
+        centered(draw, (x0, top_row[1] - 70, x1, top_row[1] - 10), codepoint, 38, fill=GRAY)
 
-    draw.text((150, 745), "UTF-8 bytes", font=font(27), fill=GRAY)
-    byte_boxes = [
-        ((360, 720, 660, 805), "41"),
-        ((780, 720, 1240, 805), "E4  BD  A0"),
-        ((1360, 720, 1660, 805), "42"),
-    ]
-    for box, label in byte_boxes:
-        draw.rounded_rectangle(
-            box, radius=12, fill=PALE_YELLOW, outline=(150, 126, 40), width=2
-        )
-        centered(draw, box, label, 27)
+    for index, byte in enumerate(["41", "E4", "BD", "A0", "42"]):
+        box = (edges[index] + 6, bottom_row[0], edges[index + 1] - 6, bottom_row[1])
+        draw.rounded_rectangle(box, radius=14, fill=PALE_YELLOW, outline=(150, 126, 40), width=4)
+        centered(draw, box, byte, 56)
 
-    draw.multiline_text(
-        (1770, 610),
-        "Backspace 刪除「你」時\n移除一個 code point，\n對應三個 UTF-8 bytes",
-        font=font(26),
-        fill=INK,
-        spacing=9,
+    # 上下排的對應關係：每個字元邊界往下對到 byte 邊界。
+    for x in (edges[0], edges[1], edges[4], edges[5]):
+        for y in range(top_row[1] + 8, bottom_row[0] - 4, 22):
+            draw.line((x, y, x, min(y + 12, bottom_row[0] - 4)), fill=GRAY, width=4)
+
+    # 綠色：以字元為單位時，游標只會停在字元邊界。
+    for x in (edges[0], edges[1], edges[4], edges[5]):
+        draw.polygon([(x - 20, 120), (x + 20, 120), (x, 160)], fill=GREEN)
+    centered(draw, (edges[5] + 20, top_row[0], 2390, top_row[1]), "游標只停在\n字元邊界", 44, fill=GREEN)
+
+    # 紅色：以 byte 為單位時，游標可能停在「你」的中間。
+    cut = edges[3]
+    draw.line((cut, bottom_row[0] - 40, cut, bottom_row[1] + 30), fill=RED, width=10)
+    draw.polygon([(cut - 22, bottom_row[1] + 72), (cut + 22, bottom_row[1] + 72), (cut, bottom_row[1] + 32)], fill=RED)
+    centered(draw, (edges[5] + 20, bottom_row[0], 2390, bottom_row[1]), "以 byte 計算\n可能切斷字元", 44, fill=RED)
+    centered(
+        draw,
+        (left, bottom_row[1] + 80, edges[5], 810),
+        "此時按 Backspace 只刪除 A0，留下的 E4 BD 無法解碼",
+        44,
+        fill=RED,
     )
     save(image, "ch05_utf8-caret.png")
 
 
+def dimension(
+    draw: ImageDraw.ImageDraw, x: int, y0: int, y1: int, label: str, color, side: str = "right"
+) -> None:
+    """垂直的尺寸標註：兩端有箭頭與短橫線，標籤放在一側。"""
+    draw.line((x - 18, y0, x + 18, y0), fill=color, width=4)
+    draw.line((x - 18, y1, x + 18, y1), fill=color, width=4)
+    mid = (y0 + y1) // 2
+    arrow(draw, (x, mid), (x, y0 + 2), color=color, width=5)
+    arrow(draw, (x, mid), (x, y1 - 2), color=color, width=5)
+    if side == "right":
+        draw.text((x + 30, mid - 34), label, font=font(56), fill=color)
+    else:
+        bounds = draw.textbbox((0, 0), label, font=font(56))
+        draw.text((x - 30 - (bounds[2] - bounds[0]), mid - 34), label, font=font(56), fill=color)
+
+
 def draw_framebuffer_coordinates() -> None:
-    image, draw = canvas(1020)
-    draw.text((70, 45), "UI 座標與 OpenGL framebuffer 座標", font=font(42), fill=INK)
-    panel(draw, (60, 130, 1120, 940), "UI／Window：左上角為原點")
-    panel(draw, (1280, 130, 2340, 940), "OpenGL：左下角為原點")
+    image, draw = canvas(1100)
 
-    ui = (210, 285, 940, 790)
-    gl = (1430, 285, 2160, 790)
-    draw.rectangle(ui, fill="white", outline=GRAY, width=4)
-    draw.rectangle(gl, fill="white", outline=GRAY, width=4)
+    # 同一個擷取區域，分別從視窗頂端（UI）與底端（OpenGL）量測。
+    window = (620, 110, 1700, 970)
+    region = (900, 330, 1420, 630)
+    draw.rectangle(window, fill="white", outline=GRAY, width=5)
 
-    capture_ui = (410, 410, 790, 650)
-    capture_gl = (1630, 425, 2010, 665)
-    draw.rectangle(capture_ui, fill=PALE_BLUE, outline=BLUE, width=4)
-    draw.rectangle(capture_gl, fill=PALE_BLUE, outline=BLUE, width=4)
+    rows = 3
+    row_height = (region[3] - region[1]) // rows
+    for i in range(rows):
+        y1 = region[3] - i * row_height
+        shade = [(96, 146, 220), (148, 184, 236), (200, 220, 246)][i]
+        draw.rectangle((region[0], y1 - row_height, region[2], y1), fill=shade)
+        centered(draw, (region[0], y1 - row_height, region[2], y1), f"row {i}", 40, fill=INK)
+    draw.rectangle(region, outline=BLUE, width=5)
+    centered(draw, (region[0], region[1] - 70, region[2], region[1] - 10), "擷取區域", 42, fill=BLUE)
 
-    draw.ellipse((203, 278, 217, 292), fill=RED)
-    arrow(draw, (210, 285), (320, 285), color=RED, width=4)
-    arrow(draw, (210, 285), (210, 395), color=RED, width=4)
-    draw.text((325, 268), "X", font=font(24), fill=RED)
-    draw.text((190, 398), "Y", font=font(24), fill=RED)
-    draw.text((170, 245), "(0, 0)", font=font(23), fill=RED)
+    # UI 原點：左上角，Y 向下。
+    ox, oy = window[0], window[1]
+    draw.ellipse((ox - 14, oy - 14, ox + 14, oy + 14), fill=RED)
+    arrow(draw, (ox, oy), (ox + 150, oy), color=RED, width=6)
+    arrow(draw, (ox, oy), (ox, oy + 150), color=RED, width=6)
+    draw.text((ox - 300, oy - 30), "UI 原點", font=font(46), fill=RED)
+    draw.text((ox + 20, oy + 140), "Y", font=font(40), fill=RED)
 
-    draw.ellipse((1423, 783, 1437, 797), fill=GREEN)
-    arrow(draw, (1430, 790), (1540, 790), color=GREEN, width=4)
-    arrow(draw, (1430, 790), (1430, 680), color=GREEN, width=4)
-    draw.text((1545, 774), "X", font=font(24), fill=GREEN)
-    draw.text((1408, 645), "Y", font=font(24), fill=GREEN)
-    draw.text((1390, 805), "(0, 0)", font=font(23), fill=GREEN)
+    # OpenGL 原點：左下角，Y 向上。
+    gx, gy = window[0], window[3]
+    draw.ellipse((gx - 14, gy - 14, gx + 14, gy + 14), fill=GREEN)
+    arrow(draw, (gx, gy), (gx + 150, gy), color=GREEN, width=6)
+    arrow(draw, (gx, gy), (gx, gy - 150), color=GREEN, width=6)
+    draw.text((gx - 360, gy - 30), "OpenGL 原點", font=font(46), fill=GREEN)
+    draw.text((gx + 20, gy - 190), "Y", font=font(40), fill=GREEN)
 
-    draw.text((425, 430), "擷取區域", font=font(27), fill=BLUE)
-    draw.multiline_text(
-        (425, 485),
-        "左上角：(x, y)\n尺寸：width × height",
-        font=font(25),
-        fill=INK,
-        spacing=8,
-    )
-    draw.text((1650, 445), "相同的 framebuffer 區域", font=font(25), fill=BLUE)
-    draw.text((1645, 600), "底部座標：(x, bottom)", font=font(24), fill=INK)
+    # 尺寸標註：右側為區域相關距離，左側為整個視窗高度。
+    dim_x = window[2] + 90
+    for y in (region[1], region[3]):
+        for x in range(region[2] + 10, dim_x - 20, 24):
+            draw.line((x, y, x + 12, y), fill=GRAY, width=3)
+    dimension(draw, dim_x, window[1], region[1], "y", RED)
+    dimension(draw, dim_x, region[1], region[3], "h", BLUE)
+    dimension(draw, dim_x, region[3], window[3], "H − y − h", GREEN)
+    dimension(draw, 2250, window[1], window[3], "H", GRAY)
+    for y in (window[1], window[3]):
+        for x in range(window[2] + 10, 2230, 24):
+            draw.line((x, y, x + 12, y), fill=GRAY, width=3)
 
-    arrow(draw, (970, 520), (1245, 520), color=BLUE, width=6)
-    formula = (820, 715, 1375, 895)
-    draw.rounded_rectangle(
-        formula, radius=18, fill=PALE_YELLOW, outline=(150, 126, 40), width=3
-    )
-    centered(draw, formula, "bottom = windowHeight - y - height", 28)
-
-    for index, color in enumerate(
-        [(221, 235, 255), (190, 215, 252), (145, 184, 239), (94, 143, 219)]
-    ):
-        y0 = capture_gl[1] + index * 60
-        draw.rectangle(
-            (capture_gl[0], y0, capture_gl[2], y0 + 60),
-            fill=color,
-            outline="white",
-            width=2,
-        )
-        draw.text((2025, y0 + 13), f"row {3 - index}", font=font(21), fill=INK)
-    draw.text(
-        (1575, 835), "glReadPixels() 由下往上存入 rows", font=font(25), fill=GREEN
+    centered(
+        draw,
+        (window[0], window[3] + 45, window[2], 1090),
+        "glReadPixels() 從 row 0（區域底部）開始往上讀",
+        40,
+        fill=GRAY,
     )
     save(image, "ch06_framebuffer-coordinate.png")
 
