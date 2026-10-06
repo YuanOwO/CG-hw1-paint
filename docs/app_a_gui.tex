@@ -1,63 +1,71 @@
-\section{自製 GUI Framework}
+\section{Mini GUI Framework}
 \label{app:gui}
 
-\subsection{設計動機與範圍}
+\subsection{設計動機與理念}
 
-這次作業沒有使用第三方 GUI framework，而是依照 drawing panel 的需要自行實作。我的目標不是做一套通用的桌面 toolkit，而是處理這個程式實際用到的多視窗、基本 control、Layout、focus、mouse capture、Event bubbling 與 OpenGL rendering。圖~\ref{fig:gui-classes} 概括 framework 的五個核心角色。
+本專案最初直接在 FreeGLUT callback 中處理滑鼠、鍵盤與視窗事件。隨著功能增加，Canvas、狀態列、文字輸入框、對話框與多視窗各自需要排列方式、事件處理與輸入狀態，若全部集中在 callback 或主視窗中，程式很快就難以維護。因此實作過程中逐步抽出 Window、Element、Layout 與 Event 等基礎機制，形成一套只涵蓋本作業需求的 Mini GUI Framework。它並非要重做完整的 GUI toolkit，而是將 FreeGLUT 的低階 callback 與應用程式邏輯分離，讓主視窗、Canvas、輸入框與對話框建立在同一套介面與事件模型上。
 
-\begin{figure}[H]
+設計概念受到瀏覽器中 HTML 與 DOM 的啟發：介面由具有父子關係的節點組成，如同 HTML 文件的元素樹；滑鼠事件先經 Hit Test 找到 target，再沿父節點向上 bubbling；Focus、Mouse Capture 與 Modal 則用來處理實際互動時的輸入狀態。由於沒有 CSS 與瀏覽器排版引擎，版面配置改採較簡單的 Measure/Arrange 兩階段計算，並只提供本作業需要的 Stack 與 Dock 兩種容器。所有元件最後都以 OpenGL 繪製在所屬視窗的 framebuffer 上。
+
+\subsection{Element Tree}
+\label{app:gui-tree}
+
+介面由 \lstinline|Element| 組成樹狀結構。每個 Element 以 \lstinline|std::unique_ptr| 擁有子元素，因此移除父元素時，整棵子樹會一併釋放。Element 的 bounds 以父元素為座標原點；繪製時遞迴地先平移到自己的左上角，再依序畫背景、自身內容、所有子元素，最後畫游標等前景效果，因此每個元件都只需處理自己的局部座標。Hit Test 也沿著樹往下進行，並從最後一個子元素開始檢查，使後加入、畫在上層的元素優先命中。
+
+目前提供的元件包括 \lstinline|RootElement|、\lstinline|DockPanelElement|、\lstinline|StackPanelElement|、\lstinline|TextElement|、\lstinline|InputElement|、\lstinline|ButtonElement|、\lstinline|CanvasElement|，以及顏色選擇器使用的 \lstinline|ColorFieldElement| 與 \lstinline|HueSliderElement|。主繪圖視窗的結構如圖~\ref{fig:layout-tree}。
+
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=.96\textwidth]{docs/figures/app_a_gui-classes.png}
-    \caption{GUI framework 的五個核心角色}
-    \label{fig:gui-classes}
-\end{figure}
-
-\subsection{Application 與 Window}
-
-Application 建立並管理所有 Window。Window 內部記錄 GLUT window ID、大小、標題、RootElement、ColorBuffer 與互動狀態。每個 Window 都註冊相同的 static callbacks，再透過圖~\ref{fig:callback-routing} 的 ID 查找方式找回正確 instance。PaintWindow、InputDialogWindow、ConfirmWindow 與 GraphicsRenderWindow 都建立在這一層之上。
-
-\begin{figure}[tbp]
-    \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/ch03_callback-routing.png}
-    \caption{GLUT 回呼的路由流程}
-    \label{fig:callback-routing}
-\end{figure}
-
-\subsection{Element Tree 與 Layout System}
-
-每個 Element 記錄 parent、children、margin、padding、alignment 與 bounds。Layout 分成 measure 和 arrange 兩個階段：measure 先由下而上詢問每個元件需要多少空間，arrange 再由上而下分配實際位置。RootElement 只放一個主要內容；StackPanel 沿水平或垂直方向排列，並依 grow 權重分配剩餘空間；DockPanel 依加入順序從四邊扣除空間，最後一個 child 取得剩下區域。圖~\ref{fig:layout-tree} 是 PaintWindow 實際使用的 UI tree，圖~\ref{fig:layout-flow} 則整理從屬性變更到重新排版與繪製的流程。
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=.78\textwidth]{docs/figures/app_a_layout-tree.png}
-    \caption{PaintWindow 的 Element 與 Layout 樹狀結構}
+    \includegraphics[width=.55\textwidth]{docs/figures/app_a_layout-tree.png}
+    \caption{主繪圖視窗的 Element Tree}
     \label{fig:layout-tree}
 \end{figure}
 
-\begin{figure}[H]
+\subsection{Layout：Measure 與 Arrange}
+\label{app:gui-layout}
+
+版面配置分成兩個遞迴階段。\textbf{Measure} 由父元素傳入可用大小（任一維度可為「不限制」），元素扣除 margin 與 padding 後量測內容，再加回 padding、套用 preferred size，回報包含 margin 的需求大小。\textbf{Arrange} 則由父元素分配實際範圍，元素扣除 margin 後依 alignment（Start、Center、End、Stretch）決定自己的 bounds，再將內容區域交給子元素。bounds 改變時會發出 \lstinline|ElementResizeEvent|，主視窗即藉此同步 Canvas 的大小。
+
+兩種容器的配置規則如下：
+\begin{itemize}
+    \item \textbf{StackPanel}：沿主軸依序排列，量測時主軸方向不限制，讓子元素回報自然大小。剩餘空間依各子元素的 grow 權重分配；為避免各自取整後遺失像素，程式以累積權重計算每個子元素的邊界，並把餘數交給最後一個有 grow 的子元素。狀態列的三個欄位即以相同權重平分寬度。
+    \item \textbf{DockPanel}：子元素依序停靠在剩餘區域的上、下、左、右側，最後一個子元素取得所有剩餘空間。主視窗先將狀態列停靠在底部，再讓 Canvas 填滿其餘區域。
+\end{itemize}
+
+屬性改變時，元素只呼叫 \lstinline|invalidateLayout()| 標記版面失效；Window 會在下一次繪製或 Hit Test 前才重新計算整棵樹，避免同一個事件中多次修改而重複配置。
+
+\subsection{事件分派}
+\label{app:gui-event}
+
+所有可接收事件的物件都繼承 \lstinline|EventTarget|，以事件型別為 key 保存 listener。\lstinline|dispatchEvent()| 會先記錄 target，再從 target 開始呼叫 listener；若該事件支援 bubbling，便沿著 parent 往上傳遞，Element Tree 的根節點之上則是 Window 本身。傳遞過程中 target 不變，current target 隨所在層級改變，任何一層都可以呼叫 \lstinline|stopPropagation()| 中止傳遞。
+
+事件的 target 依種類決定，如圖~\ref{fig:event-dispatch}：
+\begin{itemize}
+    \item \textbf{滑鼠事件}：若有元素取得 mouse capture，事件一律送給它；否則以 Hit Test 找到最深層的元素。Canvas、按鈕、色彩區域與 Hue slider 都在按下時 capture、放開時釋放，因此拖曳到元件外仍能收到移動與放開事件。Hover 則永遠依實際位置判斷，不受 capture 影響。
+    \item \textbf{鍵盤與文字事件}：送給目前的 focused element，沒有時送給 Window。按下滑鼠時，程式從命中元素沿 parent 往上找最近一個可取得 focus 的元素，並對新舊焦點分別發出 Focus 與 Blur 事件。
+\end{itemize}
+
+FreeGLUT 只回報按下與放開，Click 與 DoubleClick 由 Window 自行合成：按下與放開的距離在 4 px 以內才視為 Click，若與上一次 Click 相隔 300 ms 內且位置相近，則改發 DoubleClick，Polygon 工具即以此結束繪製。
+
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/app_a_layout-flow.png}
-    \caption{Element Tree 的測量、配置與重新繪製流程}
-    \label{fig:layout-flow}
+    \includegraphics[width=\textwidth]{docs/figures/app_a_event-dispatch.png}
+    \caption{GLUT callback 轉為事件後的分派流程}
+    \label{fig:event-dispatch}
 \end{figure}
 
-當 preferred size、margin、padding 或 alignment 改變時，Element 會呼叫 \lstinline|invalidateLayout()|，再由所屬 Window 把 Layout 標成需要更新。下一次 render 或 hit test 前，Window 先呼叫 \lstinline|ensureLayout()|：measure 從 RootElement 往子節點傳入可用空間，子節點算完內容需求後再回報 desired size；arrange 則從視窗範圍開始，逐層分配實際 slot 與 bounds。這樣滑鼠命中測試使用的範圍會和畫面上實際繪製的位置一致。
+\subsection{Window、Modal 與生命週期}
+\label{app:gui-window}
 
-\subsection{EventTarget、Bubbling 與 stopPropagation}
+GLUT callback 是不帶任何物件的 static function，因此 \lstinline|Window| 以 GLUT 視窗 ID 為 key 維護一張對照表，callback 觸發時以 \lstinline|glutGetWindow()| 查出目前的 Window，再轉交給該物件處理。主繪圖視窗、文字輸入與確認對話框、顏色選擇器，以及 PPM 匯出時使用的視窗，都是 \lstinline|Window| 的子類別。
 
-EventTarget 依 Event 型別記錄 listener。事件開始傳遞時，target 會保持為最初接收的元件，current target 則隨著 bubbling 一層一層改變。Element 會把事件傳給 parent，RootElement 再往上交給 Window。輸入框或快捷鍵處理完按鍵後，可以呼叫 \lstinline|stopPropagation()|，例如避免同一個 Enter 同時提交輸入框，又觸發上層 Window 的操作。傳遞流程見圖~\ref{fig:event-propagation}。
+對話框以 Modal 方式開啟：同一時間只記錄一個 Modal 視窗，開啟時先清除所有視窗的按鍵、點擊與 capture 狀態；之後其他視窗收到鍵盤、滑鼠或選單輸入時，會直接丟棄事件並把 Modal 視窗提到最前面。游標進出視窗時清除滑鼠按鍵狀態，元素被移除時也會一併清除指向該子樹的 focus、hover 與 capture，避免之後把事件送到已經不存在的元素。
 
-\begin{figure}[tbp]
-    \centering
-    \includegraphics[width=.98\textwidth]{docs/figures/ch03_event-propagation.png}
-    \caption{Event 目標選取與沿父節點向上傳遞的流程}
-    \label{fig:event-propagation}
-\end{figure}
+視窗關閉通常發生在 callback 執行途中，若立刻釋放物件，callback 返回後可能存取到已刪除的記憶體。因此關閉時只將視窗標記為待關閉，由 \lstinline|Application| 在 GLUT 的 idle callback 中統一釋放。
 
-\subsection{Mouse Capture 與 Input State}
+\subsection{Menu 與 Shortcut}
+\label{app:gui-menu}
 
-Window 會記錄目前取得 focus、hover 與 mouse capture 的 Element。MouseDown 後 Canvas 取得 capture，所以 Motion 與 MouseUp 仍會送回 Canvas；Hover 不受 capture 影響，繼續依游標實際位置更新。鍵盤狀態由視窗共用，滑鼠狀態則由各 Window 記錄。Modal Dialog 開啟或滑鼠進出視窗時，程式會清理相關狀態，避免按鍵或滑鼠按鈕一直停在按下狀態。
+FreeGLUT 的選單以整數 ID 識別，callback 也只會收到被點選項目的 ID。\lstinline|Menu| 將一個 GLUT 選單包裝成物件：建立時記錄所屬視窗，並在全域對照表中登記「選單 ID $\to$ Menu」；每個項目則保存「項目 ID $\to$ \lstinline|std::function|」。子選單同樣是 \lstinline|Menu|，由父選單擁有，因此整個選單會形成一棵樹，釋放時一併銷毀。callback 觸發時，先以 \lstinline|glutGetMenu()| 找到所屬的 Menu，確認沒有被 Modal 視窗擋下後，再執行對應項目的動作。由於 GLUT 以全域狀態記錄「目前的視窗與選單」，新增項目前會暫時切換到自己的視窗與選單，完成後再切回原本的狀態。
 
-\subsection{Multi-window Lifecycle}
-
-關閉 callback 不會立刻刪除 C++ object，而是先移除 GLUT ID，接著送出 WindowCloseEvent。PaintWindow 可以在這時檢查未儲存的修改並顯示 Confirm Dialog；使用者確定關閉後，Window 才會標記為可移除，最後由 Application 的 idle callback 釋放物件。Timer 每次執行前也會先確認視窗是否仍存在，避免 callback 執行到一半時物件已被銷毀。
+快捷鍵由 \lstinline|ShortcutManager| 管理。每組快捷鍵是一個 key chord，也就是必須同時按住的按鍵與修飾鍵集合；修飾鍵中的 Primary 在 macOS 對應 Command，在其他平台對應 Ctrl，讓同一組綁定能跨平台使用。KeyDown 事件發生時，管理器只考慮包含剛按下按鍵、且所有按鍵都處於按下狀態的 chord，並在多個 chord 同時符合時選擇按鍵數最多的一組，例如按下 Primary+Shift+Z 時執行 Redo，而不是同樣符合的 Primary+Z。按住不放產生的重複事件則會被忽略，避免動作連續觸發。快捷鍵在 Window 層處理，因此鍵盤事件會先送到 focused element，只有元素沒有呼叫 \lstinline|stopPropagation()| 時才會 bubbling 到 Window 並觸發快捷鍵。主視窗中，選單項目與對應的快捷鍵綁定到同一個函式，避免兩邊的行為不同步。
