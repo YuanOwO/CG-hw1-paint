@@ -154,10 +154,6 @@ def draw_pixel_grid(
 
 
 def draw_placement_panel(draw: ImageDraw.ImageDraw, cubic: dict[str, object]) -> None:
-    draw.rounded_rectangle(
-        (70, 135, 1160, 970), radius=24, fill=PANEL, outline=(184, 192, 203), width=3
-    )
-    draw.text((110, 170), "字形定位：Cubic-11，U+4F60", font=font(34), fill=INK)
 
     mask = cubic["mask"]
     assert isinstance(mask, Image.Image)
@@ -209,40 +205,44 @@ def draw_placement_panel(draw: ImageDraw.ImageDraw, cubic: dict[str, object]) ->
         width=3,
     )
     dashed_line(draw, (130, baseline_y, 1080, baseline_y), RED, width=4)
-    draw.text((875, baseline_y - 48), "基線", font=font(26), fill=RED)
+    draw.text((875, baseline_y - 48), "基線", font=font(32), fill=RED)
     dashed_line(draw, (pen_x, 400, pen_x, 870), GRAY, width=3)
     dashed_line(draw, (next_pen_x, 400, next_pen_x, 870), GRAY, width=3)
-    draw.text((pen_x - 70, 875), "目前 penX", font=font(25), fill=INK)
-    draw.text((next_pen_x - 65, 875), "下一個 penX", font=font(25), fill=INK)
+    draw.text((pen_x - 70, 875), "目前 penX", font=font(30), fill=INK)
+    draw.text((next_pen_x - 65, 875), "下一個 penX", font=font(30), fill=INK)
 
     double_arrow(
         draw, (pen_x - 55, glyph_top), (pen_x - 55, baseline_y), GREEN, width=4
     )
-    draw.text(
-        (75, (glyph_top + baseline_y) // 2 - 18),
-        f"垂直 bearingY = {cubic['bearing_y']}",
-        font=font(24),
+    draw.multiline_text(
+        (pen_x - 75, (glyph_top + baseline_y) // 2),
+        f"bearingY\n= {cubic['bearing_y']}",
+        font=font(30),
         fill=GREEN,
+        anchor="rm",
+        align="right",
+        spacing=6,
     )
     draw.text(
         (glyph_left + 8, glyph_top - 42),
-        f"水平 bearingX = {cubic['bearing_x']}",
-        font=font(24),
+        f"bearingX = {cubic['bearing_x']}",
+        font=font(30),
         fill=GREEN,
     )
 
     double_arrow(draw, (pen_x, 820), (next_pen_x, 820), BLUE, width=4)
     draw.text(
-        (pen_x + 58, 830),
-        f"水平推進 advanceX = {cubic['advance_x']}",
-        font=font(24),
+        ((pen_x + next_pen_x) // 2, 835),
+        f"advanceX = {cubic['advance_x']}",
+        font=font(30),
         fill=BLUE,
+        anchor="mt",
     )
     draw.text(
         (680, 455),
         f"bitmap 尺寸：{cubic['width']} × {cubic['height']}\n"
-        f"上升部／下降部：{cubic['ascender']}／{cubic['descender']}",
-        font=font(26),
+        f"ascender/descender：{cubic['ascender']}/{cubic['descender']}",
+        font=font(32),
         fill=INK,
         spacing=10,
     )
@@ -312,11 +312,11 @@ if __name__ == "__main__":
     cubic_data = glyph_data(args.cubic, 12, "你")
     unifont_data = glyph_data(args.unifont, 16, "你")
 
-    canvas = Image.new("RGBA", (2400, 1050), "white")
+    canvas = Image.new("RGBA", (1300, 1050), "white")
     drawing = ImageDraw.Draw(canvas)
-    drawing.text((80, 45), "GFNT 點陣字形定位與執行期著色", font=font(42), fill=INK)
+    # 只保留字形定位；執行期著色已在第 6 章說明。
     draw_placement_panel(drawing, cubic_data)
-    draw_runtime_panel(drawing, unifont_data)
+    canvas = canvas.crop((40, 370, 1260, 930))
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     canvas.convert("RGB").save(args.output, dpi=(240, 240), optimize=True)

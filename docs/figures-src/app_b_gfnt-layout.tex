@@ -2,24 +2,44 @@
 \usepackage{xeCJK}
 \setCJKmainfont{NotoSansCJKtc-Regular.otf}[Path=/Users/yuan/Library/Fonts/]
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning}
+\usetikzlibrary{arrows.meta}
 \begin{document}
 \begin{tikzpicture}[
-        font=\small,
-        node distance=0pt,
-        arrow/.style={-{Stealth[length=2.5mm]},line width=.8pt}
+        font=\small\sffamily,
+        u/.store in=\unit, u=0.82,
+        field/.style={draw, minimum height=1.05cm, inner sep=1pt, align=center, font=\footnotesize\sffamily},
+        arrow/.style={-{Stealth[length=2.5mm]}, line width=.8pt},
     ]
-    \node[draw, minimum width=11.5cm, minimum height=1.1cm, fill=blue!7] (h)
-    {GfntHeaderV1 -- 16 位元組 -- 檔案位移 0};
-    \node[draw, minimum width=11.5cm, minimum height=1.1cm, fill=gray!8, below=of h] (g0)
-    {GfntGlyphV1[0] -- 18 位元組 -- 檔案位移 16};
-    \node[draw, minimum width=11.5cm, minimum height=1.1cm, fill=gray!8, below=of g0] (g1)
-    {GfntGlyphV1[1] -- 18 位元組 -- 檔案位移 34};
-    \node[draw, minimum width=11.5cm, minimum height=.8cm, fill=gray!4, below=of g1] (dots)
-    {$\cdots$ 共 $N$ 筆，依 code point 排序};
-    \node[draw, minimum width=11.5cm, minimum height=1.2cm, fill=green!7, below=of dots] (bits)
-    {Bitmap Data -- 檔案位移 $16+18N$ -- 每個 pixel 使用 1 位元組透明度};
-    \draw[arrow] ([xshift=-6cm]h.north west) -- ([xshift=-6cm]bits.south west)
-        node[midway, left, align=right]{檔案\\順序};
+    % 依 bytes 數畫出一列欄位；#1 為 y 座標，#2 為 {名稱/bytes/顏色} 清單
+    \newcommand{\fieldrow}[2]{%
+        \def\x{0}%
+        \foreach \name/\bytes/\col in {#2} {%
+            \pgfmathsetmacro{\w}{\bytes*\unit}%
+            \node[field, fill=\col, minimum width=\w cm, anchor=north west]
+                at (\x, #1) {\name\\[-1pt]{\scriptsize\color{black!55}\bytes\ B}};%
+            \pgfmathsetmacro{\x}{\x+\w}%
+            \global\let\x\x%
+        }%
+    }
+
+    % Header：16 bytes
+    \node[anchor=east, align=right] at (-0.3, -0.52) {\textbf{Header}\\{\scriptsize\color{black!55}位移 0}};
+    \fieldrow{0}{magic/4/blue!8, version/2/blue!8, pixelSize/2/blue!8, ascender/2/blue!8, descender/2/blue!8, glyphCount/4/blue!8}
+
+    % Glyph record：18 bytes
+    \node[anchor=east, align=right] at (-0.3, -2.02) {\textbf{Glyph[$i$]}\\{\scriptsize\color{black!55}位移 $16+18i$}};
+    \fieldrow{-1.5}{codepoint/4/gray!10, width/2/gray!10, height/2/gray!10, bearingX/2/gray!10, bearingY/2/gray!10, advanceX/2/gray!10, bitmapOffset/4/orange!15}
+    \node[anchor=west, align=left, color=black!60] at (18*\unit+0.2, -2.02) {$\times N$\\{\scriptsize 依 codepoint 遞增}};
+
+    % Bitmap Data
+    \node[anchor=east, align=right] at (-0.3, -3.97) {\textbf{Bitmap Data}\\{\scriptsize\color{black!55}位移 $16+18N$}};
+    \draw[fill=green!6] (0, -3.45) rectangle (18*\unit, -4.5);
+    \draw[fill=orange!30] (7*\unit, -3.45) rectangle (12*\unit, -4.5);
+    \node[align=center] at (9.5*\unit, -3.97) {width $\times$ height\\[-1pt]{\scriptsize\color{black!60}每 byte 一個 alpha}};
+    \node[color=black!55] at (3.5*\unit, -3.97) {$\cdots$};
+    \node[color=black!55] at (15*\unit, -3.97) {$\cdots$};
+
+    % bitmapOffset 指向 bitmap 起點
+    \draw[arrow, orange!70!black] (16*\unit, -2.55) -- (16*\unit, -3.0) -| (7*\unit, -3.45);
 \end{tikzpicture}
 \end{document}
