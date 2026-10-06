@@ -53,16 +53,17 @@ class CreationTool : public ICanvasTool {
     std::unique_ptr<TObject> _draft;
 };
 
-// 現有幾何繪圖工具共用 ShapeStyle；文字工具可直接繼承 CreationTool<TextObject>，
+// 現有幾何繪圖工具共用 PaintStyle 與 ShapeStyle；文字工具可直接繼承 CreationTool<TextObject>，
 // 並用自己的 TextStyle 建立草稿。
 template <typename TShape>
 class ShapeCreationTool : public CreationTool<TShape> {
    public:
-    explicit ShapeCreationTool(ShapeStyle style) : _style(std::move(style)) {}
+    ShapeCreationTool(const PaintStyle& paint, const ShapeStyle& style) : _paint(paint), _style(style) {}
 
    protected:
-    void beginShapeDraft() { this->beginDraft(_style); }
+    void beginShapeDraft() { this->beginDraft(_paint, _style); }
 
+    PaintStyle _paint;
     ShapeStyle _style;
 };
 

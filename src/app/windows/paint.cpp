@@ -14,6 +14,7 @@
 #include "ui/layout/bounding.hpp"
 #include "ui/theme.hpp"
 
+using paint::drawing::FillMode;
 using paint::drawing::LineCap;
 using paint::drawing::LineJoin;
 using paint::drawing::ToolKind;
@@ -68,6 +69,25 @@ std::string getFontStyleName(const FontStyle& style) {
     return "Unknown";
 }
 
+// 主要顏色與填入顏色選單共用的色票。
+const std::pair<const char*, Color> kMenuColors[] = {
+    {"Black",  Color::Black },
+    {"White",  Color::White },
+    {"Red",    Color::Red   },
+    {"Orange", Color::Orange},
+    {"Yellow", Color::Yellow},
+    {"Green",  Color::Green },
+    {"Blue",   Color::Blue  },
+    {"Purple", Color::Purple},
+};
+
+// 線寬與點大小選單共用的預設尺寸。
+const float kSizePresets[] = {1.0f, 3.0f, 5.0f, 10.0f, 25.0f, 50.0f};
+
+std::string formatPixels(float size) {
+    return std::to_string(static_cast<int>(size)) + " px";
+}
+
 }  // namespace
 
 PaintWindow::PaintWindow(const std::string& title, int width, int height) : Window(title, width, height) {
@@ -101,16 +121,19 @@ PaintWindow::PaintWindow(const std::string& title, int width, int height) : Wind
 
     addEventListener<MouseMoveEvent>([this](MouseMoveEvent& event) {
         Point position = _canvas->windowToLocal(event.position());
-        _positionText->setText("Pos: " + position.toString());
+        _positionText->setText("Pos: " + formatPixels(position.x()) + ", " + formatPixels(position.y()));
     });
 
     _canvas->addEventListener<ElementResizeEvent>([this](ElementResizeEvent& event) {
         _document.setCanvasSize(event.width(), event.height());
-        _sizeText->setText("Size: " + Point(event.width(), event.height()).toString());
+        _sizeText->setText("Size: " + formatPixels(event.width()) + " x " + formatPixels(event.height()));
     });
 
     _canvas->setTextInputRequestHandler(
-        [this](Point anchor, drawing::TextStyle style) { requestTextInput(anchor, std::move(style)); });
+        [this](Point anchor, drawing::PaintStyle paint, drawing::TextStyle style) {
+            requestTextInput(anchor, paint, std::move(style));
+        });
+    _canvas->setStyleChangedHandler([this](const drawing::StyleSet&) { updateToolStatus(); });
 }
 
 void PaintWindow::selectTool(drawing::ToolKind tool) {
@@ -118,37 +141,42 @@ void PaintWindow::selectTool(drawing::ToolKind tool) {
     updateToolStatus();
 }
 
-void PaintWindow::setShapeStyle(const drawing::ShapeStyle& style) {
-    _canvas->setStyle(style);
-    updateToolStatus();
-}
-
-void PaintWindow::setTextStyle(const drawing::TextStyle& style) {
-    _canvas->setTextStyle(style);
-    updateToolStatus();
-}
-
 void PaintWindow::updateToolStatus() {
-    if (_toolText) {
-        if (_canvas->currentTool() == ToolKind::TEXT) {
-            _toolText->setText("Tool: Text | Color: " + _canvas->textStyle().color.toHexString() +
-                               " | Font: " + getFontStyleName(_canvas->textStyle().font));
-            return;
-        }
-
-        _toolText->setText("Tool: " + drawing::getToolName(_canvas->currentTool()) +
-                           " | Stroke: " + _canvas->style().stroke.color.toHexString() + " " +
-                           std::to_string(_canvas->style().stroke.width) + "px" +
-                           " | Fill: " + _canvas->style().fill.color.toHexString());
+    if (!_toolText) {
+        return;
     }
+
+    const auto& style = _canvas->currentStyle();
+
+    if (_canvas->currentTool() == ToolKind::SELECT) {
+        _toolText->setText("Tool: Select");
+        return;
+    }
+
+    if (_canvas->currentTool() == ToolKind::TEXT) {
+        _toolText->setText("Tool: Text | Color: " + style.paint.color.toHexString() +
+                           " | Font: " + getFontStyleName(style.text.font));
+        return;
+    }
+
+    if (_canvas->currentTool() == ToolKind::POINT) {
+        _toolText->setText("Tool: " + drawing::getToolName(_canvas->currentTool()) +
+                           " | Color: " + style.paint.color.toHexString() + " " +
+                           std::to_string(style.shape.stroke.width) + "px");
+        return;
+    }
+
+    _toolText->setText("Tool: " + drawing::getToolName(_canvas->currentTool()) + " | Color: " +
+                       style.paint.color.toHexString() + " " + std::to_string(style.shape.stroke.width) +
+                       "px | Fill: " + style.paint.fillColor.toHexString());
 }
 
-void PaintWindow::requestTextInput(Point anchor, drawing::TextStyle style) {
+void PaintWindow::requestTextInput(Point anchor, drawing::PaintStyle paint, drawing::TextStyle style) {
     auto& app = Application::current();
     app.createWindow<InputDialogWindow>(
         "Insert Text", "請輸入文字：", "",
-        [this, anchor, style = std::move(style)](const std::string& text) mutable {
-            _canvas->insertText(anchor, text, std::move(style));
+        [this, anchor, paint, style = std::move(style)](const std::string& text) mutable {
+            _canvas->insertText(anchor, text, paint, std::move(style));
         });
 }
 
@@ -375,30 +403,17 @@ void PaintWindow::setupShortcuts() {
     _shortcutManager.bind({Key::Digit5}, [this]() { selectTool(ToolKind::POLYGON); });
     _shortcutManager.bind({Key::Digit6}, [this]() { selectTool(ToolKind::TEXT); });
 
-    _shortcutManager.bind({Key::LeftBracket}, [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(std::max(1, static_cast<int>(style.stroke.width - 1)));
-        style.setPointSize(std::max(1.0f, style.pointSize - 1.0f));
-        setShapeStyle(style);
-    });
-    _shortcutManager.bind({Key::RightBracket}, [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(style.stroke.width + 1);
-        style.setPointSize(style.pointSize + 1.0f);
-        setShapeStyle(style);
-    });
-    _shortcutManager.bind({Mod::Shift, Key::LeftBracket}, [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(std::max(1, static_cast<int>(style.stroke.width - 5)));
-        style.setPointSize(std::max(1.0f, style.pointSize - 5.0f));
-        setShapeStyle(style);
-    });
-    _shortcutManager.bind({Mod::Shift, Key::RightBracket}, [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(style.stroke.width + 5);
-        style.setPointSize(style.pointSize + 5.0f);
-        setShapeStyle(style);
-    });
+    // 調整線寬與點大小，兩者皆最小為 1
+    const auto adjustSize = [this](float delta) {
+        auto style = _canvas->currentStyle();
+        style.shape.stroke.setWidth(style.shape.stroke.width + delta);
+        style.shape.setPointSize(style.shape.pointSize + delta);
+        _canvas->setCurrentStyle(style);
+    };
+    _shortcutManager.bind({Key::LeftBracket}, [adjustSize]() { adjustSize(-1.0f); });
+    _shortcutManager.bind({Key::RightBracket}, [adjustSize]() { adjustSize(1.0f); });
+    _shortcutManager.bind({Mod::Shift, Key::LeftBracket}, [adjustSize]() { adjustSize(-5.0f); });
+    _shortcutManager.bind({Mod::Shift, Key::RightBracket}, [adjustSize]() { adjustSize(5.0f); });
 }
 
 #pragma endregion  // Shortcuts
@@ -420,6 +435,7 @@ void PaintWindow::setupMenu() {
     editMenu.addMenuEntry("Clear", [this]() { _canvas->clear(); });
 
     setupToolMenu();
+    setupColorMenu();
     setupStrokeMenu();
     setupFillMenu();
     setupPointMenu();
@@ -454,169 +470,121 @@ void PaintWindow::setupToolMenu() {
 
 #pragma endregion  // Tool Menu
 
+#pragma region Color Menu
+
+void PaintWindow::setupColorMenu() {
+    auto& colorMenu = _menu.addSubMenu("Color");
+
+    auto& primaryColorMenu = colorMenu.addSubMenu("Primary Color");
+    for (const auto& [name, color] : kMenuColors) {
+        primaryColorMenu.addMenuEntry(name, [this, color = color]() {
+            auto style = _canvas->currentStyle();
+            style.paint.color = color;
+            _canvas->setCurrentStyle(style);
+        });
+    }
+    primaryColorMenu.addMenuEntry("Custom...", [this]() {
+        const ColorRGBA initialColor = _canvas->currentStyle().paint.color;
+        Application::current().createWindow<ColorPickerWindow>("Primary Color", initialColor,
+                                                               [this](const ColorRGBA& color) {
+                                                                   auto style = _canvas->currentStyle();
+                                                                   style.paint.color = color;
+                                                                   _canvas->setCurrentStyle(style);
+                                                               });
+    });
+
+    auto& fillColorMenu = colorMenu.addSubMenu("Fill Color");
+    fillColorMenu.addMenuEntry("Transparent", [this]() {
+        auto style = _canvas->currentStyle();
+        style.paint.fillColor = Color::Transparent;
+        _canvas->setCurrentStyle(style);
+    });
+    for (const auto& [name, color] : kMenuColors) {
+        fillColorMenu.addMenuEntry(name, [this, color = color]() {
+            auto style = _canvas->currentStyle();
+            style.paint.fillColor = color;
+            _canvas->setCurrentStyle(style);
+        });
+    }
+    fillColorMenu.addMenuEntry("Custom...", [this]() {
+        const ColorRGBA initialColor = _canvas->currentStyle().paint.fillColor;
+        Application::current().createWindow<ColorPickerWindow>("Fill Color", initialColor,
+                                                               [this](const ColorRGBA& color) {
+                                                                   auto style = _canvas->currentStyle();
+                                                                   style.paint.fillColor = color;
+                                                                   _canvas->setCurrentStyle(style);
+                                                               });
+    });
+}
+
+#pragma endregion  // Color Menu
+
 #pragma region Stroke Menu
 
 void PaintWindow::setupStrokeMenu() {
     auto& strokeMenu = _menu.addSubMenu("Stroke");
 
-    // Stroke Color Menu
-
-    auto& colorMenu = strokeMenu.addSubMenu("Color");
-
-    colorMenu.addMenuEntry("Black", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeColor(Color::Black);
-        setShapeStyle(style);
-    });
-    colorMenu.addMenuEntry("White", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeColor(Color::White);
-        setShapeStyle(style);
-    });
-    colorMenu.addMenuEntry("Red", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeColor(Color::Red);
-        setShapeStyle(style);
-    });
-    colorMenu.addMenuEntry("Orange", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeColor(Color::Orange);
-        setShapeStyle(style);
-    });
-    colorMenu.addMenuEntry("Yellow", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeColor(Color::Yellow);
-        setShapeStyle(style);
-    });
-    colorMenu.addMenuEntry("Green", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeColor(Color::Green);
-        setShapeStyle(style);
-    });
-    colorMenu.addMenuEntry("Blue", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeColor(Color::Blue);
-        setShapeStyle(style);
-    });
-    colorMenu.addMenuEntry("Purple", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeColor(Color::Purple);
-        setShapeStyle(style);
-    });
-    colorMenu.addMenuEntry("Custom...", [this]() {
-        const ColorRGBA initialColor = _canvas->style().stroke.color;
-        Application::current().createWindow<ColorPickerWindow>(
-            "Stroke Color", initialColor, [this](const ColorRGBA& color) {
-                auto style = _canvas->style();
-                style.setStrokeColor(color);
-                setShapeStyle(style);
-            });
-    });
-
     // Stroke Width Menu
 
     auto& widthMenu = strokeMenu.addSubMenu("Width");
 
-    widthMenu.addMenuEntry("1 px", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(1);
-        setShapeStyle(style);
-    });
-    widthMenu.addMenuEntry("3 px", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(3);
-        setShapeStyle(style);
-    });
-    widthMenu.addMenuEntry("5 px", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(5);
-        setShapeStyle(style);
-    });
-    widthMenu.addMenuEntry("10 px", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(10);
-        setShapeStyle(style);
-    });
-    widthMenu.addMenuEntry("25 px", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(25);
-        setShapeStyle(style);
-    });
-    widthMenu.addMenuEntry("50 px", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(50);
-        setShapeStyle(style);
-    });
-    widthMenu.addMenuEntry("Thicker", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(_canvas->style().strokeWidth() + 1);
-        setShapeStyle(style);
-    });
-    widthMenu.addMenuEntry("Thicker++", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(_canvas->style().strokeWidth() + 3);
-        setShapeStyle(style);
-    });
-    widthMenu.addMenuEntry("Thicker+++", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(_canvas->style().strokeWidth() + 5);
-        setShapeStyle(style);
-    });
-    widthMenu.addMenuEntry("Thinner", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(_canvas->style().strokeWidth() - 1);
-        setShapeStyle(style);
-    });
-    widthMenu.addMenuEntry("Thinner++", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(_canvas->style().strokeWidth() - 3);
-        setShapeStyle(style);
-    });
-    widthMenu.addMenuEntry("Thinner+++", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeWidth(_canvas->style().strokeWidth() - 5);
-        setShapeStyle(style);
-    });
+    for (float width : kSizePresets) {
+        widthMenu.addMenuEntry(formatPixels(width), [this, width]() {
+            auto style = _canvas->currentStyle();
+            style.shape.stroke.setWidth(width);
+            _canvas->setCurrentStyle(style);
+        });
+    }
+
+    const std::pair<const char*, float> widthSteps[] = {
+        {"Thicker",    1.0f },
+        {"Thicker++",  3.0f },
+        {"Thicker+++", 5.0f },
+        {"Thinner",    -1.0f},
+        {"Thinner++",  -3.0f},
+        {"Thinner+++", -5.0f},
+    };
+    for (const auto& [name, delta] : widthSteps) {
+        widthMenu.addMenuEntry(name, [this, delta = delta]() {
+            auto style = _canvas->currentStyle();
+            style.shape.stroke.setWidth(style.shape.stroke.width + delta);
+            _canvas->setCurrentStyle(style);
+        });
+    }
 
     // Stroke Join Menu
 
     auto& joinMenu = strokeMenu.addSubMenu("Join");
 
-    joinMenu.addMenuEntry("Miter", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeJoin(LineJoin::MITER);
-        setShapeStyle(style);
-    });
-    joinMenu.addMenuEntry("Bevel", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeJoin(LineJoin::BEVEL);
-        setShapeStyle(style);
-    });
-    joinMenu.addMenuEntry("Round", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeJoin(LineJoin::ROUND);
-        setShapeStyle(style);
-    });
+    const std::pair<const char*, LineJoin> joins[] = {
+        {"Miter", LineJoin::MITER},
+        {"Bevel", LineJoin::BEVEL},
+        {"Round", LineJoin::ROUND},
+    };
+    for (const auto& [name, join] : joins) {
+        joinMenu.addMenuEntry(name, [this, join = join]() {
+            auto style = _canvas->currentStyle();
+            style.shape.stroke.join = join;
+            _canvas->setCurrentStyle(style);
+        });
+    }
 
     // Stroke Cap Menu
 
     auto& capMenu = strokeMenu.addSubMenu("Cap");
 
-    capMenu.addMenuEntry("Round", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeCap(LineCap::ROUND);
-        setShapeStyle(style);
-    });
-    capMenu.addMenuEntry("Square", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeCap(LineCap::SQUARE);
-        setShapeStyle(style);
-    });
-    capMenu.addMenuEntry("Butt", [this]() {
-        auto style = _canvas->style();
-        style.setStrokeCap(LineCap::BUTT);
-        setShapeStyle(style);
-    });
+    const std::pair<const char*, LineCap> caps[] = {
+        {"Round",  LineCap::ROUND },
+        {"Square", LineCap::SQUARE},
+        {"Butt",   LineCap::BUTT  },
+    };
+    for (const auto& [name, cap] : caps) {
+        capMenu.addMenuEntry(name, [this, cap = cap]() {
+            auto style = _canvas->currentStyle();
+            style.shape.stroke.cap = cap;
+            _canvas->setCurrentStyle(style);
+        });
+    }
 }
 
 #pragma endregion  // Stroke Menu
@@ -630,80 +598,18 @@ void PaintWindow::setupFillMenu() {
 
     auto& fillModeMenu = fillMenu.addSubMenu("Mode");
 
-    fillModeMenu.addMenuEntry("Outline", [this]() {
-        auto style = _canvas->style();
-        style.setFillMode(drawing::FillMode::OUTLINE);
-        setShapeStyle(style);
-    });
-    fillModeMenu.addMenuEntry("Filled", [this]() {
-        auto style = _canvas->style();
-        style.setFillMode(drawing::FillMode::FILLED);
-        setShapeStyle(style);
-    });
-    fillModeMenu.addMenuEntry("Advanced", [this]() {
-        auto style = _canvas->style();
-        style.setFillMode(drawing::FillMode::ADVANCED);
-        setShapeStyle(style);
-    });
-
-    // Fill Color Menu
-
-    auto& fillColorMenu = fillMenu.addSubMenu("Color");
-
-    fillColorMenu.addMenuEntry("Transparent", [this]() {
-        auto style = _canvas->style();
-        style.setFillColor(Color::Transparent);
-        setShapeStyle(style);
-    });
-    fillColorMenu.addMenuEntry("Black", [this]() {
-        auto style = _canvas->style();
-        style.setFillColor(Color::Black);
-        setShapeStyle(style);
-    });
-    fillColorMenu.addMenuEntry("White", [this]() {
-        auto style = _canvas->style();
-        style.setFillColor(Color::White);
-        setShapeStyle(style);
-    });
-    fillColorMenu.addMenuEntry("Red", [this]() {
-        auto style = _canvas->style();
-        style.setFillColor(Color::Red);
-        setShapeStyle(style);
-    });
-    fillColorMenu.addMenuEntry("Orange", [this]() {
-        auto style = _canvas->style();
-        style.setFillColor(Color::Orange);
-        setShapeStyle(style);
-    });
-    fillColorMenu.addMenuEntry("Yellow", [this]() {
-        auto style = _canvas->style();
-        style.setFillColor(Color::Yellow);
-        setShapeStyle(style);
-    });
-    fillColorMenu.addMenuEntry("Green", [this]() {
-        auto style = _canvas->style();
-        style.setFillColor(Color::Green);
-        setShapeStyle(style);
-    });
-    fillColorMenu.addMenuEntry("Blue", [this]() {
-        auto style = _canvas->style();
-        style.setFillColor(Color::Blue);
-        setShapeStyle(style);
-    });
-    fillColorMenu.addMenuEntry("Purple", [this]() {
-        auto style = _canvas->style();
-        style.setFillColor(Color::Purple);
-        setShapeStyle(style);
-    });
-    fillColorMenu.addMenuEntry("Custom...", [this]() {
-        const ColorRGBA initialColor = _canvas->style().fill.color;
-        Application::current().createWindow<ColorPickerWindow>(
-            "Fill Color", initialColor, [this](const ColorRGBA& color) {
-                auto style = _canvas->style();
-                style.setFillColor(color);
-                setShapeStyle(style);
-            });
-    });
+    const std::pair<const char*, FillMode> modes[] = {
+        {"Outline",  FillMode::OUTLINE },
+        {"Filled",   FillMode::FILLED  },
+        {"Advanced", FillMode::ADVANCED},
+    };
+    for (const auto& [name, mode] : modes) {
+        fillModeMenu.addMenuEntry(name, [this, mode = mode]() {
+            auto style = _canvas->currentStyle();
+            style.shape.fillMode = mode;
+            _canvas->setCurrentStyle(style);
+        });
+    }
 }
 
 #pragma endregion  // Fill Menu
@@ -713,36 +619,13 @@ void PaintWindow::setupFillMenu() {
 void PaintWindow::setupPointMenu() {
     auto& pointMenu = _menu.addSubMenu("Point");
 
-    pointMenu.addMenuEntry("1 px", [this]() {
-        auto style = _canvas->style();
-        style.setPointSize(1);
-        setShapeStyle(style);
-    });
-    pointMenu.addMenuEntry("3 px", [this]() {
-        auto style = _canvas->style();
-        style.setPointSize(3);
-        setShapeStyle(style);
-    });
-    pointMenu.addMenuEntry("5 px", [this]() {
-        auto style = _canvas->style();
-        style.setPointSize(5);
-        setShapeStyle(style);
-    });
-    pointMenu.addMenuEntry("10 px", [this]() {
-        auto style = _canvas->style();
-        style.setPointSize(10);
-        setShapeStyle(style);
-    });
-    pointMenu.addMenuEntry("25 px", [this]() {
-        auto style = _canvas->style();
-        style.setPointSize(25);
-        setShapeStyle(style);
-    });
-    pointMenu.addMenuEntry("50 px", [this]() {
-        auto style = _canvas->style();
-        style.setPointSize(50);
-        setShapeStyle(style);
-    });
+    for (float size : kSizePresets) {
+        pointMenu.addMenuEntry(formatPixels(size), [this, size]() {
+            auto style = _canvas->currentStyle();
+            style.shape.setPointSize(size);
+            _canvas->setCurrentStyle(style);
+        });
+    }
 }
 
 #pragma endregion  // Point Menu
@@ -750,116 +633,28 @@ void PaintWindow::setupPointMenu() {
 #pragma region Text Menu
 
 void PaintWindow::setupTextMenu() {
-    auto& textMenu = _menu.addSubMenu("Text");
-    auto& fontMenu = textMenu.addSubMenu("Font");
+    auto& fontMenu = _menu.addSubMenu("Text Font");
 
-    fontMenu.addMenuEntry("8 x 13", [this]() {
-        auto style = _canvas->textStyle();
-        style.font = BitmapFontStyle{BitmapFont::BITMAP_8_BY_13};
-        setTextStyle(style);
-    });
-    fontMenu.addMenuEntry("9 x 15", [this]() {
-        auto style = _canvas->textStyle();
-        style.font = BitmapFontStyle{BitmapFont::BITMAP_9_BY_15};
-        setTextStyle(style);
-    });
-    fontMenu.addMenuEntry("Helvetica 10", [this]() {
-        auto style = _canvas->textStyle();
-        style.font = BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_10};
-        setTextStyle(style);
-    });
-    fontMenu.addMenuEntry("Helvetica 12", [this]() {
-        auto style = _canvas->textStyle();
-        style.font = BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12};
-        setTextStyle(style);
-    });
-    fontMenu.addMenuEntry("Helvetica 18", [this]() {
-        auto style = _canvas->textStyle();
-        style.font = BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_18};
-        setTextStyle(style);
-    });
-    fontMenu.addMenuEntry("Times Roman 10", [this]() {
-        auto style = _canvas->textStyle();
-        style.font = BitmapFontStyle{BitmapFont::BITMAP_TIMES_ROMAN_10};
-        setTextStyle(style);
-    });
-    fontMenu.addMenuEntry("Times Roman 24", [this]() {
-        auto style = _canvas->textStyle();
-        style.font = BitmapFontStyle{BitmapFont::BITMAP_TIMES_ROMAN_24};
-        setTextStyle(style);
-    });
-    fontMenu.addMenuEntry("Cubic 11", [this]() {
-        auto style = _canvas->textStyle();
-        style.font = GfntFontStyle{GfntFontId::CUBIC_11};
-        setTextStyle(style);
-    });
-    fontMenu.addMenuEntry("Unifont 16", [this]() {
-        auto style = _canvas->textStyle();
-        style.font = GfntFontStyle{GfntFontId::UNIFONT_16};
-        setTextStyle(style);
-    });
-    fontMenu.addMenuEntry("Stroke Roman", [this]() {
-        auto style = _canvas->textStyle();
-        style.font = StrokeFontStyle{StrokeFont::STROKE_ROMAN, 0.15f};
-        setTextStyle(style);
-    });
-    fontMenu.addMenuEntry("Stroke Mono Roman", [this]() {
-        auto style = _canvas->textStyle();
-        style.font = StrokeFontStyle{StrokeFont::STROKE_MONO_ROMAN, 0.15f};
-        setTextStyle(style);
-    });
-
-    auto& colorMenu = textMenu.addSubMenu("Color");
-
-    colorMenu.addMenuEntry("Black", [this]() {
-        auto style = _canvas->textStyle();
-        style.color = Color::Black;
-        setTextStyle(style);
-    });
-    colorMenu.addMenuEntry("White", [this]() {
-        auto style = _canvas->textStyle();
-        style.color = Color::White;
-        setTextStyle(style);
-    });
-    colorMenu.addMenuEntry("Red", [this]() {
-        auto style = _canvas->textStyle();
-        style.color = Color::Red;
-        setTextStyle(style);
-    });
-    colorMenu.addMenuEntry("Orange", [this]() {
-        auto style = _canvas->textStyle();
-        style.color = Color::Orange;
-        setTextStyle(style);
-    });
-    colorMenu.addMenuEntry("Yellow", [this]() {
-        auto style = _canvas->textStyle();
-        style.color = Color::Yellow;
-        setTextStyle(style);
-    });
-    colorMenu.addMenuEntry("Green", [this]() {
-        auto style = _canvas->textStyle();
-        style.color = Color::Green;
-        setTextStyle(style);
-    });
-    colorMenu.addMenuEntry("Blue", [this]() {
-        auto style = _canvas->textStyle();
-        style.color = Color::Blue;
-        setTextStyle(style);
-    });
-    colorMenu.addMenuEntry("Purple", [this]() {
-        auto style = _canvas->textStyle();
-        style.color = Color::Purple;
-        setTextStyle(style);
-    });
-    colorMenu.addMenuEntry("Custom...", [this]() {
-        const ColorRGBA initialColor = _canvas->textStyle().color;
-        Application::current().createWindow<ColorPickerWindow>(
-            "Text Color", initialColor, [this](const ColorRGBA& color) {
-                auto style = _canvas->textStyle();
-                style.color = color;
-                setTextStyle(style);
-            });
-    });
+    const std::pair<const char*, FontStyle> fonts[] = {
+        {"8 x 13",            BitmapFontStyle{BitmapFont::BITMAP_8_BY_13}          },
+        {"9 x 15",            BitmapFontStyle{BitmapFont::BITMAP_9_BY_15}          },
+        {"Helvetica 10",      BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_10}     },
+        {"Helvetica 12",      BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_12}     },
+        {"Helvetica 18",      BitmapFontStyle{BitmapFont::BITMAP_HELVETICA_18}     },
+        {"Times Roman 10",    BitmapFontStyle{BitmapFont::BITMAP_TIMES_ROMAN_10}   },
+        {"Times Roman 24",    BitmapFontStyle{BitmapFont::BITMAP_TIMES_ROMAN_24}   },
+        {"Cubic 11",          GfntFontStyle{GfntFontId::CUBIC_11}                  },
+        {"Unifont 16",        GfntFontStyle{GfntFontId::UNIFONT_16}                },
+        {"Stroke Roman",      StrokeFontStyle{StrokeFont::STROKE_ROMAN, 0.15f}     },
+        {"Stroke Mono Roman", StrokeFontStyle{StrokeFont::STROKE_MONO_ROMAN, 0.15f}},
+    };
+    for (const auto& [name, font] : fonts) {
+        fontMenu.addMenuEntry(name, [this, font = font]() {
+            auto style = _canvas->currentStyle();
+            style.text.font = font;
+            _canvas->setCurrentStyle(style);
+        });
+    }
 }
 
 #pragma endregion  // Text Menu

@@ -12,6 +12,7 @@ namespace paint::io {
 
 using drawing::EllipseShape;
 using drawing::LineShape;
+using drawing::PaintStyle;
 using drawing::PathShape;
 using drawing::PointShape;
 using drawing::PolygonShape;
@@ -82,20 +83,19 @@ ShapeKind GptdParserV1::parseShapeKind(const std::string& token, std::size_t lin
 
 #pragma region Shape Deserialization
 
-ShapeStyle GptdParserV1::parseShapeStyle() {
+void GptdParserV1::parseShapeStyle(PaintStyle& paint, ShapeStyle& style) {
     // Shape style 在檔案中固定由三筆記錄組成，載入後再合併回一個物件。
     Record shapeStyleRecord = expectRecord("SHAPE_STYLE", 3);
     Record fillRecord = expectRecord("FILL", 5);
     Record strokeRecord = expectRecord("STROKE", 9);
 
-    ShapeStyle style;
     style.fillMode = parseFillMode(shapeStyleRecord.fields[1], shapeStyleRecord.lineNumber);
     style.pointSize =
         parseFloat(shapeStyleRecord.fields[2], "point size", shapeStyleRecord.lineNumber);
-    style.fill.color = parseColor(fillRecord, 1);
+    paint.fillColor = parseColor(fillRecord, 1);
     style.stroke.width =
         parseFloat(strokeRecord.fields[1], "stroke width", strokeRecord.lineNumber);
-    style.stroke.color = parseColor(strokeRecord, 2);
+    paint.color = parseColor(strokeRecord, 2);
     style.stroke.join = parseLineJoin(strokeRecord.fields[6], strokeRecord.lineNumber);
     style.stroke.cap = parseLineCap(strokeRecord.fields[7], strokeRecord.lineNumber);
     style.stroke.miterLimit =
@@ -105,7 +105,6 @@ ShapeStyle GptdParserV1::parseShapeStyle() {
         throw error("point size, stroke width, and miter limit must be at least 1",
                     strokeRecord.lineNumber);
     }
-    return style;
 }
 
 std::vector<Point> GptdParserV1::parsePointList() {
@@ -127,13 +126,15 @@ std::shared_ptr<SceneObject> GptdParserV1::parseShape() {
     // 先解析共用 style，再依 ShapeKind 讀取對應的 geometry。
     Record shapeRecord = expectRecord("SHAPE", 2);
     ShapeKind kind = parseShapeKind(shapeRecord.fields[1], shapeRecord.lineNumber);
-    ShapeStyle style = parseShapeStyle();
+    PaintStyle paint;
+    ShapeStyle style;
+    parseShapeStyle(paint, style);
     std::shared_ptr<SceneObject> object;
 
     switch (kind) {
     case ShapeKind::Point: {
         Record positionRecord = expectRecord("POSITION", 3);
-        auto shape = std::make_shared<PointShape>(style);
+        auto shape = std::make_shared<PointShape>(paint, style);
         shape->setPosition(parsePoint(positionRecord, 1));
         object = shape;
         break;
@@ -143,23 +144,23 @@ std::shared_ptr<SceneObject> GptdParserV1::parseShape() {
     case ShapeKind::Ellipse: {
         Record boundsRecord = expectRecord("BOUNDS", 5);
         std::shared_ptr<TwoPointShape> shape;
-        if (kind == ShapeKind::Line) shape = std::make_shared<LineShape>(style);
-        if (kind == ShapeKind::Rectangle) shape = std::make_shared<RectangleShape>(style);
-        if (kind == ShapeKind::Ellipse) shape = std::make_shared<EllipseShape>(style);
+        if (kind == ShapeKind::Line) shape = std::make_shared<LineShape>(paint, style);
+        if (kind == ShapeKind::Rectangle) shape = std::make_shared<RectangleShape>(paint, style);
+        if (kind == ShapeKind::Ellipse) shape = std::make_shared<EllipseShape>(paint, style);
         shape->setStart(parsePoint(boundsRecord, 1));
         shape->setEnd(parsePoint(boundsRecord, 3));
         object = shape;
         break;
     }
     case ShapeKind::Path: {
-        auto shape = std::make_shared<PathShape>(style);
+        auto shape = std::make_shared<PathShape>(paint, style);
         // addPoint 會為了滑鼠輸入過濾過密點，載入檔案時必須直接還原。
         shape->setPoints(parsePointList());
         object = shape;
         break;
     }
     case ShapeKind::Polygon: {
-        auto shape = std::make_shared<PolygonShape>(style);
+        auto shape = std::make_shared<PolygonShape>(paint, style);
         shape->setPoints(parsePointList());
         object = shape;
         break;
@@ -224,8 +225,10 @@ std::shared_ptr<SceneObject> GptdParserV1::parseText() {
     Record positionRecord = expectRecord("POSITION", 3);
     Record styleRecord = expectRecord("TEXT_STYLE", 6);
 
+    PaintStyle paint;
+    paint.color = parseColor(styleRecord, 1);
+
     TextStyle style;
-    style.color = parseColor(styleRecord, 1);
     style.lineSpacing =
         parseFloat(styleRecord.fields[5], "line spacing", styleRecord.lineNumber);
     if (style.lineSpacing <= 0.0f) {
@@ -239,7 +242,7 @@ std::shared_ptr<SceneObject> GptdParserV1::parseText() {
     std::string text = readUtf8Payload(byteCount);
     expectRecord("END_OBJECT", 1);
 
-    return std::make_shared<TextObject>(parsePoint(positionRecord, 1), text, style);
+    return std::make_shared<TextObject>(parsePoint(positionRecord, 1), text, paint, style);
 }
 
 std::shared_ptr<SceneObject> GptdParserV1::parseObject() {

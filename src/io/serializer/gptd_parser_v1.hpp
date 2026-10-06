@@ -34,7 +34,7 @@ class GptdParserV1 : public serializer::TextParser {
     drawing::LineCap parseLineCap(const std::string& token, std::size_t lineNumber) const;
     drawing::ShapeKind parseShapeKind(const std::string& token, std::size_t lineNumber) const;
 
-    drawing::ShapeStyle parseShapeStyle();
+    void parseShapeStyle(drawing::PaintStyle& paint, drawing::ShapeStyle& style);
     std::vector<Point> parsePointList();
     std::shared_ptr<drawing::SceneObject> parseShape();
 

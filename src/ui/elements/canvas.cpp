@@ -13,13 +13,6 @@ CanvasElement::CanvasElement(Document& document)
     setHorizontalAlignment(Alignment::Stretch);
     setVerticalAlignment(Alignment::Stretch);
 
-    _currentStyle.stroke.width = 1;
-    _currentStyle.stroke.color = ColorRGBA(Color::Black);
-    _currentStyle.fill.color = ColorRGBA(Color::Transparent);
-    _currentStyle.stroke.join = drawing::LineJoin::MITER;
-    _currentStyle.stroke.cap = drawing::LineCap::ROUND;
-    _currentTextStyle.color = _currentStyle.stroke.color;
-
     addEventListener<KeyDownEvent>([this](KeyDownEvent& event) {
         // 忽略重複按鍵事件
         if (event.isRepeat()) {
@@ -105,20 +98,15 @@ void CanvasElement::setTool(drawing::ToolKind tool) {
     resetTool();
 }
 
-void CanvasElement::setStyle(const drawing::ShapeStyle& style) {
+void CanvasElement::setCurrentStyle(const drawing::StyleSet& style) {
     _currentStyle = style;
-    _currentTextStyle.color = style.stroke.color;
 
     if (!isInteracting()) {
         resetTool();
     }
-}
 
-void CanvasElement::setTextStyle(const drawing::TextStyle& style) {
-    _currentTextStyle = style;
-
-    if (!isInteracting()) {
-        resetTool();
+    if (_styleChangedHandler) {
+        _styleChangedHandler(_currentStyle);
     }
 }
 
@@ -148,18 +136,19 @@ void CanvasElement::clear() {
     invalidateDisplay();
 }
 
-void CanvasElement::insertText(Point anchor, std::string text, drawing::TextStyle style) {
+void CanvasElement::insertText(Point anchor, std::string text, drawing::PaintStyle paint,
+                               drawing::TextStyle style) {
     if (text.empty()) {
         return;
     }
 
-    _document.addObject(std::make_unique<drawing::TextObject>(anchor, std::move(text), std::move(style)));
+    _document.addObject(
+        std::make_unique<drawing::TextObject>(anchor, std::move(text), paint, std::move(style)));
     invalidateDisplay();
 }
 
 void CanvasElement::resetTool() {
-    _activeTool =
-        drawing::createCanvasTool(_currentTool, _document.scene(), _currentStyle, _currentTextStyle);
+    _activeTool = drawing::createCanvasTool(_currentTool, _document.scene(), _currentStyle);
 }
 
 bool CanvasElement::handleToolResult(drawing::ToolResult result) {
@@ -179,7 +168,7 @@ bool CanvasElement::handleToolResult(drawing::ToolResult result) {
 
     if (auto* request = std::get_if<drawing::RequestTextInputAction>(&result.action)) {
         if (_textInputRequestHandler) {
-            _textInputRequestHandler(request->anchor, request->style);
+            _textInputRequestHandler(request->anchor, request->paint, request->style);
         }
     }
 

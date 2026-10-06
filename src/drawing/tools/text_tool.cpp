@@ -3,7 +3,7 @@
 namespace paint::drawing {
 
 ToolResult TextTool::onClick(const ClickEvent& event, Point localPosition) {
-    return ToolResult::requestTextInput(localPosition, _style);
+    return ToolResult::requestTextInput(localPosition, _paint, _style);
 }
 
 }  // namespace paint::drawing

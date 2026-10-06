@@ -21,6 +21,7 @@ static const char GPT_DOCUMENT_HEADER[] = "GPTD 1";
 using drawing::EllipseShape;
 using drawing::LineShape;
 using drawing::ObjectKind;
+using drawing::PaintStyle;
 using drawing::PathShape;
 using drawing::PointShape;
 using drawing::PolygonShape;
@@ -121,13 +122,13 @@ const char* GptdDumperV1::shapeKindName(ShapeKind kind) {
 #pragma region Shape Serialization
 
 // Shape style 的欄位順序與 gpt_file_format.md 相同，即使某種圖形沒有用到也完整寫出。
-void GptdDumperV1::writeShapeStyle(const ShapeStyle& style) {
+void GptdDumperV1::writeShapeStyle(const PaintStyle& paint, const ShapeStyle& style) {
     _output << "SHAPE_STYLE " << fillModeName(style.fillMode) << ' ' << style.pointSize << '\n';
     _output << "FILL ";
-    writeColor(style.fill.color);
+    writeColor(paint.fillColor);
     _output << '\n';
     _output << "STROKE " << style.stroke.width << ' ';
-    writeColor(style.stroke.color);
+    writeColor(paint.color);
     _output << ' ' << lineJoinName(style.stroke.join) << ' ' << lineCapName(style.stroke.cap) << ' '
             << style.stroke.miterLimit << '\n';
 }
@@ -153,7 +154,7 @@ void GptdDumperV1::writePointList(const std::vector<Point>& points) {
 void GptdDumperV1::writeShape(const ShapeObject& shape) {
     _output << "OBJECT shape\n";
     _output << "SHAPE " << shapeKindName(shape.shapeKind()) << '\n';
-    writeShapeStyle(shape.style());
+    writeShapeStyle(shape.paint(), shape.style());
 
     // 這裡保存的是物件原本的幾何參數。矩形與橢圓不能寫成繪製時的採樣點，
     // 否則載入後就無法還原成原本的參數化圖形。
@@ -265,7 +266,7 @@ void GptdDumperV1::writeText(const TextObject& text) {
     writePoint(text.position());
     _output << '\n';
     _output << "TEXT_STYLE ";
-    writeColor(style.color);
+    writeColor(text.paint().color);
     _output << ' ' << style.lineSpacing << '\n';
     writeFont(style.font);
 

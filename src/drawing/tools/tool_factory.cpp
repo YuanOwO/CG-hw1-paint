@@ -1,7 +1,5 @@
 #include "drawing/tools/tool_factory.hpp"
 
-#include <utility>
-
 #include "drawing/tools/select_tool.hpp"
 #include "drawing/tools/shape_tools.hpp"
 #include "drawing/tools/text_tool.hpp"
@@ -31,25 +29,24 @@ const std::string getToolName(ToolKind tool) {
     }
 }
 
-std::unique_ptr<ICanvasTool> createCanvasTool(ToolKind tool, const Scene& scene, ShapeStyle shapeStyle,
-                                              TextStyle textStyle) {
+std::unique_ptr<ICanvasTool> createCanvasTool(ToolKind tool, const Scene& scene, const StyleSet& style) {
     switch (tool) {
     case ToolKind::SELECT:
         return std::make_unique<SelectTool>(scene);
     case ToolKind::POINT:
-        return std::make_unique<PointTool>(shapeStyle);
+        return std::make_unique<PointTool>(style.paint, style.shape);
     case ToolKind::PENCIL:
-        return std::make_unique<PencilTool>(shapeStyle);
+        return std::make_unique<PencilTool>(style.paint, style.shape);
     case ToolKind::LINE:
-        return std::make_unique<LineTool>(shapeStyle);
+        return std::make_unique<LineTool>(style.paint, style.shape);
     case ToolKind::RECTANGLE:
-        return std::make_unique<RectangleTool>(shapeStyle);
+        return std::make_unique<RectangleTool>(style.paint, style.shape);
     case ToolKind::ELLIPSE:
-        return std::make_unique<EllipseTool>(shapeStyle);
+        return std::make_unique<EllipseTool>(style.paint, style.shape);
     case ToolKind::POLYGON:
-        return std::make_unique<PolygonTool>(shapeStyle);
+        return std::make_unique<PolygonTool>(style.paint, style.shape);
     case ToolKind::TEXT:
-        return std::make_unique<TextTool>(std::move(textStyle));
+        return std::make_unique<TextTool>(style.paint, style.text);
     default:
         return nullptr;
     }
