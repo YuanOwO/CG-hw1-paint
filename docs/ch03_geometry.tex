@@ -1,6 +1,7 @@
 \section{幾何表示與互動式繪圖}
 
 \subsection{圖形的幾何表示}
+\label{sec:geometry-representation}
 
 不同工具取得圖形的方法不一樣，但完成繪圖後都會將 Line、Rectangle、Path 和 Polygon 都整理成頂點序列，另外記錄路徑是否封閉。
 Ellipse 則先由外接矩形算出中心和半徑，再取樣成 64 個頂點。Point 只需要位置；Text 會保存基準位置、UTF-8 字串和文字樣式。
@@ -23,6 +24,7 @@ Ellipse 則先由外接矩形算出中心和半徑，再取樣成 64 個頂點�
 \end{figure}
 
 \subsection{Pencil 路徑採樣}
+\label{sec:pencil-sampling}
 
 Pencil 需要一直收集滑鼠位置，但如果把每個 Motion event 都存下來，會產生很多幾乎重合的點。
 設上一個採樣點為 $P_{i-1}$、目前位置為 $P$、線寬為 $w$，最小距離設為
