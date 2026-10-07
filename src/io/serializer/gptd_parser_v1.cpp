@@ -1,12 +1,7 @@
 #include "io/serializer/gptd_parser_v1.hpp"
 
-#include <cstddef>
-#include <memory>
-#include <string>
-#include <vector>
-
-#include "drawing/shape_object.hpp"
 #include "drawing/text_object.hpp"
+#include "drawing/text_style.hpp"
 
 namespace paint::io {
 
@@ -115,7 +110,7 @@ std::vector<Point> GptdParserV1::parsePointList() {
     // 先 reserve 只是避免大型 path 反覆擴充 vector，不另外限制點數。
     std::vector<Point> points;
     points.reserve(count);
-    for (std::size_t i = 0; i < count; ++i) {
+    for (std::size_t i = 0; i < count; i++) {
         Record pointRecord = expectRecord("POINT", 3);
         points.push_back(parsePoint(pointRecord, 1));
     }
@@ -280,7 +275,7 @@ app::DocumentData GptdParserV1::parse() {
         parseCount(objectsRecord.fields[1], "object count", objectsRecord.lineNumber);
 
     // 先在暫時 DocumentData 建立完整 Scene；任何一筆失敗都不會修改目前文件。
-    for (std::size_t i = 0; i < objectCount; ++i) {
+    for (std::size_t i = 0; i < objectCount; i++) {
         document.scene.add(parseObject());
     }
 

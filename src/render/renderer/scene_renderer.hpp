@@ -1,9 +1,5 @@
 #pragma once
 
-#include <vector>
-
-#include "common/point.hpp"
-#include "drawing/shape_style.hpp"
 #include "render/render_context.hpp"
 
 namespace paint::drawing {

@@ -4,7 +4,9 @@
 #include <functional>
 #include <type_traits>
 #include <typeindex>
+#include <typeinfo>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "event/event.hpp"

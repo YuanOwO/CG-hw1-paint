@@ -1,8 +1,6 @@
 #include "ui/event_target.hpp"
 
 #include <algorithm>
-#include <type_traits>
-#include <utility>
 
 namespace paint::ui {
 

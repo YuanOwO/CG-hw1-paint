@@ -3,6 +3,7 @@
 #include <GL/freeglut.h>
 
 #include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <stdexcept>
 #include <unordered_map>
@@ -194,7 +195,7 @@ float getFontHeight(const GfntFontStyle& style, const std::string& text) {
     // 配合現有 FreeGLUT 字型的行為：
     // 結尾換行不產生額外的空白行高度。
     if (text.back() == '\n') {
-        --lines;
+        lines--;
     }
 
     const auto& header = font.header();

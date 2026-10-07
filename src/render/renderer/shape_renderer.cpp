@@ -2,10 +2,15 @@
 
 #include <GL/freeglut.h>
 
+#include <algorithm>
 #include <cmath>
 #include <utility>
+#include <vector>
 
+#include "common/point.hpp"
+#include "drawing/paint_style.hpp"
 #include "drawing/shape_object.hpp"
+#include "drawing/shape_style.hpp"
 
 namespace paint::render {
 
@@ -259,7 +264,7 @@ void drawRoundArc(const Point& center, const Point& start, const Point& end, con
 
     glBegin(GL_TRIANGLE_FAN);
     glVertex2f(center.x(), center.y());
-    for (int i = 0; i <= segments; ++i) {
+    for (int i = 0; i <= segments; i++) {
         const GLfloat angle =
             angleStart + angleDiff * static_cast<GLfloat>(i) / static_cast<GLfloat>(segments);
         const GLfloat x = center.x() + radius * std::cos(angle);
@@ -441,16 +446,14 @@ void ShapeRenderer::draw(RenderContext& context, const drawing::ShapeObject& sha
     const auto& paint = shape.paint();
     const auto& style = shape.style();
 
+    // 繪製過程會改變顏色、點大小、線寬與 polygon mode，結束後還原，避免影響後續繪製。
+    glPushAttrib(GL_CURRENT_BIT | GL_POINT_BIT | GL_LINE_BIT | GL_POLYGON_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);  // 先設定為填充模式
 
-    // 如果是 PointShape，直接使用 basicPoint 繪製
     if (auto point = dynamic_cast<const drawing::PointShape*>(&shape)) {
+        // 如果是 PointShape，直接使用 basicPoint 繪製
         basicPoint(point->getPosition(), paint, style);
-        return;
-    }
-
-    // 根據 FillMode 決定使用哪種繪製方式
-    if (style.fillMode != drawing::FillMode::ADVANCED) {
+    } else if (style.fillMode != drawing::FillMode::ADVANCED) {
         // OUTLINE / FILLED 模式，直接使用基本繪製
         basicDraw(vertices, shape.isClosed(), paint, style);
     } else {
@@ -460,6 +463,8 @@ void ShapeRenderer::draw(RenderContext& context, const drawing::ShapeObject& sha
         }
         stroke(vertices, shape.isClosed(), style.stroke, paint.color);
     }
+
+    glPopAttrib();
 }
 
 }  // namespace paint::render

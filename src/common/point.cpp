@@ -1,6 +1,7 @@
 #include "common/point.hpp"
 
 #include <algorithm>
+#include <cstddef>
 
 namespace paint {
 

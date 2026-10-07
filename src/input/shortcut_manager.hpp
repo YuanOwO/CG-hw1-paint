@@ -1,11 +1,13 @@
 #pragma once
 
+#include <cstddef>
 #include <functional>
-#include <utility>
+#include <initializer_list>
 #include <variant>
 #include <vector>
 
 #include "event/input_event.hpp"
+#include "input/input_state.hpp"
 #include "input/input_types.hpp"
 
 namespace paint {

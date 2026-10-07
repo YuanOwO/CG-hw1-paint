@@ -2,8 +2,6 @@
 
 #include <string>
 
-#include "common/color.hpp"
-#include "common/font.hpp"
 #include "common/point.hpp"
 #include "drawing/paint_style.hpp"
 #include "drawing/scene_object.hpp"

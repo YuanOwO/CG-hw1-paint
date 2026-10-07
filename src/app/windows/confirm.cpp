@@ -1,7 +1,10 @@
 #include "app/windows/confirm.hpp"
 
-#include "common/color.hpp"
-#include "common/font.hpp"
+#include <memory>
+#include <utility>
+
+#include "event/events.hpp"
+#include "ui/builders.hpp"
 #include "ui/elements/button.hpp"
 #include "ui/elements/stack_panel.hpp"
 #include "ui/elements/text.hpp"
@@ -11,7 +14,7 @@ namespace paint::app {
 
 ConfirmWindow::ConfirmWindow(const std::string& title, const std::string& message, Callback onConfirm,
                              Callback onCancel)
-    : Window(title, 440, 220, false),
+    : Window(title, 440, 240, false),
       _message(message),
       _onConfirm(std::move(onConfirm)),
       _onCancel(std::move(onCancel)) {
@@ -50,16 +53,14 @@ void ConfirmWindow::cancel() {
 void ConfirmWindow::setupContent() {
     auto root = std::make_unique<ui::StackPanelElement>(ui::StackOrientation::Vertical);
 
-    root->setPadding({28, 28, 28, 24});
+    root->setPadding({24, 24, 24, 24});
     root->setBackgroundColor(ui::theme::WindowBackground);
 
-    auto heading = std::make_unique<ui::TextElement>(this->title(), ui::theme::HeadingFont,
-                                                     ui::theme::Text);
+    auto heading = ui::createHeading(title());
     heading->setMargin({0, 0, 0, 12});
     root->appendChild(std::move(heading));
 
-    auto message =
-        std::make_unique<ui::TextElement>(_message, ui::theme::BodyFont, ui::theme::MutedText);
+    auto message = ui::createText(_message, ui::theme::MutedText);
 
     message->setMargin({0, 0, 0, 24});
     root->appendChild(std::move(message), 1.0f);
@@ -67,30 +68,10 @@ void ConfirmWindow::setupContent() {
     // 設置按鈕區域
     auto buttons = std::make_unique<ui::StackPanelElement>(ui::StackOrientation::Horizontal);
 
-    auto cancelButton = std::make_unique<ui::ButtonElement>([this]() { cancel(); });
-    cancelButton->setPreferredSize({104, 36});
+    auto cancelButton = ui::createButton("取消", [this]() { cancel(); });
     cancelButton->setMargin({0, 0, 12, 0});
 
-    auto cancelText = std::make_unique<ui::TextElement>("取消", ui::theme::BodyFont);
-    cancelText->setColor(ui::theme::ButtonText);
-    cancelText->setHorizontalAlignment(ui::Alignment::Center);
-    cancelText->setVerticalAlignment(ui::Alignment::Center);
-    cancelButton->appendChild(std::move(cancelText));
-
-    auto confirmButton = std::make_unique<ui::ButtonElement>([this]() { confirm(); });
-    confirmButton->setPreferredSize({104, 36});
-    confirmButton->setStyle({
-        ui::theme::Primary,
-        ui::theme::PrimaryHovered,
-        ui::theme::PrimaryPressed,
-        ui::theme::Primary,
-    });
-
-    auto confirmText = std::make_unique<ui::TextElement>("確認", ui::theme::BodyFont);
-    confirmText->setColor(Color::White);
-    confirmText->setHorizontalAlignment(ui::Alignment::Center);
-    confirmText->setVerticalAlignment(ui::Alignment::Center);
-    confirmButton->appendChild(std::move(confirmText));
+    auto confirmButton = ui::createButton("確認", [this]() { confirm(); }, true);
 
     buttons->appendChild(std::make_unique<ui::Element>(), 1.0f);  // 左側 spacer
     buttons->appendChild(std::move(cancelButton));

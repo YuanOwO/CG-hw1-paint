@@ -1,5 +1,7 @@
 #include "render/color_buffer.hpp"
 
+#include <cstddef>
+
 #include <GL/freeglut.h>
 
 namespace paint::render {
@@ -125,8 +127,8 @@ void ColorBuffer::fill(const ColorRGBA& color) {
         return;
     }
 
-    for (int y = 0; y < _height; ++y) {
-        for (int x = 0; x < _width; ++x) {
+    for (int y = 0; y < _height; y++) {
+        for (int x = 0; x < _width; x++) {
             std::size_t index = static_cast<std::size_t>(y) * _width * 4 + static_cast<std::size_t>(x) * 4;
             // 將浮點色彩 [0, 1] 轉成 unsigned byte [0, 255]。
             _pixels[index] = static_cast<unsigned char>(color.r * 255.0f);

@@ -1,5 +1,7 @@
 #include "ui/elements/root.hpp"
 
+#include <utility>
+
 namespace paint::ui {
 
 Element& RootElement::setContent(std::unique_ptr<Element> content) {

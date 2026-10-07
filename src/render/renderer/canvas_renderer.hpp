@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "drawing/tools/canvas_tool.hpp"
 #include "render/render_context.hpp"
 #include "render/renderer/scene_renderer.hpp"

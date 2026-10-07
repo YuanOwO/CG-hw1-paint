@@ -1,18 +1,18 @@
 #pragma once
 
-#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>
 #include <utility>
-#include <vector>
 
 #include "app/document.hpp"
+#include "drawing/paint_style.hpp"
 #include "drawing/style_set.hpp"
+#include "drawing/text_style.hpp"
+#include "drawing/tools/canvas_tool.hpp"
 #include "drawing/tools/tool_factory.hpp"
 #include "render/renderer/canvas_renderer.hpp"
 #include "ui/element.hpp"
-#include "ui/layout/bounding.hpp"
 
 using paint::app::Document;
 

@@ -4,7 +4,6 @@
 #include <memory>
 #include <utility>
 
-#include "common/color.hpp"
 #include "common/font.hpp"
 #include "common/utf8.hpp"
 #include "ui/elements/text.hpp"
@@ -36,7 +35,7 @@ InputElement::InputElement(std::string value, std::string placeholder)
 
     setFocusable(true);
     setPadding({8, 4, 8, 4});
-    setPreferredSize({180, 34});
+    setPreferredSize({180, 36});
 
     auto text = std::make_unique<TextElement>("", theme::BodyFont);
     _textElement = text.get();
@@ -75,7 +74,7 @@ void InputElement::setValue(std::string value) {
     const std::size_t count = std::min(codepoints.size(), _maxLength);
     characters.reserve(count);
 
-    for (std::size_t i = 0; i < count; ++i) {
+    for (std::size_t i = 0; i < count; i++) {
         characters.push_back({codepoints[i]});
     }
 
@@ -167,7 +166,7 @@ float InputElement::cursorX() const {
     std::u32string prefix;
     prefix.reserve(_cursorIndex + _unicodeDigits.size() + 1);
 
-    for (std::size_t i = 0; i < _cursorIndex; ++i) {
+    for (std::size_t i = 0; i < _cursorIndex; i++) {
         prefix.push_back(_characters[i].codepoint);
     }
 
@@ -231,7 +230,7 @@ void InputElement::handleKeyDown(KeyDownEvent& event) {
     case Key::Backspace:
         if (_cursorIndex > 0) {
             _characters.erase(_characters.begin() + _cursorIndex - 1);
-            --_cursorIndex;
+            _cursorIndex--;
             valueChanged = true;
         }
         break;
@@ -245,13 +244,13 @@ void InputElement::handleKeyDown(KeyDownEvent& event) {
 
     case Key::Left:
         if (_cursorIndex > 0) {
-            --_cursorIndex;
+            _cursorIndex--;
         }
         break;
 
     case Key::Right:
         if (_cursorIndex < _characters.size()) {
-            ++_cursorIndex;
+            _cursorIndex++;
         }
         break;
 
@@ -353,7 +352,7 @@ void InputElement::commitUnicodeInput() {
     const std::u32string normalized = utf8::toUtf32(utf8::encodeOne(codepoint));
     if (_characters.size() < _maxLength && !normalized.empty()) {
         _characters.insert(_characters.begin() + _cursorIndex, InputCharacter{normalized.front()});
-        ++_cursorIndex;
+        _cursorIndex++;
         rebuildValue();
         notifyValueChanged();
     }
@@ -397,7 +396,7 @@ void InputElement::updateDisplayedText() {
     std::u32string displayed;
     displayed.reserve(_characters.size() + _unicodeDigits.size() + 1);
 
-    for (std::size_t i = 0; i <= _characters.size(); ++i) {
+    for (std::size_t i = 0; i <= _characters.size(); i++) {
         if (_unicodeInputActive && i == _cursorIndex) {
             displayed.push_back(U'`');
             for (char digit : _unicodeDigits) {

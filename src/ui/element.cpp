@@ -1,8 +1,8 @@
 #include "ui/element.hpp"
 
 #include <algorithm>
+#include <stdexcept>
 
-#include "common/point.hpp"
 #include "event/events.hpp"
 #include "ui/window.hpp"
 

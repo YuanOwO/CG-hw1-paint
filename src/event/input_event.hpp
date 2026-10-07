@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "common/point.hpp"
 #include "event/event.hpp"
 #include "input/input_state.hpp"
 #include "input/input_types.hpp"

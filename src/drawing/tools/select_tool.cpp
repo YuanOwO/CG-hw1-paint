@@ -1,11 +1,15 @@
 #include "drawing/tools/select_tool.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <optional>
+#include <utility>
 
 #include "common/font.hpp"
+#include "common/point.hpp"
 #include "drawing/shape_object.hpp"
 #include "drawing/text_object.hpp"
+#include "input/input_types.hpp"
 
 namespace paint::drawing {
 namespace {
@@ -98,7 +102,7 @@ bool hitTest(const SceneObject& object, Point point) {
     }
 
     const std::size_t edgeCount = shape->isClosed() ? vertices.size() : vertices.size() - 1;
-    for (std::size_t i = 0; i < edgeCount; ++i) {
+    for (std::size_t i = 0; i < edgeCount; i++) {
         if (distanceToSegment(point, vertices[i], vertices[(i + 1) % vertices.size()]) <= tolerance) {
             return true;
         }
@@ -151,7 +155,7 @@ ToolResult SelectTool::onMouseDown(const MouseButtonEvent& event, Point localPos
     std::shared_ptr<SceneObject> selected;
 
     // 場景尾端最後繪製，因此反向搜尋可優先選到視覺上的最上層物件。
-    for (auto it = _scene.objects().rbegin(); it != _scene.objects().rend(); ++it) {
+    for (auto it = _scene.objects().rbegin(); it != _scene.objects().rend(); it++) {
         if (*it && hitTest(**it, localPosition)) {
             selected = *it;
             break;

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <cstring>
 #include <fstream>
 #include <limits>
@@ -129,7 +130,7 @@ GfntFont GfntFont::load(const std::filesystem::path& path) {
 
     font._glyphs.reserve(font._header.glyphCount);
 
-    for (std::uint32_t i = 0; i < font._header.glyphCount; ++i) {
+    for (std::uint32_t i = 0; i < font._header.glyphCount; i++) {
         font._glyphs.push_back(readGlyph(input));
     }
 
@@ -144,7 +145,7 @@ GfntFont GfntFont::load(const std::filesystem::path& path) {
 
     // 載入時一次驗證完整個字型，渲染時就可以直接取用 bitmap，
     // 不必每畫一個字都重複做邊界檢查。
-    for (std::size_t i = 0; i < font._glyphs.size(); ++i) {
+    for (std::size_t i = 0; i < font._glyphs.size(); i++) {
         const auto& glyph = font._glyphs[i];
 
         // findGlyph() 使用 binary search，因此這裡不只要檢查排序，

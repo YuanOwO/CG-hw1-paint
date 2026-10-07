@@ -1,6 +1,7 @@
 #include "ui/elements/dock_panel.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <utility>
 
 namespace paint::ui {
@@ -31,7 +32,7 @@ Size DockPanelElement::measureContent(const Size& availableSize) {
     int desiredWidth = 0;
     int desiredHeight = 0;
 
-    for (std::size_t i = 0; i < children().size(); ++i) {
+    for (std::size_t i = 0; i < children().size(); i++) {
         auto& child = *children()[i];
 
         // 每個 child 只能使用前面元素留下的空間。
@@ -78,7 +79,7 @@ Size DockPanelElement::measureContent(const Size& availableSize) {
 void DockPanelElement::arrangeContent(const BoundingBox& contentBounds) {
     BoundingBox remaining = contentBounds;
 
-    for (std::size_t i = 0; i < children().size(); ++i) {
+    for (std::size_t i = 0; i < children().size(); i++) {
         auto& child = *children()[i];
 
         // 最後一個 child 取得所有剩餘空間。

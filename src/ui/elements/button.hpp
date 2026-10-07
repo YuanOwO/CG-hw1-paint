@@ -1,9 +1,8 @@
 #pragma once
 
 #include <functional>
-#include <string>
 
-#include "common/font.hpp"
+#include "common/color.hpp"
 #include "render/renderer/button_renderer.hpp"
 #include "ui/element.hpp"
 #include "ui/theme.hpp"

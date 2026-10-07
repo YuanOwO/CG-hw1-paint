@@ -2,8 +2,7 @@
 
 #include <initializer_list>
 #include <optional>
-
-#include "common/point.hpp"
+#include <stdexcept>
 
 namespace paint {
 

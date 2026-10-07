@@ -28,7 +28,7 @@ Record TextParser::readRecord() {
     if (!utils::readLine(_input, line)) {
         throw error("unexpected end of file");
     }
-    ++_lineNumber;
+    _lineNumber++;
 
     Record record;
     record.fields = utils::splitFields(line);
@@ -100,7 +100,7 @@ std::string TextParser::readUtf8Payload(std::size_t byteCount) {
     } else if (delimiter != '\n') {
         throw error("text payload has an invalid trailing newline");
     }
-    ++_lineNumber;
+    _lineNumber++;
 
     if (!utils::isValidUtf8(text)) {
         throw error("text payload is not valid UTF-8", _lineNumber);

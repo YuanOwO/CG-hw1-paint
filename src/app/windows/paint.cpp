@@ -1,17 +1,26 @@
 #include "app/windows/paint.hpp"
 
-#include <cstdlib>
+#include <filesystem>
 #include <memory>
+#include <optional>
+#include <system_error>
 #include <utility>
+#include <variant>
 
 #include "app/application.hpp"
 #include "app/windows/color_picker.hpp"
 #include "app/windows/confirm.hpp"
 #include "app/windows/input_dialog.hpp"
+#include "common/color.hpp"
 #include "common/font.hpp"
+#include "drawing/shape_style.hpp"
+#include "drawing/style_set.hpp"
+#include "event/element_event.hpp"
+#include "event/input_event.hpp"
+#include "event/window_event.hpp"
+#include "input/input_types.hpp"
 #include "ui/elements/dock_panel.hpp"
 #include "ui/elements/stack_panel.hpp"
-#include "ui/layout/bounding.hpp"
 #include "ui/theme.hpp"
 
 using paint::drawing::FillMode;
@@ -601,11 +610,7 @@ void PaintWindow::setupStrokeMenu() {
 #pragma region Fill Menu
 
 void PaintWindow::setupFillMenu() {
-    auto& fillMenu = _menu.addSubMenu("Fill");
-
-    // Fill Mode Menu
-
-    auto& fillModeMenu = fillMenu.addSubMenu("Mode");
+    auto& fillModeMenu = _menu.addSubMenu("Fill Mode");
 
     const std::pair<const char*, FillMode> modes[] = {
         {"Outline",  FillMode::OUTLINE },

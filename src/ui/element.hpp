@@ -2,10 +2,11 @@
 
 #include <chrono>
 #include <memory>
-#include <stdexcept>
 #include <utility>
 #include <vector>
 
+#include "common/color.hpp"
+#include "common/point.hpp"
 #include "render/render_context.hpp"
 #include "ui/event_target.hpp"
 #include "ui/layout/alignment.hpp"

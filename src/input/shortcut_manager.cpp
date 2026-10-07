@@ -1,6 +1,7 @@
 #include "input/shortcut_manager.hpp"
 
 #include <algorithm>
+#include <utility>
 
 namespace paint {
 

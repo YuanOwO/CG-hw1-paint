@@ -4,9 +4,7 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
-#include <string>
 #include <utility>
-#include <vector>
 
 #include "command/command_history.hpp"
 #include "drawing/scene.hpp"

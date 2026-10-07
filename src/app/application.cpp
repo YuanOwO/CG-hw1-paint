@@ -3,6 +3,7 @@
 #include <GL/freeglut.h>
 
 #include <algorithm>
+#include <stdexcept>
 
 namespace paint::app {
 

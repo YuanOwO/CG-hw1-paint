@@ -46,6 +46,9 @@ class ColorPickerWindow : public ui::Window {
     ui::InputElement* _redInput = nullptr;
     ui::InputElement* _greenInput = nullptr;
     ui::InputElement* _blueInput = nullptr;
+    ui::InputElement* _hueInput = nullptr;
+    ui::InputElement* _saturationInput = nullptr;
+    ui::InputElement* _valueInput = nullptr;
     ui::TextElement* _errorText = nullptr;
 
     // 程式化更新 InputElement 時也會觸發 value changed callback，
@@ -65,6 +68,7 @@ class ColorPickerWindow : public ui::Window {
     // 處理使用者直接編輯文字欄位；格式不合法時保留原顏色並顯示錯誤。
     void updateFromHex(const std::string& value);
     void updateFromRgb();
+    void updateFromHsv();
 
     void submit();
     void cancel();

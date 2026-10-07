@@ -1,9 +1,10 @@
 #include "io/image_exporter.hpp"
 
-#include <filesystem>
 #include <fstream>
+#include <stdexcept>
+#include <string>
 
-#include "app/windows/graphics_exporter.hpp"
+#include "app/windows/graphics_render.hpp"
 #include "io/utils.hpp"
 
 namespace paint::io {

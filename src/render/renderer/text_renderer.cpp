@@ -2,13 +2,14 @@
 
 #include <GL/freeglut.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <stdexcept>
-#include <string>
 #include <variant>
 #include <vector>
 
-#include "common/font.hpp"
+#include "common/gfnt.hpp"
+#include "common/gfnt_font.hpp"
 #include "common/utf8.hpp"
 #include "drawing/text_object.hpp"
 #include "ui/elements/text.hpp"
@@ -168,7 +169,7 @@ void renderGfnt(RenderContext& context, const std::string& text, const GfntFontS
             const std::uint8_t* alphaPixels = font.bitmap(*glyph);
             rgbaPixels.resize(pixelCount * 4);
 
-            for (std::size_t i = 0; i < pixelCount; ++i) {
+            for (std::size_t i = 0; i < pixelCount; i++) {
                 rgbaPixels[i * 4] = red;
                 rgbaPixels[i * 4 + 1] = green;
                 rgbaPixels[i * 4 + 2] = blue;

@@ -1,6 +1,7 @@
 #include "io/utils.hpp"
 
 #include <stdexcept>
+#include <string>
 
 namespace paint::io::utils {
 

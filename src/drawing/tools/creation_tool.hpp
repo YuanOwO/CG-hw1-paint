@@ -3,7 +3,8 @@
 #include <memory>
 #include <utility>
 
-#include "drawing/shape_object.hpp"
+#include "drawing/paint_style.hpp"
+#include "drawing/shape_style.hpp"
 #include "drawing/tools/canvas_tool.hpp"
 
 namespace paint::drawing {

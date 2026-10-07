@@ -51,7 +51,7 @@ DecodeResult decodeOne(const std::string& text, std::size_t offset) {
         return {REPLACEMENT_CHARACTER, 1};
     }
 
-    for (std::size_t i = 1; i < length; ++i) {
+    for (std::size_t i = 1; i < length; i++) {
         const auto byte = static_cast<unsigned char>(text[offset + i]);
 
         // Continuation byte 必須符合 10xxxxxx。

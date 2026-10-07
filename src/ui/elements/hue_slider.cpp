@@ -1,14 +1,13 @@
 #include "ui/elements/hue_slider.hpp"
 
 #include <algorithm>
-#include <utility>
 
+#include "common/color.hpp"
 #include "event/events.hpp"
 
 namespace paint::ui {
 
 HueSliderElement::HueSliderElement(float hue) {
-    setPreferredSize({28, 220});
     setHue(hue);
 
     // 捕獲滑鼠可避免拖曳到滑桿外時中斷操作。
@@ -53,7 +52,7 @@ void HueSliderElement::setHue(float hue) {
 }
 
 Size HueSliderElement::measureContent(const Size&) {
-    return {28, 220};
+    return {30, 220};
 }
 
 void HueSliderElement::renderContent(render::RenderContext& context) {
@@ -66,7 +65,7 @@ void HueSliderElement::updateFromPosition(Point position) {
     }
 
     // UI 使用由上往下增加的 Y 座標，因此可直接映射到 0～360 度。
-    const float ratio = std::clamp(position.y() / static_cast<float>(height() - 1), 0.0f, 1.0f);
+    const float ratio = std::clamp(position.y() / static_cast<float>(height()), 0.0f, 1.0f);
     // 360 度與 0 度相同；底端保留在 360 以下，避免指示器跳回頂端。
     const float hue = ratio == 1.0f ? 359.999f : ratio * 360.0f;
     if (_hue == hue) {

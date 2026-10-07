@@ -1,7 +1,5 @@
 #pragma once
 
-#include <string>
-
 #include "app/document.hpp"
 
 namespace paint::io {

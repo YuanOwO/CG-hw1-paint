@@ -1,9 +1,10 @@
 #pragma once
 
-#include <string>
+#include <utility>
 
 #include "app/document.hpp"
 #include "command/command.hpp"
+#include "drawing/scene.hpp"
 #include "io/document_storage.hpp"
 #include "io/image_exporter.hpp"
 #include "io/serializer/gptd_serializer.hpp"

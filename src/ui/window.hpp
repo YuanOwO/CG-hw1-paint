@@ -4,12 +4,12 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <utility>
 
+#include "common/point.hpp"
 #include "event/events.hpp"
 #include "input/input_state.hpp"
+#include "input/input_types.hpp"
 #include "render/color_buffer.hpp"
-#include "render/render_context.hpp"
 #include "ui/event_target.hpp"
 
 namespace paint::app {

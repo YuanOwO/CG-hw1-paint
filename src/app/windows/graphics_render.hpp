@@ -1,8 +1,9 @@
 #pragma once
 
+#include <memory>
+#include <utility>
+
 #include "app/document.hpp"
-#include "event/events.hpp"
-#include "iostream"
 #include "render/color_buffer.hpp"
 #include "ui/elements/canvas.hpp"
 #include "ui/window.hpp"

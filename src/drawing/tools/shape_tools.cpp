@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include "input/input_types.hpp"
+
 namespace paint::drawing {
 
 #pragma region DragTool

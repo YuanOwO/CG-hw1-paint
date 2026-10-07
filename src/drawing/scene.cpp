@@ -1,6 +1,7 @@
 #include "drawing/scene.hpp"
 
 #include <algorithm>
+#include <iterator>
 #include <stdexcept>
 #include <utility>
 

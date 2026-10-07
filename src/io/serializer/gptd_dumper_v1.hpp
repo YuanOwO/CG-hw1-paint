@@ -9,7 +9,10 @@
 #include "common/color.hpp"
 #include "common/font.hpp"
 #include "common/point.hpp"
+#include "drawing/paint_style.hpp"
+#include "drawing/scene_object.hpp"
 #include "drawing/shape_object.hpp"
+#include "drawing/shape_style.hpp"
 #include "drawing/text_object.hpp"
 
 namespace paint::io {

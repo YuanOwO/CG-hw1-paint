@@ -1,7 +1,13 @@
 #pragma once
 
+#include <cstddef>
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "command/command.hpp"
 #include "drawing/scene.hpp"
+#include "drawing/scene_object.hpp"
 
 using paint::drawing::Scene;
 using paint::drawing::SceneObject;

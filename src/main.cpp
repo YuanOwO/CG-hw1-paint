@@ -1,7 +1,4 @@
-#include <GL/freeglut.h>
-
 #include <filesystem>
-#include <iostream>
 
 #include "app/application.hpp"
 #include "app/windows/paint.hpp"

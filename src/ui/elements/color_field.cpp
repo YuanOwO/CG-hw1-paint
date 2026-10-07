@@ -1,7 +1,6 @@
 #include "ui/elements/color_field.hpp"
 
 #include <algorithm>
-#include <utility>
 
 #include "event/events.hpp"
 

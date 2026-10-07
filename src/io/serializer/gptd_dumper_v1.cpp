@@ -2,13 +2,9 @@
 
 #include <limits>
 #include <locale>
-#include <stdexcept>
-#include <string>
 #include <variant>
-#include <vector>
 
-#include "drawing/shape_object.hpp"
-#include "drawing/text_object.hpp"
+#include "drawing/text_style.hpp"
 
 namespace paint::io {
 

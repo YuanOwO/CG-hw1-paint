@@ -3,7 +3,10 @@
 #include <string>
 
 #include "app/document.hpp"
+#include "common/point.hpp"
+#include "drawing/paint_style.hpp"
 #include "drawing/text_style.hpp"
+#include "drawing/tools/tool_factory.hpp"
 #include "input/shortcut_manager.hpp"
 #include "ui/elements/canvas.hpp"
 #include "ui/elements/text.hpp"

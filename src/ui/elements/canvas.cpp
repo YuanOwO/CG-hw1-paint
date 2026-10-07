@@ -1,9 +1,9 @@
 #include "ui/elements/canvas.hpp"
 
-#include <utility>
+#include <variant>
 
-#include "command/edit_command.hpp"
 #include "drawing/text_object.hpp"
+#include "event/events.hpp"
 
 namespace paint::ui {
 

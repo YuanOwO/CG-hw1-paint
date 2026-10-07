@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common/point.hpp"
+#include <stdexcept>
 
 namespace paint {
 
