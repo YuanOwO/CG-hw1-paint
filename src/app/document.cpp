@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <utility>
 
+#include "command/command.hpp"
 #include "command/edit_command.hpp"
 #include "command/file_command.hpp"
 

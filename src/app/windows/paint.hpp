@@ -8,14 +8,11 @@
 #include "drawing/text_style.hpp"
 #include "drawing/tools/tool_factory.hpp"
 #include "input/shortcut_manager.hpp"
-#include "ui/elements/canvas.hpp"
-#include "ui/elements/text.hpp"
+#include "ui/elements.hpp"
 #include "ui/menu.hpp"
 #include "ui/window.hpp"
 
 namespace paint::app {
-
-class Application;
 
 class PaintWindow : public ui::Window {
    public:

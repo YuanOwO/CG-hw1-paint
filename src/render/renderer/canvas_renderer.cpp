@@ -2,7 +2,12 @@
 
 #include <GL/freeglut.h>
 
-#include "ui/elements/canvas.hpp"
+#include <memory>
+
+#include "app/document.hpp"
+#include "common/point.hpp"
+#include "drawing/scene.hpp"
+#include "ui/elements.hpp"
 
 namespace paint::render {
 

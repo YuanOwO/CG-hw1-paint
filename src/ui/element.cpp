@@ -1,6 +1,7 @@
 #include "ui/element.hpp"
 
 #include <algorithm>
+#include <optional>
 #include <stdexcept>
 
 #include "event/events.hpp"

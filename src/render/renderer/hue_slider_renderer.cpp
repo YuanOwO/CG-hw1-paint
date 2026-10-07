@@ -5,7 +5,7 @@
 #include <algorithm>
 
 #include "common/color.hpp"
-#include "ui/elements/hue_slider.hpp"
+#include "ui/elements.hpp"
 
 namespace paint::render {
 

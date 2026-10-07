@@ -5,8 +5,7 @@
 #include <utility>
 
 #include "render/render_context.hpp"
-#include "ui/element.hpp"
-#include "ui/elements/root.hpp"
+#include "ui/elements.hpp"
 
 namespace paint::ui {
 

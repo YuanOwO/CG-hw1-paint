@@ -2,7 +2,10 @@
 
 #include <algorithm>
 #include <cmath>
+#include <memory>
 
+#include "common/point.hpp"
+#include "event/input_event.hpp"
 #include "input/input_types.hpp"
 
 namespace paint::drawing {

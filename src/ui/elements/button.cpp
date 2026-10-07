@@ -1,6 +1,8 @@
 #include "ui/elements/button.hpp"
 
+#include <memory>
 #include <utility>
+#include <vector>
 
 #include "event/events.hpp"
 

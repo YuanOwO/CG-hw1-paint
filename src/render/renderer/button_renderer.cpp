@@ -1,6 +1,6 @@
 #include "render/renderer/button_renderer.hpp"
 
-#include "ui/elements/button.hpp"
+#include "ui/elements.hpp"
 
 namespace paint::render {
 

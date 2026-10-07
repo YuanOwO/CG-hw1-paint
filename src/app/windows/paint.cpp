@@ -19,8 +19,7 @@
 #include "event/input_event.hpp"
 #include "event/window_event.hpp"
 #include "input/input_types.hpp"
-#include "ui/elements/dock_panel.hpp"
-#include "ui/elements/stack_panel.hpp"
+#include "ui/elements.hpp"
 #include "ui/theme.hpp"
 
 using paint::drawing::FillMode;

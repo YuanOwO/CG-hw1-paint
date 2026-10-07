@@ -1,6 +1,6 @@
 #include "render/renderer/input_renderer.hpp"
 
-#include "ui/elements/input.hpp"
+#include "ui/elements.hpp"
 
 namespace paint::render {
 

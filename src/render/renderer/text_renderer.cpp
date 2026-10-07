@@ -10,9 +10,12 @@
 
 #include "common/gfnt.hpp"
 #include "common/gfnt_font.hpp"
+#include "common/point.hpp"
 #include "common/utf8.hpp"
+#include "drawing/paint_style.hpp"
 #include "drawing/text_object.hpp"
-#include "ui/elements/text.hpp"
+#include "drawing/text_style.hpp"
+#include "ui/elements.hpp"
 
 namespace paint::render {
 

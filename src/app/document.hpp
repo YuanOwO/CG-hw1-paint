@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "command/command_history.hpp"

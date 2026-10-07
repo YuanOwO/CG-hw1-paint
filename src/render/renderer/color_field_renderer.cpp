@@ -6,7 +6,7 @@
 #include <cmath>
 
 #include "common/color.hpp"
-#include "ui/elements/color_field.hpp"
+#include "ui/elements.hpp"
 
 namespace paint::render {
 

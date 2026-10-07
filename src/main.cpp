@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <string>
 
 #include "app/application.hpp"
 #include "app/windows/paint.hpp"

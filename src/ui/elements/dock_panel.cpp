@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <optional>
 #include <utility>
+#include <vector>
 
 namespace paint::ui {
 

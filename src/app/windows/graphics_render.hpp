@@ -1,11 +1,12 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "app/document.hpp"
 #include "render/color_buffer.hpp"
-#include "ui/elements/canvas.hpp"
+#include "ui/elements.hpp"
 #include "ui/window.hpp"
 
 namespace paint::app {

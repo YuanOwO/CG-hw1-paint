@@ -6,10 +6,7 @@
 
 #include "event/events.hpp"
 #include "ui/builders.hpp"
-#include "ui/elements/button.hpp"
-#include "ui/elements/input.hpp"
-#include "ui/elements/stack_panel.hpp"
-#include "ui/elements/text.hpp"
+#include "ui/elements.hpp"
 #include "ui/theme.hpp"
 
 namespace paint::app {

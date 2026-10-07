@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "common/color.hpp"
 #include "common/point.hpp"
 #include "drawing/paint_style.hpp"
 #include "drawing/shape_object.hpp"

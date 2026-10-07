@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <variant>
 
 #include "common/color.hpp"
 #include "common/font.hpp"

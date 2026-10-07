@@ -12,12 +12,6 @@
 #include "render/color_buffer.hpp"
 #include "ui/event_target.hpp"
 
-namespace paint::app {
-
-class Application;
-
-}
-
 namespace paint::ui {
 
 const int CAPTURE_RATE = 60;

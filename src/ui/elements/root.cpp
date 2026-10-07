@@ -1,6 +1,7 @@
 #include "ui/elements/root.hpp"
 
 #include <utility>
+#include <vector>
 
 namespace paint::ui {
 

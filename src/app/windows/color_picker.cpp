@@ -1,6 +1,7 @@
 #include "app/windows/color_picker.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cmath>
 #include <iomanip>
@@ -13,12 +14,7 @@
 #include "common/palette.hpp"
 #include "event/events.hpp"
 #include "ui/builders.hpp"
-#include "ui/elements/button.hpp"
-#include "ui/elements/color_field.hpp"
-#include "ui/elements/hue_slider.hpp"
-#include "ui/elements/input.hpp"
-#include "ui/elements/stack_panel.hpp"
-#include "ui/elements/text.hpp"
+#include "ui/elements.hpp"
 #include "ui/theme.hpp"
 
 namespace paint::app {

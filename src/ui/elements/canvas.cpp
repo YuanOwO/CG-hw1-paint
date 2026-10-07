@@ -1,5 +1,6 @@
 #include "ui/elements/canvas.hpp"
 
+#include <optional>
 #include <variant>
 
 #include "drawing/text_object.hpp"
