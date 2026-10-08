@@ -13,7 +13,7 @@ enum class LineCap { BUTT, SQUARE, ROUND };
 struct StrokeStyle {
     float width = 1.0f;
 
-    LineJoin join = LineJoin::MITER;
+    LineJoin join = LineJoin::ROUND;
     LineCap cap = LineCap::ROUND;
 
     // 避免非常尖的角產生超長 miter
