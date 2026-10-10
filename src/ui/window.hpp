@@ -9,6 +9,7 @@
 #include "event/events.hpp"
 #include "input/input_state.hpp"
 #include "input/input_types.hpp"
+#include "platform/platform.hpp"
 #include "render/color_buffer.hpp"
 #include "ui/event_target.hpp"
 
@@ -22,7 +23,7 @@ const std::chrono::milliseconds DOUBLE_CLICK_TIME_THRESHOLD(300);
 class Element;
 class RootElement;
 
-class Window : public EventTarget {
+class Window : public EventTarget, private platform::WindowHandler {
    public:
     Window(const std::string& title, int width, int height, bool resizable = true);
     virtual ~Window();
@@ -118,10 +119,6 @@ class Window : public EventTarget {
 
     void detachElementSubtree(Element* subtreeRoot);
 
-    // Window lookup
-
-    static Window* currentWindow();
-
     // Window properties
 
     int _id = 0;
@@ -169,28 +166,30 @@ class Window : public EventTarget {
 
     // Internal event handlers
 
-    static void keyDownHandler(Key key, int x, int y);
-    static void keyUpHandler(Key key, int x, int y);
-    static void mouseMoveHandler(int x, int y);
+    void keyDownHandler(Key key, int x, int y);
+    void keyUpHandler(Key key, int x, int y);
+    void mouseMoveHandler(int x, int y);
 
-    // GLUT callbacks
+    // GLUT timer callback
 
     static void timerCallback(int windowId);
 
-    static void closeCallback();
-    static void reshapeCallback(int width, int height);
-    static void visibilityCallback(int state);
-    static void displayCallback();
+    // platform::WindowHandler
 
-    static void keyboardCallback(unsigned char key, int x, int y);
-    static void keyboardUpCallback(unsigned char key, int x, int y);
-    static void specialCallback(int key, int x, int y);
-    static void specialUpCallback(int key, int x, int y);
+    void onClose() final;
+    void onReshape(int width, int height) final;
+    void onVisibility(int state) final;
+    void onDisplay() final;
 
-    static void mouseCallback(int button, int state, int x, int y);
-    static void motionCallback(int x, int y);
-    static void passiveMotionCallback(int x, int y);
-    static void entryCallback(int state);
+    void onKeyboard(unsigned char key, int x, int y) final;
+    void onKeyboardUp(unsigned char key, int x, int y) final;
+    void onSpecial(int key, int x, int y) final;
+    void onSpecialUp(int key, int x, int y) final;
+
+    void onMouse(int button, int state, int x, int y) final;
+    void onMotion(int x, int y) final;
+    void onPassiveMotion(int x, int y) final;
+    void onEntry(int state) final;
 };
 
 }  // namespace paint::ui

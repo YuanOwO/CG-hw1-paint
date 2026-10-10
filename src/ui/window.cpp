@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "platform/glut.hpp"
+#include "platform/platform.hpp"
 #include "render/render_context.hpp"
 #include "ui/elements.hpp"
 
@@ -23,27 +24,9 @@ Window::Window(const std::string& title, int width, int height, bool resizable)
       _height(height),
       _resizable(resizable),
       _rootElement(std::make_unique<RootElement>()) {
-    // 創建 GLUT 視窗
+    // 創建 GLUT 視窗，之後這個視窗的事件都會呼叫 on* 成員函數
     glutInitWindowSize(_width, _height);
-    _id = glutCreateWindow(_title.c_str());
-
-    // 註冊 GLUT 回調函數
-
-    glutCloseFunc(closeCallback);
-
-    glutReshapeFunc(reshapeCallback);
-    glutVisibilityFunc(visibilityCallback);
-    glutDisplayFunc(displayCallback);
-
-    glutKeyboardFunc(keyboardCallback);
-    glutKeyboardUpFunc(keyboardUpCallback);
-    glutSpecialFunc(specialCallback);
-    glutSpecialUpFunc(specialUpCallback);
-
-    glutMouseFunc(mouseCallback);
-    glutMotionFunc(motionCallback);
-    glutPassiveMotionFunc(passiveMotionCallback);
-    glutEntryFunc(entryCallback);
+    _id = platform::createWindow(_title.c_str(), *this);
 
     // 將視窗加入管理列表
     windows[_id] = this;
@@ -62,7 +45,7 @@ Window::~Window() {
 
     if (_id != 0) {
         windows.erase(_id);
-        glutDestroyWindow(_id);
+        platform::destroyWindow(_id);
     }
 }
 
@@ -292,17 +275,6 @@ void Window::detachElementSubtree(Element* subtreeRoot) {
 
 #pragma endregion  // Element interaction
 
-Window* Window::currentWindow() {
-    const int currentWindowId = glutGetWindow();
-
-    auto it = windows.find(currentWindowId);
-    if (it != windows.end()) {
-        return it->second;
-    }
-
-    return nullptr;
-}
-
 // --------------------------------------------------
 // GLUT callbacks
 // --------------------------------------------------
@@ -346,47 +318,33 @@ void Window::timerCallback(int windowId) {
 
 #pragma region GLUT window callbacks
 
-void Window::closeCallback() {
-    auto* window = currentWindow();
-
-    // 如果找不到當前視窗，直接返回
-    if (!window) {
-        return;
-    }
-
-    if (modalWindow == window) {
+void Window::onClose() {
+    if (modalWindow == this) {
         modalWindow = nullptr;
     }
 
     // 從管理列表中移除視窗，並將其 ID 設為 0
-    windows.erase(window->_id);
-    window->_id = 0;
+    windows.erase(_id);
+    _id = 0;
 
     WindowCloseEvent event;
 
-    window->dispatchEvent(event);
+    dispatchEvent(event);
 }
 
-void Window::reshapeCallback(int width, int height) {
-    auto* window = currentWindow();
-
-    // 如果找不到當前視窗，直接返回
-    if (!window) {
-        return;
-    }
-
-    if (!window->isResizable() && (width != window->_width || height != window->_height)) {
+void Window::onReshape(int width, int height) {
+    if (!isResizable() && (width != _width || height != _height)) {
         // 如果視窗不可調整大小，則恢復到原始大小
-        glutReshapeWindow(window->_width, window->_height);
+        glutReshapeWindow(_width, _height);
         return;
     }
 
-    window->_width = width;
-    window->_height = height;
+    _width = width;
+    _height = height;
 
-    window->_colorBuffer.resize(width, height);  // 調整 ColorBuffer 的大小
-    window->_contentDirty = true;
-    window->_needsCapture = false;
+    _colorBuffer.resize(width, height);  // 調整 ColorBuffer 的大小
+    _contentDirty = true;
+    _needsCapture = false;
 
     // 零尺寸 viewport 合法，表示沒有可繪製的區域。
     glViewport(0, 0, width, height);
@@ -403,54 +361,39 @@ void Window::reshapeCallback(int width, int height) {
 
     WindowResizeEvent event(width, height);
 
-    window->dispatchEvent(event);
+    dispatchEvent(event);
 
-    window->requestLayout();
+    requestLayout();
 }
 
-void Window::visibilityCallback(int state) {
-    auto* window = currentWindow();
-
-    // 如果找不到當前視窗，直接返回
-    if (!window) {
-        return;
-    }
-
+void Window::onVisibility(int state) {
     if (state == GLUT_VISIBLE) {
         WindowVisibleEvent event;
-        window->dispatchEvent(event);
-        window->requestRedisplay();
+        dispatchEvent(event);
+        requestRedisplay();
     } else if (state == GLUT_NOT_VISIBLE) {
         WindowHiddenEvent event;
-        window->_contentDirty = true;
-        window->_needsCapture = false;
-        window->dispatchEvent(event);
+        _contentDirty = true;
+        _needsCapture = false;
+        dispatchEvent(event);
     }
 }
 
-void Window::displayCallback() {
-    auto* window = currentWindow();
-
-    // 如果找不到當前視窗，直接返回
-    if (!window) {
-        return;
-    }
-
+void Window::onDisplay() {
     // 清除顯示緩衝區
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);  // 設置背景色為白色
     glClear(GL_COLOR_BUFFER_BIT);
 
     // 如果視窗內容被標記為 dirty，或者需要捕捉內容到 ColorBuffer，
     // 或者 ColorBuffer 的大小與視窗不匹配，則重新渲染視窗內容
-    if (window->_contentDirty || window->_needsCapture ||
-        !window->_colorBuffer.matchesSize(window->_width, window->_height)) {
-        window->render();  // 渲染視窗內容
+    if (_contentDirty || _needsCapture || !_colorBuffer.matchesSize(_width, _height)) {
+        render();  // 渲染視窗內容
 
-        window->_contentDirty = false;
-        window->_needsCapture = true;
+        _contentDirty = false;
+        _needsCapture = true;
     } else {
         // 直接從 ColorBuffer 恢復視窗內容，避免不必要的重繪
-        window->_colorBuffer.restore();
+        _colorBuffer.restore();
     }
 
     // 提交繪圖命令
@@ -462,58 +405,44 @@ void Window::displayCallback() {
 #pragma region GLUT keyboard callbacks
 
 void Window::keyDownHandler(Key key, int x, int y) {
-    auto* window = currentWindow();
-
-    // 找不到當前視窗，直接返回
-    if (!window) {
-        return;
-    }
-
-    if (!canReceiveInput(window->_id)) {
+    if (!canReceiveInput(_id)) {
         activateModalWindow();
         return;
     }
 
     bool firstPress = _keyboardState._press(key);
 
-    window->_mouseState._setPosition(x, y);
+    _mouseState._setPosition(x, y);
 
-    KeyDownEvent event(_keyboardState, window->_mouseState, key, !firstPress);
+    KeyDownEvent event(_keyboardState, _mouseState, key, !firstPress);
 
-    if (window->_focusedElement != nullptr) {
-        window->_focusedElement->dispatchEvent(event);
+    if (_focusedElement != nullptr) {
+        _focusedElement->dispatchEvent(event);
     } else {
-        window->dispatchEvent(event);
+        dispatchEvent(event);
     }
 }
 
 void Window::keyUpHandler(Key key, int x, int y) {
-    auto* window = currentWindow();
-
-    // 找不到當前視窗，直接返回
-    if (!window) {
-        return;
-    }
-
-    if (!canReceiveInput(window->_id)) {
+    if (!canReceiveInput(_id)) {
         activateModalWindow();
         return;
     }
 
     _keyboardState._release(key);
 
-    window->_mouseState._setPosition(x, y);
+    _mouseState._setPosition(x, y);
 
-    KeyUpEvent event(_keyboardState, window->_mouseState, key);
+    KeyUpEvent event(_keyboardState, _mouseState, key);
 
-    if (window->_focusedElement != nullptr) {
-        window->_focusedElement->dispatchEvent(event);
+    if (_focusedElement != nullptr) {
+        _focusedElement->dispatchEvent(event);
     } else {
-        window->dispatchEvent(event);
+        dispatchEvent(event);
     }
 }
 
-void Window::keyboardCallback(unsigned char key, int x, int y) {
+void Window::onKeyboard(unsigned char key, int x, int y) {
     Key btn;
     if (_keyboardState.isDown(Key::LeftCtrl) || _keyboardState.isDown(Key::RightCtrl)) {
         btn = mapCharacterWithCtrl(key);
@@ -528,14 +457,7 @@ void Window::keyboardCallback(unsigned char key, int x, int y) {
 
     keyDownHandler(btn, x, y);
 
-    auto* window = currentWindow();
-
-    // 找不到當前視窗，直接返回
-    if (!window) {
-        return;
-    }
-
-    if (!canReceiveInput(window->_id)) {
+    if (!canReceiveInput(_id)) {
         activateModalWindow();
         return;
     }
@@ -546,16 +468,16 @@ void Window::keyboardCallback(unsigned char key, int x, int y) {
     const bool commandModifier = _keyboardState.isCtrlDown() || _keyboardState.isSuperDown();
 
     if (printable && !commandModifier) {
-        TextInputEvent event(_keyboardState, window->_mouseState, std::string(1, static_cast<char>(key)));
-        if (window->_focusedElement != nullptr) {
-            window->_focusedElement->dispatchEvent(event);
+        TextInputEvent event(_keyboardState, _mouseState, std::string(1, static_cast<char>(key)));
+        if (_focusedElement != nullptr) {
+            _focusedElement->dispatchEvent(event);
         } else {
-            window->dispatchEvent(event);
+            dispatchEvent(event);
         }
     }
 }
 
-void Window::keyboardUpCallback(unsigned char key, int x, int y) {
+void Window::onKeyboardUp(unsigned char key, int x, int y) {
     Key btn;
     if (_keyboardState.isDown(Key::LeftCtrl) || _keyboardState.isDown(Key::RightCtrl)) {
         btn = mapCharacterWithCtrl(key);
@@ -571,7 +493,7 @@ void Window::keyboardUpCallback(unsigned char key, int x, int y) {
     keyUpHandler(btn, x, y);
 }
 
-void Window::specialCallback(int key, int x, int y) {
+void Window::onSpecial(int key, int x, int y) {
     auto btn = mapSpecialKey(key);
 
     // 未知按鈕，直接返回
@@ -582,7 +504,7 @@ void Window::specialCallback(int key, int x, int y) {
     keyDownHandler(btn, x, y);
 }
 
-void Window::specialUpCallback(int key, int x, int y) {
+void Window::onSpecialUp(int key, int x, int y) {
     auto btn = mapSpecialKey(key);
 
     // 未知按鈕，直接返回
@@ -597,34 +519,32 @@ void Window::specialUpCallback(int key, int x, int y) {
 
 #pragma region GLUT mouse callbacks
 
-void Window::mouseCallback(int button, int state, int x, int y) {
-    auto* window = currentWindow();
-
+void Window::onMouse(int button, int state, int x, int y) {
     auto btn = mapMouseButton(button);
 
-    // 如果找不到當前視窗或未知按鈕，直接返回
-    if (!window || btn == MouseButton::Unknown) {
+    // 未知按鈕，直接返回
+    if (btn == MouseButton::Unknown) {
         return;
     }
 
-    if (!canReceiveInput(window->_id)) {
+    if (!canReceiveInput(_id)) {
         activateModalWindow();
         return;
     }
 
-    window->_mouseState._setPosition(x, y);
+    _mouseState._setPosition(x, y);
 
     if (state == GLUT_DOWN) {
-        window->_mouseState._press(btn);
+        _mouseState._press(btn);
 
         // 記錄滑鼠按下的位置，方便後續判斷點擊事件
-        auto& press = window->_clickCandidate[btn];
+        auto& press = _clickCandidate[btn];
         press.active = true;
         press.position = Point(x, y);
 
-        MouseDownEvent event(_keyboardState, window->_mouseState, btn);
+        MouseDownEvent event(_keyboardState, _mouseState, btn);
 
-        auto target = window->dispatchMouseEvent<MouseDownEvent>(event);
+        auto target = dispatchMouseEvent<MouseDownEvent>(event);
 
         // 滑鼠事件仍送到最深層的命中元素；鍵盤焦點則沿 parent 往上尋找
         // 最近的可聚焦元素。
@@ -632,26 +552,26 @@ void Window::mouseCallback(int button, int state, int x, int y) {
         while (focusTarget != nullptr && !focusTarget->isFocusable()) {
             focusTarget = focusTarget->parent();
         }
-        window->setFocusedElement(focusTarget);
+        setFocusedElement(focusTarget);
 
     } else if (state == GLUT_UP) {
-        window->_mouseState._release(btn);
+        _mouseState._release(btn);
 
-        MouseUpEvent event(_keyboardState, window->_mouseState, btn);
-        window->dispatchMouseEvent<MouseUpEvent>(event);
+        MouseUpEvent event(_keyboardState, _mouseState, btn);
+        dispatchMouseEvent<MouseUpEvent>(event);
 
         // 判斷是否為點擊事件
         // 如果滑鼠按下和釋放的位置距離小於閾值，則認為是點擊事件
-        auto& press = window->_clickCandidate[btn];
-        if (press.active && abs(window->_mouseState.position() - press.position) <= CLICK_MOVE_THRESHOLD) {
+        auto& press = _clickCandidate[btn];
+        if (press.active && abs(_mouseState.position() - press.position) <= CLICK_MOVE_THRESHOLD) {
             // 判斷是否為雙擊事件
             // 1. 上一次點擊事件有效
             // 2. 距離現在的時間小於閾值
             // 3. 上一次點擊事件的位置與現在的位置距離小於閾值
 
-            auto& lastClick = window->_lastClicks[btn];
+            auto& lastClick = _lastClicks[btn];
             auto now = std::chrono::steady_clock::now();
-            const Point position = window->_mouseState.position();
+            const Point position = _mouseState.position();
 
             const bool isDoubleClick = lastClick.active &&
                                        now - lastClick.time <= DOUBLE_CLICK_TIME_THRESHOLD &&
@@ -660,15 +580,15 @@ void Window::mouseCallback(int button, int state, int x, int y) {
             if (isDoubleClick) {
                 lastClick.active = false;  // 重置上一次點擊事件，避免三擊事件被誤判為雙擊事件
 
-                DoubleClickEvent doubleClickEvent(_keyboardState, window->_mouseState, btn);
-                window->dispatchMouseEvent<DoubleClickEvent>(doubleClickEvent);
+                DoubleClickEvent doubleClickEvent(_keyboardState, _mouseState, btn);
+                dispatchMouseEvent<DoubleClickEvent>(doubleClickEvent);
             } else {
                 lastClick.active = true;
-                lastClick.position = window->_mouseState.position();
+                lastClick.position = _mouseState.position();
                 lastClick.time = now;
 
-                ClickEvent clickEvent(_keyboardState, window->_mouseState, btn);
-                window->dispatchMouseEvent<ClickEvent>(clickEvent);
+                ClickEvent clickEvent(_keyboardState, _mouseState, btn);
+                dispatchMouseEvent<ClickEvent>(clickEvent);
             }
         }
 
@@ -681,22 +601,15 @@ void Window::mouseCallback(int button, int state, int x, int y) {
 }
 
 void Window::mouseMoveHandler(int x, int y) {
-    auto* window = currentWindow();
-
-    // 如果找不到當前視窗，直接返回
-    if (!window) {
+    if (!canReceiveInput(_id)) {
         return;
     }
 
-    if (!canReceiveInput(window->_id)) {
-        return;
-    }
-
-    window->_mouseState._setPosition(x, y);
+    _mouseState._setPosition(x, y);
 
     // 移動距離超過閾值，則取消所有滑鼠按下狀態，避免誤判為點擊事件
-    for (auto& [button, press] : window->_clickCandidate) {
-        if (press.active && abs(window->_mouseState.position() - press.position) > CLICK_MOVE_THRESHOLD) {
+    for (auto& [button, press] : _clickCandidate) {
+        if (press.active && abs(_mouseState.position() - press.position) > CLICK_MOVE_THRESHOLD) {
             press.active = false;
         }
     }
@@ -705,56 +618,49 @@ void Window::mouseMoveHandler(int x, int y) {
 
     // Hover 永遠依照實際位置判斷，
     // 不受 mouse capture 影響。
-    Element* hoverTarget = dynamic_cast<Element*>(window->hitTest(window->_mouseState.position()));
+    Element* hoverTarget = dynamic_cast<Element*>(hitTest(_mouseState.position()));
 
-    if (hoverTarget != window->_hoveredElement) {
-        if (window->_hoveredElement != nullptr) {
+    if (hoverTarget != _hoveredElement) {
+        if (_hoveredElement != nullptr) {
             UnhoverEvent event;
-            window->_hoveredElement->dispatchEvent(event);
+            _hoveredElement->dispatchEvent(event);
         }
 
-        window->_hoveredElement = hoverTarget;
+        _hoveredElement = hoverTarget;
 
-        if (window->_hoveredElement != nullptr) {
+        if (_hoveredElement != nullptr) {
             HoverEvent event;
-            window->_hoveredElement->dispatchEvent(event);
+            _hoveredElement->dispatchEvent(event);
         }
     }
 
     // MouseMove 本身則遵守 mouse capture
-    MouseMoveEvent event(_keyboardState, window->_mouseState);
-    window->dispatchMouseEvent<MouseMoveEvent>(event);
+    MouseMoveEvent event(_keyboardState, _mouseState);
+    dispatchMouseEvent<MouseMoveEvent>(event);
 }
 
-void Window::motionCallback(int x, int y) {
+void Window::onMotion(int x, int y) {
     mouseMoveHandler(x, y);
 }
 
-void Window::passiveMotionCallback(int x, int y) {
+void Window::onPassiveMotion(int x, int y) {
     mouseMoveHandler(x, y);
 }
 
-void Window::entryCallback(int state) {
-    auto* window = currentWindow();
-
-    // 如果找不到當前視窗，直接返回
-    if (!window) {
-        return;
-    }
-
-    if (!canReceiveInput(window->_id)) {
+void Window::onEntry(int state) {
+    if (!canReceiveInput(_id)) {
         return;
     }
 
     // 清除滑鼠按鈕狀態，避免在滑鼠進入或離開視窗時，按鈕狀態不一致。
-    window->_mouseState._clear();
+    _mouseState._clear();
 
     if (state == GLUT_ENTERED) {
         WindowEnterEvent event;
-        window->dispatchEvent(event);
+        dispatchEvent(event);
     } else if (state == GLUT_LEFT) {
         WindowLeaveEvent event;
-        window->dispatchEvent(event);
+        dispatchEvent(event);
     }
 }
 

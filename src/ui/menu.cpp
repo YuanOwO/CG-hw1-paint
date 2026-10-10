@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "platform/glut.hpp"
+#include "platform/platform.hpp"
 #include "ui/window.hpp"
 
 namespace paint::ui {
@@ -29,7 +30,7 @@ Menu::~Menu() {
 
     menus.erase(_menuId);
 
-    if (glutGet(GLUT_INIT_STATE)) {
+    if (platform::isRunning()) {
         glutDestroyMenu(_menuId);
     }
 

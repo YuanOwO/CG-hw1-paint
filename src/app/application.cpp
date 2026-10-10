@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 #include "platform/glut.hpp"
+#include "platform/platform.hpp"
 
 namespace paint::app {
 
@@ -24,14 +25,11 @@ Application::Application(int& argc, char** argv) {
     currentApp = this;
 
     // 初始化 GLUT
-    glutInit(&argc, argv);
+    platform::initialize(argc, argv);
 
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
 
     glutIdleFunc(idleCallback);
-
-    // 在視窗關閉時，繼續執行程式，而不是退出 GLUT 主循環
-    glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
 }
 
 Application::~Application() {
@@ -47,8 +45,8 @@ Application& Application::current() {
 }
 
 void Application::run() {
-    // 進入 GLUT 主循環
-    glutMainLoop();
+    // 進入 GLUT 主循環，所有視窗關閉後返回
+    platform::runMainLoop();
 }
 
 void Application::removeClosedWindows() {

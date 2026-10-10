@@ -11,15 +11,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find packages
 # -------------------------
 
-if(APPLE)
-    # Homebrew FreeGLUT uses Mesa/GLX; Apple's OpenGL framework cannot
-    # use the context it creates.
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(MESA_GL REQUIRED IMPORTED_TARGET gl)
-    pkg_check_modules(MESA_GLU REQUIRED IMPORTED_TARGET glu)
-    pkg_check_modules(GLUT REQUIRED IMPORTED_TARGET glut)
-else()
-    # Windows / Linux
+if(NOT APPLE)
+    # Windows / Linux: FreeGLUT
+    # macOS uses the system GLUT and OpenGL frameworks (see Link libraries).
     find_package(OpenGL REQUIRED)
     find_package(GLUT REQUIRED)
 endif()
@@ -66,12 +60,15 @@ target_include_directories(graphtoria PRIVATE
 # -------------------------
 
 if(APPLE)
+    # The system GLUT framework (Apple OpenGL, hardware accelerated).
+    # The OpenGL framework also provides GLU.
     target_link_libraries(graphtoria PRIVATE
-        PkgConfig::MESA_GL
-        PkgConfig::MESA_GLU
-        PkgConfig::GLUT
-        "-framework CoreGraphics"
+        "-framework GLUT"
+        "-framework OpenGL"
     )
+
+    # OpenGL and GLUT are deprecated on macOS since 10.14.
+    target_compile_definitions(graphtoria PRIVATE GL_SILENCE_DEPRECATION)
 else()
     target_link_libraries(graphtoria PRIVATE
         OpenGL::GL
