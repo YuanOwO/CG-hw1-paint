@@ -15,8 +15,7 @@ std::unordered_map<int, WindowHandler*> handlers;
 
 // GLUT 呼叫 callback 前，會將目前視窗設為事件發生的視窗
 WindowHandler* currentHandler() {
-    auto it = handlers.find(glutGetWindow());
-    return it != handlers.end() ? it->second : nullptr;
+    return findWindowHandler(glutGetWindow());
 }
 
 void reshapeCallback(int width, int height) {
@@ -103,6 +102,11 @@ void registerWindow(int window, WindowHandler& handler) {
     glutMotionFunc(motionCallback);
     glutPassiveMotionFunc(passiveMotionCallback);
     glutEntryFunc(entryCallback);
+}
+
+WindowHandler* findWindowHandler(int window) {
+    auto it = handlers.find(window);
+    return it != handlers.end() ? it->second : nullptr;
 }
 
 void unregisterWindow(int window) {

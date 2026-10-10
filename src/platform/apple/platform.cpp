@@ -1,16 +1,22 @@
-// Apple GLUT 實作（macOS），Windows / Linux 見 platform_freeglut.cpp。
+// Apple GLUT 實作（macOS），Windows / Linux 見 freeglut/platform.cpp。
 //
 // 與 FreeGLUT 的差異：
 //   - 關閉視窗時只呼叫 callback，不會銷毀視窗 → 呼叫後自行銷毀
 //   - glutMainLoop 不會返回 → 以 glutCheckLoop 自行執行主循環，所有視窗關閉後返回
+//   - 鍵盤的差異 → 見 keyboard.hpp
+//   - 右鍵選單會附加其他 App 提供的服務項目 → 見 context_menu.mm
+//   - 輸入法：程式在前景時使用英文鍵盤配置 → 見 input_source.hpp
 
 #ifdef __APPLE__
 
-#include <GLUT/glut.h>
+#  include <GLUT/glut.h>
 
-#include <unordered_set>
+#  include <unordered_set>
 
-#include "platform/platform_internal.hpp"
+#  include "platform/apple/cocoa.hpp"
+#  include "platform/apple/input_source.hpp"
+#  include "platform/apple/keyboard.hpp"
+#  include "platform/platform_internal.hpp"
 
 namespace paint::platform {
 
@@ -34,6 +40,10 @@ void closeCallback() {
 void initialize(int& argc, char** argv) {
     // 關閉視窗時不結束程式：每個視窗都註冊了 glutWMCloseFunc（見 createWindow）
     glutInit(&argc, argv);
+
+    keyboard::install();
+    input_source::install();
+    cocoa::disableContextMenuPlugIns();
 }
 
 void runMainLoop() {
@@ -41,6 +51,9 @@ void runMainLoop() {
     while (!windows.empty()) {
         glutCheckLoop();
     }
+
+    // 所有視窗關閉後程式直接結束，不會收到即將結束的通知，因此在這裡還原輸入法
+    input_source::restore();
 
     running = false;
 }
@@ -50,7 +63,8 @@ bool isRunning() {
 }
 
 int createWindow(const char* title, WindowHandler& handler) {
-    const int window = glutCreateWindow(title);
+    // 記住對應的 NSWindow，事件攔截器才知道事件屬於哪個 GLUT 視窗
+    const int window = cocoa::createWindow(title);
     windows.insert(window);
 
     registerWindow(window, handler);  // 共用的部分：查表與轉呼叫
@@ -68,6 +82,9 @@ void destroyWindow(int window) {
     }
 
     unregisterWindow(window);
+    cocoa::forgetWindow(window);
+    keyboard::forgetWindow(window);
+
     glutDestroyWindow(window);
 }
 

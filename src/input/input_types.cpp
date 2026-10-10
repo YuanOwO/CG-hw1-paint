@@ -1,6 +1,7 @@
 #include "input/input_types.hpp"
 
 #include "platform/glut.hpp"
+#include "platform/platform.hpp"
 
 namespace paint {
 
@@ -346,21 +347,21 @@ Key mapSpecialKey(int glutKey) {
         return Key::F12;
 
     // Modifiers
-    case GLUT_KEY_SHIFT_L:
+    case platform::KEY_SHIFT_L:
         return Key::LeftShift;
-    case GLUT_KEY_SHIFT_R:
+    case platform::KEY_SHIFT_R:
         return Key::RightShift;
-    case GLUT_KEY_CTRL_L:
+    case platform::KEY_CTRL_L:
         return Key::LeftCtrl;
-    case GLUT_KEY_CTRL_R:
+    case platform::KEY_CTRL_R:
         return Key::RightCtrl;
-    case GLUT_KEY_ALT_L:
+    case platform::KEY_ALT_L:
         return Key::LeftAlt;
-    case GLUT_KEY_ALT_R:
+    case platform::KEY_ALT_R:
         return Key::RightAlt;
-    case GLUT_KEY_SUPER_L:
+    case platform::KEY_SUPER_L:
         return Key::LeftSuper;
-    case GLUT_KEY_SUPER_R:
+    case platform::KEY_SUPER_R:
         return Key::RightSuper;
 
     // Unhandled keys

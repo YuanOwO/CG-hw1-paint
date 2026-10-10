@@ -1,12 +1,17 @@
-// FreeGLUT 實作（Windows / Linux），macOS 見 platform_apple.cpp。
+// FreeGLUT 實作（Windows / Linux），macOS 見 apple/platform.cpp。
 
 #ifndef __APPLE__
 
-#include <GL/freeglut.h>
+#  include <GL/freeglut.h>
 
-#include "platform/platform_internal.hpp"
+#  include "platform/platform_internal.hpp"
 
 namespace paint::platform {
+
+static_assert(KEY_SHIFT_L == GLUT_KEY_SHIFT_L && KEY_SHIFT_R == GLUT_KEY_SHIFT_R);
+static_assert(KEY_CTRL_L == GLUT_KEY_CTRL_L && KEY_CTRL_R == GLUT_KEY_CTRL_R);
+static_assert(KEY_ALT_L == GLUT_KEY_ALT_L && KEY_ALT_R == GLUT_KEY_ALT_R);
+static_assert(KEY_SUPER_L == GLUT_KEY_SUPER_L && KEY_SUPER_R == GLUT_KEY_SUPER_R);
 
 namespace {
 

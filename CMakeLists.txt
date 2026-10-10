@@ -11,9 +11,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Find packages
 # -------------------------
 
-if(NOT APPLE)
+if(APPLE)
+    # macOS uses the system GLUT and OpenGL frameworks (see Link libraries),
+    # with Objective-C++ for the Cocoa parts of the platform layer.
+    enable_language(OBJCXX)
+else()
     # Windows / Linux: FreeGLUT
-    # macOS uses the system GLUT and OpenGL frameworks (see Link libraries).
     find_package(OpenGL REQUIRED)
     find_package(GLUT REQUIRED)
 endif()
@@ -30,6 +33,12 @@ file(GLOB_RECURSE CXX_SOURCES CONFIGURE_DEPENDS
     src/*.cpp
 )
 
+if(APPLE)
+    file(GLOB_RECURSE OBJCXX_SOURCES CONFIGURE_DEPENDS
+        src/*.mm
+    )
+endif()
+
 # -------------------------
 # Executable
 # -------------------------
@@ -38,6 +47,11 @@ add_executable(graphtoria
     ${C_SOURCES}
     ${CXX_SOURCES}
 )
+
+if(APPLE)
+    target_sources(graphtoria PRIVATE ${OBJCXX_SOURCES})
+    set_source_files_properties(${OBJCXX_SOURCES} PROPERTIES COMPILE_OPTIONS -fobjc-arc)
+endif()
 
 add_custom_command(TARGET graphtoria POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -65,6 +79,8 @@ if(APPLE)
     target_link_libraries(graphtoria PRIVATE
         "-framework GLUT"
         "-framework OpenGL"
+        "-framework Cocoa"   # platform/apple/*.mm
+        "-framework Carbon"  # platform/apple/keyboard.cpp: key codes and keyboard layouts
     )
 
     # OpenGL and GLUT are deprecated on macOS since 10.14.
