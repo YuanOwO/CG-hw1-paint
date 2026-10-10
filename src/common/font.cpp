@@ -18,6 +18,8 @@ std::unordered_map<GfntFontId, std::unique_ptr<GfntFont>> g_fonts;
 
 }  // namespace
 
+#pragma region Initialization
+
 void initializeFonts(const std::filesystem::path& fontDirectory) {
     g_fonts.clear();
     g_fonts[GfntFontId::CUBIC_11] =
@@ -25,6 +27,10 @@ void initializeFonts(const std::filesystem::path& fontDirectory) {
     g_fonts[GfntFontId::UNIFONT_16] =
         std::make_unique<GfntFont>(GfntFont::load(fontDirectory / "unifont" / "unifont_16.gfnt"));
 }
+
+#pragma endregion  // Initialization
+
+#pragma region Font mapping
 
 void* mapFont(const BitmapFont& font) {
     switch (font) {
@@ -77,6 +83,76 @@ const GfntFont& mapFont(const GfntFontId& font) {
         throw std::invalid_argument("Unknown GFNT font");
     }
 }
+
+#pragma endregion  // Font mapping
+
+#pragma region Font metrics
+
+float getLineHeight(const BitmapFont& font) {
+    switch (font) {
+    case BitmapFont::BITMAP_8_BY_13:
+    case BitmapFont::BITMAP_HELVETICA_10:
+    case BitmapFont::BITMAP_TIMES_ROMAN_10:
+        return 14.0f;
+
+    case BitmapFont::BITMAP_9_BY_15:
+    case BitmapFont::BITMAP_HELVETICA_12:
+        return 16.0f;
+
+    case BitmapFont::BITMAP_HELVETICA_18:
+        return 23.0f;
+
+    case BitmapFont::BITMAP_TIMES_ROMAN_24:
+        return 29.0f;
+    }
+
+    throw std::invalid_argument("Unknown bitmap font");
+}
+
+float getOriginY(const BitmapFont& font) {
+    switch (font) {
+    case BitmapFont::BITMAP_8_BY_13:
+    case BitmapFont::BITMAP_HELVETICA_10:
+        return 3.0f;
+
+    case BitmapFont::BITMAP_9_BY_15:
+    case BitmapFont::BITMAP_HELVETICA_12:
+    case BitmapFont::BITMAP_TIMES_ROMAN_10:
+        return 4.0f;
+
+    case BitmapFont::BITMAP_HELVETICA_18:
+        return 5.0f;
+
+    case BitmapFont::BITMAP_TIMES_ROMAN_24:
+        return 7.0f;
+    }
+
+    throw std::invalid_argument("Unknown bitmap font");
+}
+
+float getLineHeight(const StrokeFont& font) {
+    switch (font) {
+    case StrokeFont::STROKE_ROMAN:
+    case StrokeFont::STROKE_MONO_ROMAN:
+        return 152.381f;
+    }
+
+    throw std::invalid_argument("Unknown stroke font");
+}
+
+float getAscent(const StrokeFont& font) {
+    switch (font) {
+    case StrokeFont::STROKE_ROMAN:
+    case StrokeFont::STROKE_MONO_ROMAN:
+        return 119.048f;
+    }
+
+    throw std::invalid_argument("Unknown stroke font");
+}
+
+#pragma endregion  // Font metrics
+
+#pragma region Font width
 
 float getFontWidth(const BitmapFontStyle& font, const std::string& text) {
     void* glutFont = mapFont(font.font);
@@ -148,9 +224,11 @@ float getFontWidth(const GfntFontStyle& style, const std::string& text) {
     return std::max(maxWidth, width);
 }
 
-float getFontHeight(const BitmapFontStyle& font, const std::string& text) {
-    void* glutFont = mapFont(font.font);
+#pragma endregion  // Font width
 
+#pragma region Font height
+
+float getFontHeight(const BitmapFontStyle& font, const std::string& text) {
     if (text.empty()) {
         return 0;
     }
@@ -161,15 +239,10 @@ float getFontHeight(const BitmapFontStyle& font, const std::string& text) {
         lines -= 1;  // 如果最後一行是空行，則不計算高度
     }
 
-    return lines * glutBitmapHeight(glutFont);
+    return lines * getLineHeight(font.font);
 }
 
 float getFontHeight(const StrokeFontStyle& font, const std::string& text) {
-    void* glutFont = mapFont(font.font);
-    if (!glutFont) {
-        throw std::invalid_argument("Unknown stroke font");
-    }
-
     if (text.empty()) {
         return 0;
     }
@@ -180,7 +253,7 @@ float getFontHeight(const StrokeFontStyle& font, const std::string& text) {
         lines -= 1;  // 如果最後一行是空行，則不計算高度
     }
 
-    return lines * glutStrokeHeight(glutFont) * font.size;
+    return lines * getLineHeight(font.font) * font.size;
 }
 
 float getFontHeight(const GfntFontStyle& style, const std::string& text) {
@@ -204,5 +277,7 @@ float getFontHeight(const GfntFontStyle& style, const std::string& text) {
 
     return static_cast<float>(lines) * lineHeight;
 }
+
+#pragma endregion  // Font height
 
 }  // namespace paint
