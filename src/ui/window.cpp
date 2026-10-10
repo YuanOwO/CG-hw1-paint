@@ -1,9 +1,8 @@
 #include "ui/window.hpp"
 
-#include <GL/freeglut.h>
-
 #include <utility>
 
+#include "platform/glut.hpp"
 #include "render/render_context.hpp"
 #include "ui/elements.hpp"
 

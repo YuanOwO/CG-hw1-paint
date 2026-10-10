@@ -1,11 +1,10 @@
 #include "render/renderer/color_field_renderer.hpp"
 
-#include <GL/freeglut.h>
-
 #include <algorithm>
 #include <cmath>
 
 #include "common/color.hpp"
+#include "platform/glut.hpp"
 #include "ui/elements.hpp"
 
 namespace paint::render {
@@ -55,7 +54,8 @@ void ColorFieldRenderer::renderPanel(RenderContext&, const ui::ColorFieldElement
 
 void ColorFieldRenderer::renderMarker(RenderContext& context, const ui::ColorFieldElement& field) {
     const int markerX = static_cast<int>(std::lround(field.saturation() * std::max(0, field.width() - 1)));
-    const int markerY = static_cast<int>(std::lround((1.0f - field.value()) * std::max(0, field.height() - 1)));
+    const int markerY =
+        static_cast<int>(std::lround((1.0f - field.value()) * std::max(0, field.height() - 1)));
 
     // 黑白雙環讓選取標記在任何深淺的背景上都保持清楚。
     // 黑環向內填到半徑 4，再由白環覆蓋半徑 3～4，兩環之間不會出現空洞。

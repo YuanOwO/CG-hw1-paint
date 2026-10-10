@@ -1,6 +1,6 @@
 #include "input/input_types.hpp"
 
-#include <GL/freeglut.h>
+#include "platform/glut.hpp"
 
 namespace paint {
 

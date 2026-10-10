@@ -1,12 +1,11 @@
 #include "render/renderer/canvas_renderer.hpp"
 
-#include <GL/freeglut.h>
-
 #include <memory>
 
 #include "app/document.hpp"
 #include "common/point.hpp"
 #include "drawing/scene.hpp"
+#include "platform/glut.hpp"
 #include "ui/elements.hpp"
 
 namespace paint::render {

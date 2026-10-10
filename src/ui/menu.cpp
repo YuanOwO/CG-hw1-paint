@@ -1,9 +1,8 @@
 #include "ui/menu.hpp"
 
-#include <GL/freeglut.h>
-
 #include <utility>
 
+#include "platform/glut.hpp"
 #include "ui/window.hpp"
 
 namespace paint::ui {

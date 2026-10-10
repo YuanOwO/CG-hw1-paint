@@ -1,11 +1,11 @@
 #include "render/render_context.hpp"
 
-#include <GL/freeglut.h>
-
 #include <algorithm>
 #include <initializer_list>
 #include <limits>
 #include <vector>
+
+#include "platform/glut.hpp"
 
 namespace paint::render {
 namespace {

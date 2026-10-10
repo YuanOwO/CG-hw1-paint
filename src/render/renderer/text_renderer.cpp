@@ -1,10 +1,7 @@
 #include "render/renderer/text_renderer.hpp"
 
-#include <GL/freeglut.h>
-
 #include <cstddef>
 #include <cstdint>
-#include <stdexcept>
 #include <variant>
 #include <vector>
 
@@ -15,6 +12,7 @@
 #include "drawing/paint_style.hpp"
 #include "drawing/text_object.hpp"
 #include "drawing/text_style.hpp"
+#include "platform/glut.hpp"
 #include "ui/elements.hpp"
 
 namespace paint::render {

@@ -1,9 +1,9 @@
 #include "app/application.hpp"
 
-#include <GL/freeglut.h>
-
 #include <algorithm>
 #include <stdexcept>
+
+#include "platform/glut.hpp"
 
 namespace paint::app {
 

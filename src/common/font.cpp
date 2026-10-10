@@ -1,7 +1,5 @@
 #include "common/font.hpp"
 
-#include <GL/freeglut.h>
-
 #include <algorithm>
 #include <cstddef>
 #include <memory>
@@ -9,6 +7,7 @@
 #include <unordered_map>
 
 #include "common/utf8.hpp"
+#include "platform/glut.hpp"
 
 namespace paint {
 

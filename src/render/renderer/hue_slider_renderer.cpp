@@ -1,10 +1,9 @@
 #include "render/renderer/hue_slider_renderer.hpp"
 
-#include <GL/freeglut.h>
-
 #include <algorithm>
 
 #include "common/color.hpp"
+#include "platform/glut.hpp"
 #include "ui/elements.hpp"
 
 namespace paint::render {
