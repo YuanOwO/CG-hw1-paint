@@ -21,6 +21,9 @@ Menu::Menu() {
 }
 
 Menu::~Menu() {
+    // 清理子菜單，確保不會有懸空指針
+    _submenus.clear();
+
     if (_menuId == 0) {
         return;
     }
