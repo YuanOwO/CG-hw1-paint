@@ -2,7 +2,7 @@
 
 #include <cstddef>
 
-#include <GL/freeglut.h>
+#include "platform/glut.hpp"
 
 namespace paint::render {
 

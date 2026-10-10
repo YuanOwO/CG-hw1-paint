@@ -12,14 +12,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # -------------------------
 
 if(APPLE)
-    # Homebrew FreeGLUT uses Mesa/GLX; Apple's OpenGL framework cannot
-    # use the context it creates.
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(MESA_GL REQUIRED IMPORTED_TARGET gl)
-    pkg_check_modules(MESA_GLU REQUIRED IMPORTED_TARGET glu)
-    pkg_check_modules(GLUT REQUIRED IMPORTED_TARGET glut)
+    # macOS uses the system GLUT and OpenGL frameworks (see Link libraries),
+    # with Objective-C++ for the Cocoa parts of the platform layer.
+    enable_language(OBJCXX)
 else()
-    # Windows / Linux
+    # Windows / Linux: FreeGLUT
     find_package(OpenGL REQUIRED)
     find_package(GLUT REQUIRED)
 endif()
@@ -36,6 +33,12 @@ file(GLOB_RECURSE CXX_SOURCES CONFIGURE_DEPENDS
     src/*.cpp
 )
 
+if(APPLE)
+    file(GLOB_RECURSE OBJCXX_SOURCES CONFIGURE_DEPENDS
+        src/*.mm
+    )
+endif()
+
 # -------------------------
 # Executable
 # -------------------------
@@ -44,6 +47,11 @@ add_executable(graphtoria
     ${C_SOURCES}
     ${CXX_SOURCES}
 )
+
+if(APPLE)
+    target_sources(graphtoria PRIVATE ${OBJCXX_SOURCES})
+    set_source_files_properties(${OBJCXX_SOURCES} PROPERTIES COMPILE_OPTIONS -fobjc-arc)
+endif()
 
 add_custom_command(TARGET graphtoria POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -66,12 +74,17 @@ target_include_directories(graphtoria PRIVATE
 # -------------------------
 
 if(APPLE)
+    # The system GLUT framework (Apple OpenGL, hardware accelerated).
+    # The OpenGL framework also provides GLU.
     target_link_libraries(graphtoria PRIVATE
-        PkgConfig::MESA_GL
-        PkgConfig::MESA_GLU
-        PkgConfig::GLUT
-        "-framework CoreGraphics"
+        "-framework GLUT"
+        "-framework OpenGL"
+        "-framework Cocoa"   # platform/apple/*.mm
+        "-framework Carbon"  # platform/apple/keyboard.cpp: key codes and keyboard layouts
     )
+
+    # OpenGL and GLUT are deprecated on macOS since 10.14.
+    target_compile_definitions(graphtoria PRIVATE GL_SILENCE_DEPRECATION)
 else()
     target_link_libraries(graphtoria PRIVATE
         OpenGL::GL

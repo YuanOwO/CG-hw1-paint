@@ -1,7 +1,5 @@
 #include "render/renderer/shape_renderer.hpp"
 
-#include <GL/freeglut.h>
-
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -12,6 +10,7 @@
 #include "drawing/paint_style.hpp"
 #include "drawing/shape_object.hpp"
 #include "drawing/shape_style.hpp"
+#include "platform/glut.hpp"
 
 namespace paint::render {
 

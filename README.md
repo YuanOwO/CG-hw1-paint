@@ -1,6 +1,6 @@
 # Graphtoria
 
-電腦圖學 Homework #1：A Drawing Panel。以 C++17、OpenGL 與 FreeGLUT 實作的向量繪圖程式。
+電腦圖學 Homework #1：A Drawing Panel。以 C++17、OpenGL 與 GLUT 實作的向量繪圖程式（Windows / Linux 使用 FreeGLUT，macOS 使用系統內建的 GLUT）。
 
 ![主畫面](docs/figures/ch02_main_window.png)
 
@@ -16,15 +16,15 @@
 
 ## 建置
 
-需要 CMake 3.16 以上、支援 C++17 的編譯器，以及 OpenGL / GLU / FreeGLUT。
+需要 CMake 3.16 以上、支援 C++17 的編譯器，以及 OpenGL / GLU / GLUT。
 
 | 平台 | 相依套件 |
 | --- | --- |
-| macOS | `brew install cmake pkgconf freeglut mesa mesa-glu` |
+| macOS | Xcode Command Line Tools（`xcode-select --install`）與 CMake（例如 `brew install cmake`） |
 | Linux（Debian / Ubuntu） | `sudo apt install cmake freeglut3-dev libglu1-mesa-dev` |
 | Windows | MinGW-w64 + FreeGLUT（MinGW 會靜態連結執行檔） |
 
-> macOS 上的 Homebrew FreeGLUT 使用 Mesa / GLX 建立 context，因此 CMake 透過 pkg-config 連結 Mesa 的 GL / GLU，而不是 Apple 的 OpenGL framework。執行時需要 XQuartz。
+> macOS 使用系統內建的 GLUT、OpenGL framework（含 GLU），有硬體加速，不需要 Homebrew 的 FreeGLUT、Mesa 或 XQuartz。Apple GLUT 與 FreeGLUT 的差異（關閉視窗、主循環、修飾鍵、Command 快捷鍵等）由平台層處理，見 [`src/platform/README.md`](src/platform/README.md)。
 
 ```bash
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
@@ -61,6 +61,8 @@ cmake --build build
 
 Primary 在 macOS 為 Command，在 Windows / Linux 為 Ctrl。
 
+GLUT 無法使用輸入法，注音等輸入法開啟時單鍵快捷鍵會失效。macOS 上程式在前景時會自動切換為英文鍵盤配置，切換到其他程式或結束時還原；其他平台請自行切換為英文輸入。
+
 | 快捷鍵 | 功能 |
 | --- | --- |
 | Primary+Z / Primary+Shift+Z | Undo / Redo（繪製中按 Undo 會先取消 Draft） |
@@ -87,6 +89,7 @@ src/
 ├── event/      輸入、視窗與元素事件
 ├── input/      輸入狀態與快捷鍵管理
 ├── io/         文件存取、.gpt 序列化與 PPM 輸出
+├── platform/   GLUT 平台層：FreeGLUT 與 Apple GLUT 的差異
 ├── render/     Color Buffer、Render Context 與各元件的 Renderer
 └── ui/         元素樹、版面配置、選單與主題
 assets/fonts/   Cubic 11 與 Unifont 的 GFNT 點陣字型

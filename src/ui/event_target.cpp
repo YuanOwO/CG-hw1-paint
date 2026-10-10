@@ -28,7 +28,9 @@ void EventTarget::dispatchEvent(Event& event) {
         auto it = current->_listeners.find(typeid(event));
 
         if (it != current->_listeners.end()) {
-            for (const auto& entry : it->second) {
+            // 先複製一份，避免 callback 中增刪 listener 使 vector 重新配置而讓迴圈失效
+            const auto listeners = it->second;
+            for (const auto& entry : listeners) {
                 entry.callback(event);  // 調用 listener 的 callback 函數
             }
         }

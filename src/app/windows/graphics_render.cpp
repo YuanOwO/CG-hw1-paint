@@ -1,6 +1,6 @@
 #include "app/windows/graphics_render.hpp"
 
-#include <GL/freeglut.h>
+#include "platform/glut.hpp"
 
 namespace paint::app {
 

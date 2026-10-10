@@ -1,9 +1,9 @@
 #include "ui/menu.hpp"
 
-#include <GL/freeglut.h>
-
 #include <utility>
 
+#include "platform/glut.hpp"
+#include "platform/platform.hpp"
 #include "ui/window.hpp"
 
 namespace paint::ui {
@@ -21,13 +21,16 @@ Menu::Menu() {
 }
 
 Menu::~Menu() {
+    // 清理子菜單，確保不會有懸空指針
+    _submenus.clear();
+
     if (_menuId == 0) {
         return;
     }
 
     menus.erase(_menuId);
 
-    if (glutGet(GLUT_INIT_STATE)) {
+    if (platform::isRunning()) {
         glutDestroyMenu(_menuId);
     }
 

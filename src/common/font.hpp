@@ -64,6 +64,19 @@ inline void* mapFont(const Font& font) {
     return std::visit([](const auto& f) { return mapFont(f); }, font);
 }
 
+// GLUT 內建字型的度量，數值與 FreeGLUT 的字型資料相同。
+// Apple GLUT 沒有 glutBitmapHeight / glutStrokeHeight，因此自行查表。
+
+// Bitmap 字型的行高（像素）
+float getLineHeight(const BitmapFont& font);
+
+// Bitmap 字型的 raster origin Y。基線位置 = 行頂端 + 行高 - originY。
+float getOriginY(const BitmapFont& font);
+
+// Stroke 字型的行高與上緣，單位為字型座標，需乘上 StrokeFontStyle::size
+float getLineHeight(const StrokeFont& font);
+float getAscent(const StrokeFont& font);
+
 float getFontWidth(const BitmapFontStyle& font, const std::string& text);
 float getFontWidth(const StrokeFontStyle& font, const std::string& text);
 float getFontWidth(const GfntFontStyle& font, const std::string& text);

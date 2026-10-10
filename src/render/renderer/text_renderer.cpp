@@ -1,10 +1,7 @@
 #include "render/renderer/text_renderer.hpp"
 
-#include <GL/freeglut.h>
-
 #include <cstddef>
 #include <cstdint>
-#include <stdexcept>
 #include <variant>
 #include <vector>
 
@@ -15,42 +12,20 @@
 #include "drawing/paint_style.hpp"
 #include "drawing/text_object.hpp"
 #include "drawing/text_style.hpp"
+#include "platform/glut.hpp"
 #include "ui/elements.hpp"
 
 namespace paint::render {
 
 namespace {
 
-// FreeGLUT 內建 Bitmap 字型的 raster origin Y。
-// 基線位置 = 行頂端 + 行高 - originY。
-float bitmapOriginY(BitmapFont font) {
-    switch (font) {
-    case BitmapFont::BITMAP_8_BY_13:
-    case BitmapFont::BITMAP_HELVETICA_10:
-        return 3.0f;
-
-    case BitmapFont::BITMAP_9_BY_15:
-    case BitmapFont::BITMAP_HELVETICA_12:
-    case BitmapFont::BITMAP_TIMES_ROMAN_10:
-        return 4.0f;
-
-    case BitmapFont::BITMAP_HELVETICA_18:
-        return 5.0f;
-
-    case BitmapFont::BITMAP_TIMES_ROMAN_24:
-        return 7.0f;
-    }
-
-    throw std::invalid_argument("Unknown bitmap font");
-}
-
 void renderBitmap(const std::string& text, const BitmapFontStyle& style, float left, float top) {
     void* font = mapFont(style.font);
 
-    const float lineHeight = static_cast<float>(glutBitmapHeight(font));
+    const float lineHeight = getLineHeight(style.font);
 
     float x = left;
-    float y = top + lineHeight - bitmapOriginY(style.font);
+    float y = top + lineHeight - getOriginY(style.font);
 
     for (unsigned char c : text) {
         if (c == '\n') {
@@ -70,14 +45,11 @@ void renderStroke(RenderContext& context, const std::string& text, const StrokeF
                   float top) {
     void* font = mapFont(style.font);
 
-    // FreeGLUT Roman / Mono Roman 的字型座標上界。
-    constexpr float ascent = 119.048f;
-
     const float scale = style.size;
-    const float lineHeight = glutStrokeHeight(font) * scale;
+    const float lineHeight = getLineHeight(style.font) * scale;
 
     float x = left;
-    float y = top + ascent * scale;
+    float y = top + getAscent(style.font) * scale;
 
     for (unsigned char c : text) {
         if (c == '\n') {
